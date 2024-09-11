@@ -10,7 +10,7 @@ import (
 )
 
 //global variable for port (different on each machine)
-var port string = "8080"
+var port string = "8086"
 
 func main() {
 	// check whether it's a server (receiver) or client (sender)
@@ -51,7 +51,8 @@ func handleConnection(conn net.Conn) {
 	buf := make([]byte, 1024)
     n, _ := conn.Read(buf)
     command := string(buf[:n])
-	command = command + " machine.1.log"
+	filename = "machine.6.log"
+	command = command + " " + filename
 
 	// run the grep command on machine
 	cmd := exec.Command("sh", "-c", command)
