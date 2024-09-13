@@ -8,24 +8,30 @@ import (
 	"os/exec"
 	"strings"
 	"io"
+	"lines"
+	"bufio"
 )
 
 //global variable for port. machine number, log file name (different on each machine)
-var port string = "8080"
-var machineNumber int = 10
-var filename string = "machine.10.log"
+var port string = "8086"
+var machineNumber int = 6
+var filename string = "machine.6.log"
 
 func main() {
 	// check whether it's a server (receiver) or client (sender)
 	if len(os.Args) > 1 && os.Args[1] == "client" { // run client
 		grep := strings.Join(os.Args[2:], " ")
 		client(grep)
+	} else if len(os.Args) > 1 && os.Args[1] == "test" {
+		machineName := os.Args[2]
+		fileContents := os.Args[3:]
+		sendFileContents(machineName,fileContents)
 	} else { // run server
-		server(port)
+		server()
 	}
 }
 
-func server(port string) {
+func server() {
 	// listen for connection from other machine 
 	ln, err := net.Listen("tcp", ":" + port)
     if err != nil {
@@ -54,6 +60,7 @@ func handleConnection(conn net.Conn) {
 	buf := make([]byte, 1024)
     n, _ := conn.Read(buf)
     command := string(buf[:n])
+
 	command = command + " " + filename
 
 	// run the grep command on machine
@@ -122,10 +129,44 @@ func sendCommand(port string, message string) {
         n, err := conn.Read(buf)
         if err != nil {
             if err == io.EOF {
+				fmt.Println(err)
                 break 
             }
             return
         }
         fmt.Print(string(buf[:n])) 
     }
+}
+
+func writeToFile(fileContents string) {
+	file, err := os.OpenFile(filename)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
+
+	// Create a new writer
+	writer := bufio.NewWriter(file)
+
+	// Iterate through the array and write each line
+	for _, line := range lines {
+		_, err := writer.WriteString(line + "\n") // Write each string with a newline
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+}
+
+func sendFileContents(machine string, contents string) {
+	conn, err := net.Dial("tcp", port)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    defer conn.Close()
+
+	// send the file contents to the machine
+    conn.Write([]byte(message))
 }
