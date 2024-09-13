@@ -8,8 +8,6 @@ import (
 	"os/exec"
 	"strings"
 	"io"
-	"lines"
-	"bufio"
 )
 
 //global variable for port. machine number, log file name (different on each machine)
@@ -22,10 +20,6 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "client" { // run client
 		grep := strings.Join(os.Args[2:], " ")
 		client(grep)
-	} else if len(os.Args) > 1 && os.Args[1] == "test" {
-		machineName := os.Args[2]
-		fileContents := os.Args[3:]
-		sendFileContents(machineName,fileContents)
 	} else { // run server
 		server()
 	}
@@ -136,37 +130,4 @@ func sendCommand(port string, message string) {
         }
         fmt.Print(string(buf[:n])) 
     }
-}
-
-func writeToFile(fileContents string) {
-	file, err := os.OpenFile(filename)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer file.Close()
-
-	// Create a new writer
-	writer := bufio.NewWriter(file)
-
-	// Iterate through the array and write each line
-	for _, line := range lines {
-		_, err := writer.WriteString(line + "\n") // Write each string with a newline
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-	}
-}
-
-func sendFileContents(machine string, contents string) {
-	conn, err := net.Dial("tcp", port)
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-    defer conn.Close()
-
-	// send the file contents to the machine
-    conn.Write([]byte(message))
 }
