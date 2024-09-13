@@ -7,10 +7,13 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"io"
 )
 
-//global variable for port (different on each machine)
-var port string = "8086"
+//global variable for port. machine number, log file name (different on each machine)
+var port string = "8080"
+var machineNumber int = 10
+var filename string = "machine.10.log"
 
 func main() {
 	// check whether it's a server (receiver) or client (sender)
@@ -51,7 +54,6 @@ func handleConnection(conn net.Conn) {
 	buf := make([]byte, 1024)
     n, _ := conn.Read(buf)
     command := string(buf[:n])
-	filename = "machine.6.log"
 	command = command + " " + filename
 
 	// run the grep command on machine
@@ -68,18 +70,42 @@ func handleConnection(conn net.Conn) {
 }
 
 func client(grep string) {
-	// have a list of ports for other machines
-	ports := []string{"8080", "8081", "8082", "8083", "8084", "8085", "8086", "8087", "8088", "8089"}
+	// have a list of addresses for other machines
+	ports := []string{"fa24-cs425-1201.cs.illinois.edu:8081", 
+						"fa24-cs425-1202.cs.illinois.edu:8082", 
+						"fa24-cs425-1203.cs.illinois.edu:8083", 
+						"fa24-cs425-1204.cs.illinois.edu:8084", 
+						"fa24-cs425-1205.cs.illinois.edu:8085", 
+						"fa24-cs425-1206.cs.illinois.edu:8086", 
+						"fa24-cs425-1207.cs.illinois.edu:8087", 
+						"fa24-cs425-1208.cs.illinois.edu:8088", 
+						"fa24-cs425-1209.cs.illinois.edu:8089",
+						"fa24-cs425-1210.cs.illinois.edu:8080"}
 	// loop through all other machines
 	for i := 0; i < len(ports); i++ {
-        // connect to each machine and send grep command
+        // check if we're on initial machine
+		if i == machineNumber - 1 {
+			fmt.Println("here")
+			command := grep + " " + filename
+			cmd := exec.Command("sh", "-c", command)
+			output, err := cmd.CombinedOutput()
+			
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Print(string(output))
+			return
+			
+		}
+		// connect to another machine and send grep command
 		sendCommand(ports[i], grep)
     }
 }
 
 func sendCommand(port string, message string) {
 	// conect to the port
-    conn, err := net.Dial("tcp", "localhost:"+port)
+    conn, err := net.Dial("tcp", port)
     if err != nil {
         fmt.Println(err)
         return
@@ -91,6 +117,15 @@ func sendCommand(port string, message string) {
 
 	// get the response from the machine
     buf := make([]byte, 1024)
-    n, _ := conn.Read(buf)
-	fmt.Println(string(buff[:n]))
+	// loop through whole response and print it till it reaches the end
+	for {
+        n, err := conn.Read(buf)
+        if err != nil {
+            if err == io.EOF {
+                break 
+            }
+            return
+        }
+        fmt.Print(string(buf[:n])) 
+    }
 }
