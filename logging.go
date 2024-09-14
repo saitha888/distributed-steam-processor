@@ -53,21 +53,57 @@ func handleConnection(conn net.Conn) {
 	// Get the grep command
 	buf := make([]byte, 1024)
     n, _ := conn.Read(buf)
-    command := string(buf[:n])
+    message := string(buf[:n])
 
-	command = command + " " + filename
+	if message[:4] == "grep" { // recieving a grep command
+		command := message + " " + filename
 
-	// run the grep command on machine
-	cmd := exec.Command("sh", "-c", command)
-	output, err := cmd.CombinedOutput()
-	
-	if err != nil {
-		fmt.Println(err)
-		return
+		// run the grep command on machine
+		cmd := exec.Command("sh", "-c", command)
+		output, err := cmd.CombinedOutput()
+		
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		
+		// send the result back to the initial machine
+		conn.Write(output)
+	} else { // recieving a message to generate log file
+		// Open the file to write the contents
+		file, err := os.Create(filename)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer file.Close()
+
+		// Write initial  chunk to the file
+		_, err = file.Write(buf[:n])
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		// Read from the connection in chunks and write to the file
+		for {
+			n, err := conn.Read(buf)
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				fmt.Println(err)
+				return 
+			}
+
+			// Write the chunk to the file
+			_, err = file.Write(buf[:n])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}
 	}
-	
-	// send the result back to the initial machine
-    conn.Write(output)
 }
 
 func client(grep string) {
