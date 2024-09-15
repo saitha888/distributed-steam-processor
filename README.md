@@ -23,8 +23,17 @@ go run logging.go client GET
 
 ### Running the Test Suite
 
-To run the test suite on a machine, run the following command:
+To run the test suite on any machine, run the following command:
 
 go run test.go
 
 This will execute our test file, which will go through each of our unit test cases and print whether or not we passed them.
+
+
+### Common Workflow
+
+1) Run the server command on all machines that are part of your distributed system 
+
+2) On one of the machines run the client command followed by a grep pattern 
+
+3) Check the output.txt file of the client machine for the aggregated output
