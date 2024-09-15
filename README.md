@@ -14,7 +14,7 @@ go run logging.go
 
 To start a client on a machine and send a grep command to all other machines in the system, run the following command:
 
-go run logging.go client <grep pattern>
+go run logging.go client **grep pattern**
 
 Make sure not to write the full grep command, but only the pattern which will query the files. For example, below is a valid call to the machine:
 
