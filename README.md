@@ -4,6 +4,13 @@ This project implements a distributed log querying system where each machine can
 
 ## Instructions
 
+### Cloning the Repository into a machine
+Cloning the repo into a machine so that it can run as a server and client involves a few additional steps:
+
+1. Change the port number to one you want to use
+2. Change the machine number to assigned number
+3. Change the filename variable to appropriate log file name for machine (_machine.i.log_)
+
 ### Running a Server (Listener)
 
 To start a server on a machine, run the following command:
