@@ -17,17 +17,22 @@ var machineNumber int = 6
 var filename string = "machine.6.log"
 
 func main() {
+
     // check whether it's a server (receiver) or client (sender)
     if len(os.Args) > 1 && os.Args[1] == "client" { // run client
         grep := os.Args[2]
-        print("patten: ", grep)
+        fmt.Println("pattern: ", grep)
         client(grep)
-    } else { // run server
+    } else { 
+
+        // run server
         server()
     }
 }
 
+//starts machine as a server listening for calls
 func server() {
+
     // listen for connection from other machine 
     ln, err := net.Listen("tcp", ":" + port)
     if err != nil {
@@ -48,17 +53,21 @@ func server() {
     }
 }
 
+//handler of any incoming connection from other machines
 func handleConnection(conn net.Conn) {
+
     // Close the connection when we're done
     defer conn.Close()
 
-    // Get the grep command
+    // Get the connection message
     buf := make([]byte, 1024)
     n, _ := conn.Read(buf)
     message := string(buf[:n])
 
-    if message[:4] == "grep" { // recieving a grep command
+    // Check if message is a grep command
+    if message[:4] == "grep" {
         grep := message + " " + filename
+
         // run the grep command on machine
         cmd := exec.Command("sh", "-c", grep)
         output, err := cmd.CombinedOutput()
@@ -70,10 +79,15 @@ func handleConnection(conn net.Conn) {
         
         // send the result back to the initial machine
         conn.Write(output)
-    } else if message[:5] == "client" {
-		totalLines := client("grep " + message[6:])
-		conn.Write([]byte(strconv.Itoa(totalLines)))
-	} else { // recieving a message to generate log file
+
+    // Check if message is a client call (for testing)
+    } else if message[:6] == "client" {
+        totalLines := client(message[7:])
+        conn.Write([]byte(strconv.Itoa(totalLines)))
+
+    //if not grep or command call, must be call to create a log file
+    } else { 
+
         // Open the file to write the contents
         file, err := os.Create(filename)
         if err != nil {
@@ -82,7 +96,7 @@ func handleConnection(conn net.Conn) {
         }
         defer file.Close()
 
-        // Write initial  chunk to the file
+        // Write initial chunk to the file
         _, err = file.Write(buf[:n])
         if err != nil {
             fmt.Println(err)
@@ -92,7 +106,10 @@ func handleConnection(conn net.Conn) {
         // Read from the connection in chunks and write to the file
         for {
             n, err := conn.Read(buf)
+
             if err != nil {
+
+                //break once at the end of the buffer
                 if err == io.EOF {
                     break
                 }
@@ -110,9 +127,14 @@ func handleConnection(conn net.Conn) {
     }
 }
 
+//goes through lists of ports, runs the grep command, prints aggregated results
 func client(pattern string) int {
+
     // Start the timer
     start := time.Now()
+
+    //Array for printing out machine line counts at the end
+    linesArr := []string{}
 
     // have a list of addresses for other machines
     ports := []string{
@@ -127,64 +149,90 @@ func client(pattern string) int {
                         "fa24-cs425-1209.cs.illinois.edu:8089",
                         "fa24-cs425-1210.cs.illinois.edu:8080",
                     }
+
     totalLines := 0
+
     // loop through all other machines
     for i := 0; i < len(ports); i++ {
+
         // check if we're on initial machine
         if i == machineNumber - 1 {
-            // fmt.Println("here")
+            
+            //if on initial machine, run grep commands on its log files
+            //first grep command for printing matching lines
             command := "grep -nH " + pattern + " " + filename
             cmd := exec.Command("sh", "-c", command)
             output, err := cmd.CombinedOutput()
-            
+            if err != nil {
+                fmt.Println("Error converting output to int:", err)
+                continue
+            }
+
+            //second grep command for printing matching line counts
             command2 := "grep -c " + pattern + " " + filename
             cmd2 := exec.Command("sh", "-c", command2)
             output2, err2 := cmd2.CombinedOutput()
-
-            if err != nil {
-                fmt.Println(err)
-                return 0
-            }
             if err2 != nil {
                 fmt.Println(err2)
-                return 0 
+                continue 
             }
+
+            //converts line grep command into int
+            lineStr := strings.TrimSpace(string(output2))
+            selfLineCount, err3 := strconv.Atoi(lineStr)
+            if err3 != nil {
+                fmt.Println(err3)
+                continue 
+            }
+
+            //append line counts for initial
+            lineStr = fmt.Sprintf("Machine %s: %d", ports[i][13:15], selfLineCount) + "\n"
+            linesArr = append(linesArr, lineStr)
+
+            totalLines += selfLineCount
+
             fmt.Print(string(output))
             fmt.Print(string(output2))
-            //FIX LINE COUNT OF SELF MACHINE
-            // c, e := strconv.Atoi(output2)
 
-            // if e != nil {
-            //     fmt.Println(e)
-            //     return
-            // }
-        }
+        //case for connecting to other machines and running grep command
+        } else {
+        
         grep_response := "grep -nH " + pattern
         grep_count := "grep -c " + pattern
-        //lineGrep := "grep -c" + pattern + " " + filename
 
-
-        // connect to another machine and send grep command
+        // connect to machine and send grep command
         sendCommand(ports[i], grep_response)
-        //connect to another machine and send grep line command
+
+        //connect to machine and send grep line command
         lineCount := sendLineCommand(ports[i], grep_count)
+        
+        //append line counts for connected machine
+        lineStr := fmt.Sprintf("Machine %s: %d", ports[i][13:15], lineCount) + "\n"
+        linesArr = append(linesArr, lineStr)
 
         totalLines += lineCount
+        }
     }
-    //Print total lines
+
+    //at end of query results, print out line counts for each machine, total line count
+    fmt.Print("Line count from each machines: \n\n")
+    fmt.Print(linesArr)
+    fmt.Print("\n\n")
     fmt.Print("Total line count: " + strconv.Itoa(totalLines) + "\n\n\n")
 
-    // Stop the timer
+    // stop the timer
     elapsed := time.Since(start)
 
-    // Output how long the command took
+    // output how long the process took
     fmt.Printf("Grep command took %s to complete.\n", elapsed)
     fmt.Println()
     return totalLines
 }
 
+//handler of grep query
 func sendCommand(port string, message string) {
-    // conect to the port
+
+    // connect to the port
     conn, err := net.Dial("tcp", port)
     if err != nil {
         fmt.Println(err)
@@ -197,7 +245,8 @@ func sendCommand(port string, message string) {
 
     // get the response from the machine
     buf := make([]byte, 1024)
-    // loop through whole response and print it till it reaches the end
+
+    // read the buf in chunks
     for {
         n, err := conn.Read(buf)
         if err != nil {
@@ -207,12 +256,15 @@ func sendCommand(port string, message string) {
             }
             return
         }
+
+        //print out query results
         fmt.Print(string(buf[:n])) 
     }
 }
 
+//handler of grep line query
 func sendLineCommand(port string, message string) int {
-    // conect to the port
+    // connect to the port
     conn, err := net.Dial("tcp", port)
     if err != nil {
         fmt.Println(err)
@@ -226,18 +278,8 @@ func sendLineCommand(port string, message string) int {
     // get the response from the machine
     buf := make([]byte, 1024)
     n, err := conn.Read(buf)
-    // loop through whole response and print it till it reaches the end
-    // for {
-    //     n, err := conn.Read(buf)
-    //     if err != nil {
-    //         if err == io.EOF {
-    //             fmt.Println(err)
-    //             break 
-    //         }
-    //         return
-    //     }
-    //     fmt.Print(string(buf[:n])) 
-    // }
+
+    // convert the response into int and return it back to client
     fmt.Printf("Line count from machine: ")
     fmt.Printf(string(buf[:n]) + "\n\n")
     lineCountStr := string(buf[:n])
