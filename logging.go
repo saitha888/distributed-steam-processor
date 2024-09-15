@@ -9,6 +9,7 @@ import (
     "io"
     "strconv"
     "time"
+    "bufio"
 )
 
 //global variable for port. machine number, log file name (different on each machine)
@@ -21,7 +22,6 @@ func main() {
     // check whether it's a server (receiver) or client (sender)
     if len(os.Args) > 1 && os.Args[1] == "client" { // run client
         grep := os.Args[2]
-        fmt.Println("pattern: ", grep)
         client(grep)
     } else { 
 
@@ -190,8 +190,11 @@ func client(pattern string) int {
             linesArr = append(linesArr, lineStr)
 
             totalLines += selfLineCount
-
-            fmt.Print(string(output))
+            
+            writer := bufio.NewWriter(os.Stdout)
+            fmt.Fprint(writer, output)
+            writer.Flush()
+            // fmt.Print(string(output))
             fmt.Print(string(output2))
 
         //case for connecting to other machines and running grep command
@@ -215,7 +218,6 @@ func client(pattern string) int {
     }
 
     //at end of query results, print out line counts for each machine, total line count
-    fmt.Print("Line count from each machines: \n\n")
     fmt.Print(linesArr)
     fmt.Print("\n\n")
     fmt.Print("Total line count: " + strconv.Itoa(totalLines) + "\n\n\n")
@@ -243,23 +245,19 @@ func sendCommand(port string, message string) {
     // send the grep command to the machine
     conn.Write([]byte(message))
 
-    // get the response from the machine
-    buf := make([]byte, 1024)
+    // write the command to an output file
+    file, err := os.Create("port_" + port + "-" + "output.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
 
-    // read the buf in chunks
-    for {
-        n, err := conn.Read(buf)
-        if err != nil {
-            if err == io.EOF {
-
-                break 
-            }
-            return
-        }
-
-        //print out query results
-        fmt.Print(string(buf[:n])) 
-    }
+	_, err = io.Copy(file, conn)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }
 
 //handler of grep line query
@@ -280,8 +278,6 @@ func sendLineCommand(port string, message string) int {
     n, err := conn.Read(buf)
 
     // convert the response into int and return it back to client
-    fmt.Printf("Line count from machine: ")
-    fmt.Printf(string(buf[:n]) + "\n\n")
     lineCountStr := string(buf[:n])
     lineCountStr = strings.TrimSpace(lineCountStr)
     lineCount, err := strconv.Atoi(lineCountStr)
