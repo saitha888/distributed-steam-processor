@@ -9,15 +9,22 @@ import (
     "io"
     "strconv"
     "time"
-    "bufio"
 )
 
 //global variable for port. machine number, log file name (different on each machine)
-var port string = "8086"
-var machineNumber int = 6
-var filename string = "machine.6.log"
+var port string = "8087"
+var machineNumber int = 7
+var filename string = "machine.7.log"
 
 func main() {
+
+    // clear the output file 
+    file, err := os.OpenFile("output.txt", os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return
+	}
+	defer file.Close()
 
     // check whether it's a server (receiver) or client (sender)
     if len(os.Args) > 1 && os.Args[1] == "client" { // run client
@@ -191,11 +198,19 @@ func client(pattern string) int {
 
             totalLines += selfLineCount
             
-            writer := bufio.NewWriter(os.Stdout)
-            fmt.Fprint(writer, output)
-            writer.Flush()
-            // fmt.Print(string(output))
-            fmt.Print(string(output2))
+            // write the command to an output file
+            file, err := os.OpenFile("output.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+            if err != nil {
+                fmt.Println(err)
+                continue
+            }
+            defer file.Close()
+
+            _, err = file.Write(output)
+            if err != nil {
+                fmt.Println(err)
+                continue
+            }
 
         //case for connecting to other machines and running grep command
         } else {
@@ -246,7 +261,7 @@ func sendCommand(port string, message string) {
     conn.Write([]byte(message))
 
     // write the command to an output file
-    file, err := os.Create("port_" + port + "-" + "output.txt")
+    file, err := os.OpenFile("output.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println(err)
 		return
