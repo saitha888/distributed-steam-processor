@@ -12,9 +12,9 @@ import (
 )
 
 //global variable for port. machine number, log file name (different on each machine)
-var port string = "8087"
-var machineNumber int = 7
-var filename string = "machine.7.log"
+var port string = ""
+var machineNumber int = -1
+var filename string = "machine.i.log"
 
 func main() {
 
