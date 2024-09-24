@@ -12,7 +12,8 @@ import (
 )
 
 //global variable for port. machine number, log file name (different on each machine)
-var port string = "8081"
+var tcp_port string = "8081"
+var udp_port string = "9091"
 var machineNumber int = 1
 var filename string = "machine.1.log"
 
@@ -46,15 +47,18 @@ func main() {
         client(grep)
     } else { 
 
-        // run server
-        go server()
-        fmt.Println("\n")
+        //run server
+        go tcpServer()
+        go udpServer()
+        go udpClient("fa24-cs425-1202.cs.illinois.edu:9092")
 
-        for {
-            displayMembershipList()
-            time.Sleep(2 * time.Second) // Update every 5 seconds
-            clearPrintedLines(3)
-        }
+        fmt.Println("\n")
+        select {}
+        // for {
+        //     displayMembershipList()
+        //     time.Sleep(2 * time.Second) // Update every 5 seconds
+        //     clearPrintedLines(3)
+        // }
     }
 }
 
@@ -63,7 +67,7 @@ func displayMembershipList() {
     fmt.Println("Membership List for Machine")
     fmt.Println(" IP                                     | Status")
     for i := 0; i < len(ports); i++ {
-        if port != ports[i][len(ports[i])-4:]{
+        if tcp_port != ports[i][len(ports[i])-4:]{
             fmt.Printf("%s    | alive \n", ports[i])
         }
     }
@@ -77,11 +81,11 @@ func clearPrintedLines(lines int) {
 }
 
 
-//starts machine as a server listening for calls
-func server() {
+//starts tcp server that listens for grep commands
+func tcpServer() {
 
     // listen for connection from other machine 
-    ln, err := net.Listen("tcp", ":" + port)
+    ln, err := net.Listen("tcp", ":" + tcp_port)
     if err != nil {
         fmt.Println(err)
         return
@@ -99,6 +103,82 @@ func server() {
         go handleConnection(conn)
     }
 }
+
+//starts ucp server that listens for pings
+func udpServer() {
+    addr, err := net.ResolveUDPAddr("udp", ":"+udp_port)
+    if err != nil {
+        fmt.Println("Error resolving address:", err)
+        return
+    }
+
+    conn, err := net.ListenUDP("udp", addr)
+    if err != nil {
+        fmt.Println("Error starting UDP server:", err)
+        return
+    }
+    defer conn.Close()
+
+    buf := make([]byte, 1024)
+
+    for {
+        n, addr, err := conn.ReadFromUDP(buf)
+        if err != nil {
+            fmt.Println("Error reading from UDP:", err)
+            continue
+        }
+
+        message := string(buf[:n])
+        fmt.Printf("Received Ping from %v: %s\n", addr, message)
+
+        // Respond with Ack
+        ack := "Ack"
+        conn.WriteToUDP([]byte(ack), addr)
+    }
+}
+
+// Function to act as a client and send ping messages to a target server
+func udpClient(targetAddr string) {
+    addr, err := net.ResolveUDPAddr("udp", targetAddr)
+    if err != nil {
+        fmt.Println("Error resolving server address:", err)
+        return
+    }
+
+    conn, err := net.DialUDP("udp", nil, addr)
+    if err != nil {
+        fmt.Println("Error connecting to server:", err)
+        return
+    }
+    defer conn.Close()
+
+    // Periodically send ping messages
+    for {
+        message := "Ping from client"
+        _, err = conn.Write([]byte(message))
+        if err != nil {
+            fmt.Println("Error sending message:", err)
+            return
+        }
+
+        // Buffer to store the response from the server
+        buf := make([]byte, 1024)
+
+        // Read the response from the server (acknowledgment)
+        n, _, err := conn.ReadFromUDP(buf)
+        if err != nil {
+            fmt.Println("Error reading from server:", err)
+            return
+        }
+
+        // Print the response from the server
+        fmt.Printf("Received response from server: %s\n", string(buf[:n]))
+
+        // Sleep for a while before sending the next ping
+        time.Sleep(6 * time.Second) // adjust the interval as needed
+    }
+}
+
 
 //handler of any incoming connection from other machines
 func handleConnection(conn net.Conn) {
