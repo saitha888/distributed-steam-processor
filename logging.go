@@ -12,9 +12,9 @@ import (
 )
 
 //global variable for port. machine number, log file name (different on each machine)
-var port string = ""
-var machineNumber int = -1
-var filename string = "machine.i.log"
+var port string = "8081"
+var machineNumber int = 1
+var filename string = "machine.1.log"
 
 func main() {
 
@@ -147,14 +147,14 @@ func client(pattern string) int {
     ports := []string{
                         "fa24-cs425-1201.cs.illinois.edu:8081", 
                         "fa24-cs425-1202.cs.illinois.edu:8082", 
-                        "fa24-cs425-1203.cs.illinois.edu:8083", 
-                        "fa24-cs425-1204.cs.illinois.edu:8084", 
-                        "fa24-cs425-1205.cs.illinois.edu:8085", 
-                        "fa24-cs425-1206.cs.illinois.edu:8086", 
-                        "fa24-cs425-1207.cs.illinois.edu:8087", 
-                        "fa24-cs425-1208.cs.illinois.edu:8088", 
-                        "fa24-cs425-1209.cs.illinois.edu:8089",
-                        "fa24-cs425-1210.cs.illinois.edu:8080",
+                        // "fa24-cs425-1203.cs.illinois.edu:8083", 
+                        // "fa24-cs425-1204.cs.illinois.edu:8084", 
+                        // "fa24-cs425-1205.cs.illinois.edu:8085", 
+                        // "fa24-cs425-1206.cs.illinois.edu:8086", 
+                        // "fa24-cs425-1207.cs.illinois.edu:8087", 
+                        // "fa24-cs425-1208.cs.illinois.edu:8088", 
+                        // "fa24-cs425-1209.cs.illinois.edu:8089",
+                        // "fa24-cs425-1210.cs.illinois.edu:8080",
                     }
 
     totalLines := 0
