@@ -31,6 +31,9 @@ func main() {
         go tcp.TcpServer()
         go udp.UdpServer()
 
+        go udp.JoinSystem()
+        go udp.PingClient()
+
 
         select {}
 
