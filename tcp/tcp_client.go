@@ -9,6 +9,8 @@ import (
     "io"
     "strconv"
     "time"
+    "github.com/joho/godotenv"
+
 )
 
 var ports = []string{
@@ -24,8 +26,9 @@ var ports = []string{
     // "fa24-cs425-1210.cs.illinois.edu:8080",
 }
 
-var machineNumber int = 2
-var filename string = "machine.7.log"
+var err2 = godotenv.Load(".env")
+var machineNumber string = os.Getenv("MACHINE_NUMBER")
+var filename string = os.Getenv("LOG_FILENAME")
 
 
 //goes through lists of ports, runs the grep command, prints aggregated results
@@ -41,6 +44,13 @@ func TcpClient(pattern string) int {
 
     // loop through all other machines
     for i := 0; i < len(ports); i++ {
+
+        machineNumber, err := strconv.Atoi(machineNumber)
+        if err != nil {
+            fmt.Println("Error converting APP_PORT:", err)
+        } else {
+            fmt.Printf("App Port: %d\n", machineNumber)
+        }
 
         // check if we're on initial machine
         if i == machineNumber - 1 {

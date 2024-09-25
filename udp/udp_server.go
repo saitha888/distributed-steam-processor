@@ -3,10 +3,16 @@ package udp
 import (
     "fmt"
     "net"
+    "os"
+    "github.com/joho/godotenv"
 )
+
+var err = godotenv.Load(".env")
+var udp_port string = os.Getenv("UDP_PORT")
+
 //starts udp server that listens for pings
-func UdpServer(port string) {
-    addr, err := net.ResolveUDPAddr("udp", ":"+port)
+func UdpServer() {
+    addr, err := net.ResolveUDPAddr("udp", ":"+udp_port)
     if err != nil {
         fmt.Println("Error resolving address:", err)
         return
