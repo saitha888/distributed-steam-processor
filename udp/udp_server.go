@@ -45,13 +45,37 @@ func UdpServer() {
         }
 
         message := string(buf[:n])
-        fmt.Printf("Received Ping from %v: %s\n", addr, message)
+        fmt.Println(len(message))
+        if message == "mem_list" {
+            nodes := make([]string, 0)
+            for _,node := range membership_list {
+                current_node := node.NodeID + " " + node.Status + " " + node.Timestamp
+                nodes = append(nodes, current_node)
+            }
+            result := strings.Join(nodes, ", ")
+            fmt.Println(result)
+            conn.WriteToUDP([]byte(result), addr)
+        } else {
+            fmt.Printf("Received Ping from %v: %s\n", addr, message)
 
-        // Respond with Ack
-        ack := "Ack"
-        conn.WriteToUDP([]byte(ack), addr)
+            // Respond with Ack
+            ack := "Ack"
+            conn.WriteToUDP([]byte(ack), addr)
+        }
     }
 }
+
+// func HandleIntroducerRejoin() {
+//     nodes := make([]string, 0)
+//     for _,node := range membership_list {
+//         conn.WriteToUDP([]byte(result), addr+ " " + node.Status + " " + node.Timestamp)
+//         nodes = append(nodes, current_node)
+//     }
+//     result := strings.Join(nodes, ", ")
+//     fmt.Println(result)
+//     conn.WriteToUDP([]byte(result), "fa24-cs425-1210.cs.illinois.edu:9080")
+// }
+
 
 func ListMem() {
     // Check if the membership list is empty

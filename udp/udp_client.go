@@ -55,12 +55,15 @@ func JoinSystem(nodeID string) {
 
     
 
+    
+
     // Print the response from the introducer (e.g., acknowledgment or membership list)
     fmt.Printf("Received response from introducer: %s\n", string(buf[:n]))
 
     // Optional: Sleep for a while before ending the client (to show acknowledgment)
     time.Sleep(3 * time.Second)
 }
+
 
 
 
