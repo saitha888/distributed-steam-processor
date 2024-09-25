@@ -6,7 +6,7 @@ import (
     "os"
 )
 
-var udp_port = os.Getenv("UDP_PORT")
+var udp_port string = os.Getenv("UDP_PORT")
 
 //starts udp server that listens for pings
 func UdpServer() {

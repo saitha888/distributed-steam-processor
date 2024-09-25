@@ -12,19 +12,19 @@ import (
 )
 
 var ports = []string{
-    "fa24-cs425-1201.cs.illinois.edu:8081", 
-    "fa24-cs425-1202.cs.illinois.edu:8082", 
-    "fa24-cs425-1203.cs.illinois.edu:8083", 
-    "fa24-cs425-1204.cs.illinois.edu:8084", 
-    "fa24-cs425-1205.cs.illinois.edu:8085", 
+    // "fa24-cs425-1201.cs.illinois.edu:8081", 
+    // "fa24-cs425-1202.cs.illinois.edu:8082", 
+    // "fa24-cs425-1203.cs.illinois.edu:8083", 
+    // "fa24-cs425-1204.cs.illinois.edu:8084", 
+    // "fa24-cs425-1205.cs.illinois.edu:8085", 
     "fa24-cs425-1206.cs.illinois.edu:8086", 
     "fa24-cs425-1207.cs.illinois.edu:8087", 
-    "fa24-cs425-1208.cs.illinois.edu:8088", 
-    "fa24-cs425-1209.cs.illinois.edu:8089",
-    "fa24-cs425-1210.cs.illinois.edu:8080",
+    // "fa24-cs425-1208.cs.illinois.edu:8088", 
+    // "fa24-cs425-1209.cs.illinois.edu:8089",
+    // "fa24-cs425-1210.cs.illinois.edu:8080",
 }
 
-var machineNumber int = strconv.Atoi(os.Getenv("MACHINE_NUMBER"))
+var machineNumber string = os.Getenv("MACHINE_NUMBER")
 var filename string = os.Getenv("LOG_FILENAME")
 
 
@@ -41,6 +41,13 @@ func TcpClient(pattern string) int {
 
     // loop through all other machines
     for i := 0; i < len(ports); i++ {
+
+        machineNumber, err := strconv.Atoi(machineNumber)
+        if err != nil {
+            fmt.Println("Error converting APP_PORT:", err)
+        } else {
+            fmt.Printf("App Port: %d\n", machineNumber)
+        }
 
         // check if we're on initial machine
         if i == machineNumber - 1 {

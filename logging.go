@@ -4,21 +4,16 @@ import (
     "fmt"
     "os"
     "distributed_system/tcp"
-    "distributed_system/udp"
+    // "distributed_system/udp"
 )
-
-//global variable for port. machine number, log file name (different on each machine)
-
-outputFilename = os.Getenv("OUTPUT_FILENAME")
-
 
 
 func main() {
 
     // clear the output file 
-    file, err := os.OpenFile(outputFilename, os.O_WRONLY|os.O_TRUNC, 0644)
+    file, err := os.OpenFile("output.txt", os.O_WRONLY|os.O_TRUNC, 0644)
     if err != nil {
-        fmt.Println("Error opening file:", err)
+        fmt.Println("Error opening file: ", err)
         return
     }
     defer file.Close()
@@ -31,6 +26,8 @@ func main() {
 
         //run server
         go tcp.TcpServer()
+
+        select {}
 
     }
 }

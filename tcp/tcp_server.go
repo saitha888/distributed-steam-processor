@@ -9,7 +9,7 @@ import (
     "strconv"
 )
 
-var tcp_port = os.Getenv("TCP_PORT")
+var tcp_port string = os.Getenv("TCP_PORT")
 
 //starts tcp server that listens for grep commands
 func TcpServer() {
