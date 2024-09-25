@@ -9,6 +9,7 @@ import (
     "io"
     "strconv"
     "time"
+    "github.com/joho/godotenv"
 
 )
 
@@ -25,7 +26,7 @@ var ports = []string{
     // "fa24-cs425-1210.cs.illinois.edu:8080",
 }
 
-
+var err2 = godotenv.Load(".env")
 var machineNumber string = os.Getenv("MACHINE_NUMBER")
 var filename string = os.Getenv("LOG_FILENAME")
 

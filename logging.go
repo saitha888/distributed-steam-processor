@@ -4,7 +4,7 @@ import (
     "fmt"
     "os"
     "distributed_system/tcp"
-    // "distributed_system/udp"
+    "distributed_system/udp"
     "github.com/joho/godotenv"
 )
 
@@ -29,6 +29,8 @@ func main() {
 
         //run server
         go tcp.TcpServer()
+        go udp.UdpServer()
+
 
         select {}
 
