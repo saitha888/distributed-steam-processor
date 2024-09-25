@@ -7,8 +7,10 @@ import (
     "os/exec"
     "io"
     "strconv"
+    "github.com/joho/godotenv"
 )
 
+var err = godotenv.Load(".env")
 var tcp_port string = os.Getenv("TCP_PORT")
 
 //starts tcp server that listens for grep commands

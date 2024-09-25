@@ -4,8 +4,10 @@ import (
     "fmt"
     "net"
     "os"
+    "github.com/joho/godotenv"
 )
 
+var err = godotenv.Load(".env")
 var udp_port string = os.Getenv("UDP_PORT")
 
 //starts udp server that listens for pings

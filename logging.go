@@ -5,10 +5,13 @@ import (
     "os"
     "distributed_system/tcp"
     // "distributed_system/udp"
+    "github.com/joho/godotenv"
 )
 
 
 func main() {
+
+    err := godotenv.Load(".env")
 
     // clear the output file 
     file, err := os.OpenFile("output.txt", os.O_WRONLY|os.O_TRUNC, 0644)

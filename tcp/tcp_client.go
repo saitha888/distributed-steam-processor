@@ -9,6 +9,7 @@ import (
     "io"
     "strconv"
     "time"
+
 )
 
 var ports = []string{
@@ -23,6 +24,7 @@ var ports = []string{
     // "fa24-cs425-1209.cs.illinois.edu:8089",
     // "fa24-cs425-1210.cs.illinois.edu:8080",
 }
+
 
 var machineNumber string = os.Getenv("MACHINE_NUMBER")
 var filename string = os.Getenv("LOG_FILENAME")
