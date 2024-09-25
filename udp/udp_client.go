@@ -7,7 +7,7 @@ import (
 )
 
 // Function to act as a client and send ping messages to a target server
-func UdpClient(targetAddr string) {
+func UdpClient(targetAddr string, type string) {
     addr, err := net.ResolveUDPAddr("udp", targetAddr)
     if err != nil {
         fmt.Println("Error resolving server address:", err)

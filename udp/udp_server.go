@@ -5,10 +5,20 @@ import (
     "net"
     "os"
     "github.com/joho/godotenv"
+    "time"
 )
 
 var err = godotenv.Load(".env")
 var udp_port string = os.Getenv("UDP_PORT")
+var addr string = os.Getenv("MACHINE_ADDRESS")
+
+var type Node struct {
+    NodeID    string    // Unique node ID (e.g., "IP:Port-Version")
+    Status    string    // Status of the node: "alive", "failed", "left"
+    Timestamp time.Time // Timestamp for the most recent status update
+}
+
+var membership_list []Node
 
 //starts udp server that listens for pings
 func UdpServer() {
