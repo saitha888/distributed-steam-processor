@@ -5,17 +5,17 @@ import (
     "net"
     "os"
     "github.com/joho/godotenv"
-    "time"
+    "strings"
 )
 
 var err = godotenv.Load(".env")
 var udp_port string = os.Getenv("UDP_PORT")
-var addr string = os.Getenv("MACHINE_ADDRESS")
 
-var type Node struct {
+
+type Node struct {
     NodeID    string    // Unique node ID (e.g., "IP:Port-Version")
     Status    string    // Status of the node: "alive", "failed", "left"
-    Timestamp time.Time // Timestamp for the most recent status update
+    Timestamp string // Timestamp for the most recent status update
 }
 
 var membership_list []Node
@@ -50,6 +50,27 @@ func UdpServer() {
         // Respond with Ack
         ack := "Ack"
         conn.WriteToUDP([]byte(ack), addr)
+    }
+}
+
+func ListMem() {
+    // Check if the membership list is empty
+    if len(membership_list) == 0 {
+        fmt.Println("Membership list is empty.")
+        return
+    }
+
+    // Set column widths for alignment
+    nodeIDWidth := 54
+    statusWidth := 4
+
+    // Print header with formatted columns
+    fmt.Printf("%-*s | %-*s | %s\n", nodeIDWidth, "NodeID", statusWidth, "Status", "Last Updated")
+    fmt.Println(strings.Repeat("-", nodeIDWidth+statusWidth+25))
+
+    // Iterate over the membership list and print each entry
+    for _, node := range membership_list {
+        fmt.Printf("%s | %s  | %s\n",node.NodeID, node.Status, node.Timestamp)
     }
 }
 

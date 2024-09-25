@@ -4,7 +4,9 @@ import (
     "fmt"
     "net"
     "time"
+    "strings"
 )
+
 
 func JoinSystem(nodeID string) {
     addr, err := net.ResolveUDPAddr("udp", "fa24-cs425-1210.cs.illinois.edu:9080")
@@ -37,6 +39,21 @@ func JoinSystem(nodeID string) {
         fmt.Println("Error reading from introducer:", err)
         return
     }
+    memb_list_string := string(buf[:n])
+    memb_list := strings.Split(memb_list_string,", ")
+    fmt.Println(memb_list)
+
+    for _,node :=  range memb_list {
+        node_vars := strings.Split(node, " ")
+        new_node := Node{
+            NodeID:    node_vars[0],  
+            Status:    node_vars[1],           
+            Timestamp: node_vars[2],
+        }
+        membership_list = append(membership_list, new_node) 
+    }
+
+    
 
     // Print the response from the introducer (e.g., acknowledgment or membership list)
     fmt.Printf("Received response from introducer: %s\n", string(buf[:n]))
@@ -46,44 +63,46 @@ func JoinSystem(nodeID string) {
 }
 
 
+
+
 // Function to act as a client and send ping messages to a target server
-func PingClient(targetAddr string, type string) {
-    addr, err := net.ResolveUDPAddr("udp", targetAddr)
-    if err != nil {
-        fmt.Println("Error resolving server address:", err)
-        return
-    }
+// func PingClient(targetAddr string, type string) {
+//     addr, err := net.ResolveUDPAddr("udp", targetAddr)
+//     if err != nil {
+//         fmt.Println("Error resolving server address:", err)
+//         return
+//     }
 
-    conn, err := net.DialUDP("udp", nil, addr)
-    if err != nil {
-        fmt.Println("Error connecting to server:", err)
-        return
-    }
-    defer conn.Close()
+//     conn, err := net.DialUDP("udp", nil, addr)
+//     if err != nil {
+//         fmt.Println("Error connecting to server:", err)
+//         return
+//     }
+//     defer conn.Close()
 
-    // Periodically send ping messages
-    for {
-        message := "Ping from client"
-        _, err = conn.Write([]byte(message))
-        if err != nil {
-            fmt.Println("Error sending message:", err)
-            return
-        }
+//     // Periodically send ping messages
+//     for {
+//         message := "Ping from client"
+//         _, err = conn.Write([]byte(message))
+//         if err != nil {
+//             fmt.Println("Error sending message:", err)
+//             return
+//         }
 
-        // Buffer to store the response from the server
-        buf := make([]byte, 1024)
+//         // Buffer to store the response from the server
+//         buf := make([]byte, 1024)
 
-        // Read the response from the server (acknowledgment)
-        n, _, err := conn.ReadFromUDP(buf)
-        if err != nil {
-            fmt.Println("Error reading from server:", err)
-            return
-        }
+//         // Read the response from the server (acknowledgment)
+//         n, _, err := conn.ReadFromUDP(buf)
+//         if err != nil {
+//             fmt.Println("Error reading from server:", err)
+//             return
+//         }
 
-        // Print the response from the server
-        fmt.Printf("Received response from server: %s\n", string(buf[:n]))
+//         // Print the response from the server
+//         fmt.Printf("Received response from server: %s\n", string(buf[:n]))
 
-        // Sleep for a while before sending the next ping
-        time.Sleep(6 * time.Second) // adjust the interval as needed
-    }
-}
+//         // Sleep for a while before sending the next ping
+//         time.Sleep(6 * time.Second) // adjust the interval as needed
+//     }
+// }

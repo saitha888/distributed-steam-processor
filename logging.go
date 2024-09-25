@@ -6,7 +6,10 @@ import (
     "distributed_system/tcp"
     "distributed_system/udp"
     "github.com/joho/godotenv"
+    "bufio"
 )
+
+var addr string = os.Getenv("MACHINE_ADDRESS")
 
 
 func main() {
@@ -30,12 +33,33 @@ func main() {
         //run server
         go tcp.TcpServer()
         go udp.UdpServer()
-
-        go udp.JoinSystem()
-        go udp.PingClient()
+        commandLoop()
+        
+        // go udp.PingClient()
 
 
         select {}
 
+    }
+}
+
+func commandLoop() {
+    scanner := bufio.NewScanner(os.Stdin)
+    for {
+        fmt.Print("> ") // CLI prompt
+        scanner.Scan()
+        command := scanner.Text()
+
+        switch command {
+
+        case "join":
+            go udp.JoinSystem(addr)
+        
+        case "list_mem":
+            go udp.ListMem()
+
+        default:
+            fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")
+        }
     }
 }
