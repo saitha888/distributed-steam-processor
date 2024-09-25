@@ -3,11 +3,6 @@ package udp
 import (
     "fmt"
     "net"
-    "os"
-    "os/exec"
-    "strings"
-    "io"
-    "strconv"
     "time"
 )
 

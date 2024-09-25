@@ -11,6 +11,23 @@ import (
     "time"
 )
 
+var ports = []string{
+    // "fa24-cs425-1201.cs.illinois.edu:8081", 
+    // "fa24-cs425-1202.cs.illinois.edu:8082", 
+    // "fa24-cs425-1203.cs.illinois.edu:8083", 
+    // "fa24-cs425-1204.cs.illinois.edu:8084", 
+    // "fa24-cs425-1205.cs.illinois.edu:8085", 
+    "fa24-cs425-1206.cs.illinois.edu:8086", 
+    "fa24-cs425-1207.cs.illinois.edu:8087", 
+    // "fa24-cs425-1208.cs.illinois.edu:8088", 
+    // "fa24-cs425-1209.cs.illinois.edu:8089",
+    // "fa24-cs425-1210.cs.illinois.edu:8080",
+}
+
+var machineNumber int = 2
+var filename string = "machine.7.log"
+
+
 //goes through lists of ports, runs the grep command, prints aggregated results
 func TcpClient(pattern string) int {
 

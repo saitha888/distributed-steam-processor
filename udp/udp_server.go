@@ -3,14 +3,7 @@ package udp
 import (
     "fmt"
     "net"
-    "os"
-    "os/exec"
-    "strings"
-    "io"
-    "strconv"
-    "time"
 )
-
 //starts udp server that listens for pings
 func UdpServer(port string) {
     addr, err := net.ResolveUDPAddr("udp", ":"+port)

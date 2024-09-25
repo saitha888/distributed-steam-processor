@@ -5,11 +5,11 @@ import (
     "net"
     "os"
     "os/exec"
-    "strings"
     "io"
     "strconv"
-    "time"
 )
+
+var tcp_port = "8087"
 
 //starts tcp server that listens for grep commands
 func TcpServer() {
