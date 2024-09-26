@@ -102,7 +102,7 @@ func PingClient() {
     defer conn.Close()
 
     // Send a ping message
-    message := fmt.Sprintf("ping from %s", node_id)
+    message := fmt.Sprintf("ping")
     _, err = conn.Write([]byte(message))
     if err != nil {
         fmt.Println("Error sending ping message:", err)

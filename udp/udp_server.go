@@ -55,12 +55,39 @@ func UdpServer() {
             result := strings.Join(nodes, ", ")
             fmt.Println(result)
             conn.WriteToUDP([]byte(result), addr)
-        } else {
-            fmt.Printf("Received Ping from %v: %s\n", addr, message)
+        } else if message == "ping" {
+            // fmt.Printf("Received Ping from %v: %s\n", addr, message)
 
             // Respond with Ack
             ack := "Ack"
             conn.WriteToUDP([]byte(ack), addr)
+        } else if message[:4] == "fail" {
+            node_id := message[5:]
+            for index,node := range membership_list {
+                if node_id == node.NodeID { // remove the node if it's found
+                    membership_list = append(membership_list[:index], membership_list[index+1:]...)
+                }
+            }
+            message := fmt.Sprintf("%s deleted", node_id)
+            conn.WriteToUDP([]byte(message), addr)
+        } else if message[:4] == "join" {
+            node_id := message[5:]
+            node_timestamp := message[len(message)-19:]
+            found := false
+            for _,node := range membership_list {
+                if node_id == node.NodeID {
+                    found = true
+                    break
+                }
+            }
+            if found == false { // add the node if it's not already in membership list
+                new_node := Node{
+                    NodeID:    node_id,  
+                    Status:    "alive",           
+                    Timestamp: node_timestamp,
+                }
+                membership_list = append(membership_list, new_node)
+            }
         }
     }
 }
