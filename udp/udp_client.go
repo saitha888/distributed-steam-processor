@@ -117,13 +117,41 @@ func PingClient() {
     if err != nil {
         fmt.Println("Error reading ack from target node:", err)
         
-        // for _,node := range membership_list {
-        //     sendFailure()
-        // }
+        for _,node := range membership_list {
+            sendFailure(node.NodeID)
+        }
     }
 
     ack_message := string(buf[:n])
     fmt.Printf("Received ack from %s: %s\n", target_node.NodeID, ack_message)
+}
+
+func sendFailure(node_id string) {
+
+    target_addr := node_id[:36]
+    // target_addr := "fa24-cs425-1202.cs.illinois.edu:9082"
+
+
+    addr, err := net.ResolveUDPAddr("udp", target_addr)
+    if err != nil {
+        fmt.Println("Error resolving target address:", err)
+        return
+    }
+
+    // Dial UDP to the target node
+    conn, err := net.DialUDP("udp", nil, addr)
+    if err != nil {
+        fmt.Println("Error connecting to target node:", err)
+        return
+    }
+
+    defer conn.Close()
+    message := fmt.Sprintf("fail %s", node_id)
+    _, err = conn.Write([]byte(message))
+    if err != nil {
+        fmt.Println("Error sending fail message:", err)
+        return
+    }
 }
 
 
