@@ -7,6 +7,7 @@ import (
     "distributed_system/udp"
     "github.com/joho/godotenv"
     "bufio"
+    "time"
 )
 
 var addr string = os.Getenv("MACHINE_ADDRESS")
@@ -54,7 +55,12 @@ func commandLoop() {
 
         case "join":
             go udp.JoinSystem(addr)
-        
+            for {
+                time.Sleep(5 * time.Second)
+                go udp.PingClient()
+                
+            }
+            
         case "list_mem":
             go udp.ListMem()
 
