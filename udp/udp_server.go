@@ -71,6 +71,7 @@ func UdpServer() {
             message := fmt.Sprintf("%s deleted", node_id)
             conn.WriteToUDP([]byte(message), addr)
         } else if message[:4] == "join" {
+            fmt.Println("Join req received")
             node_id := message[5:]
             node_timestamp := message[len(message)-19:]
             found := false
@@ -89,8 +90,8 @@ func UdpServer() {
                 membership_list = append(membership_list, new_node)
             }
             fmt.Println("%s joined", node_id)
-            // message := fmt.Sprintf("%s joined", node_id)
-            // conn.WriteToUDP([]byte(message), addr)
+            message := fmt.Sprintf("%s joined", node_id)
+            conn.WriteToUDP([]byte(message), addr)
         }
     }
 }

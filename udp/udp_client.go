@@ -12,7 +12,7 @@ import (
 var node_id = ""
 
 func JoinSystem(address string) {
-    addr, err := net.ResolveUDPAddr("udp", "fa24-cs425-1203.cs.illinois.edu:9083")
+    addr, err := net.ResolveUDPAddr("udp", "fa24-cs425-1210.cs.illinois.edu:9080")
     if err != nil {
         fmt.Println("Error resolving introducer address:", err)
         return
