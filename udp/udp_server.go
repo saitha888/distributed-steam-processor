@@ -88,8 +88,9 @@ func UdpServer() {
                 }
                 membership_list = append(membership_list, new_node)
             }
-            message := fmt.Sprintf("%s joined", node_id)
-            conn.WriteToUDP([]byte(message), addr)
+            fmt.Println("%s joined", node_id)
+            // message := fmt.Sprintf("%s joined", node_id)
+            // conn.WriteToUDP([]byte(message), addr)
         }
     }
 }
