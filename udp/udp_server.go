@@ -45,7 +45,6 @@ func UdpServer() {
         }
 
         message := string(buf[:n])
-        fmt.Println(len(message))
         if message == "mem_list" {
             nodes := make([]string, 0)
             for _,node := range membership_list {

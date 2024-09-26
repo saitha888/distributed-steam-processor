@@ -55,11 +55,12 @@ func commandLoop() {
 
         case "join":
             go udp.JoinSystem(addr)
-            for {
-                time.Sleep(5 * time.Second)
-                go udp.PingClient()
-                
-            }
+            go func() {
+                for {
+                    time.Sleep(5 * time.Second)  // Sleep for 5 seconds between pings
+                    udp.PingClient()              // Call PingClient to ping a random node
+                }
+            }()
             
         case "list_mem":
             go udp.ListMem()
