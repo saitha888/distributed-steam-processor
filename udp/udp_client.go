@@ -6,29 +6,20 @@ import (
     "time"
     "strings"
     "math/rand"
-    "os"
 )
 
 var node_id string = ""
 
 func JoinSystem(address string) {
-    addr, err := net.ResolveUDPAddr("udp", "fa24-cs425-1210.cs.illinois.edu:9080")
-    if err != nil {
-        fmt.Println("Error resolving introducer address:", err)
-        return
-    }
 
-    conn, err := net.DialUDP("udp", nil, addr)
-    if err != nil {
-        fmt.Println("Error connecting to introducer:", err)
-        return
-    }
+    conn, err := DialUDPClient("fa24-cs425-1210.cs.illinois.edu:9080")
     defer conn.Close()
 
     // Send the address to the introducer
     if node_id == "" {
         node_id = address + "_" + time.Now().Format("2006-01-02_15:04:05")
     }
+
     message := fmt.Sprintf("join %s", node_id) // Format the message as "join <address>"
     _, err = conn.Write([]byte(message))
     if err != nil {
@@ -36,7 +27,7 @@ func JoinSystem(address string) {
         return
     }
 
-    // Buffer to store the response from the introducer (optional)
+
     buf := make([]byte, 1024)
 
     // Read the response from the introducer (acknowledgment or membership list)
@@ -53,16 +44,9 @@ func JoinSystem(address string) {
 
     for _,node :=  range memb_list {
         node_vars := strings.Split(node, " ")
-        new_node := Node{
-            NodeID:    node_vars[0],  
-            Status:    node_vars[1],           
-            Timestamp: node_vars[2],
-        }
-        if new_node.NodeID[:36] == os.Getenv("MACHINE_ADDRESS") {
-            node_id = new_node.NodeID
-        }
-        membership_list = append(membership_list, new_node) 
+        AddNode(node_vars[0], node_vars[1], node_vars[2])
     }
+
     // Print the response from the introducer (e.g., acknowledgment or membership list)
     fmt.Printf("Received response from introducer: %s\n", string(buf[:n]))
 
@@ -74,36 +58,13 @@ func JoinSystem(address string) {
 // Function to randomly select one node and ping it
 func PingClient() {
 
-    rand.Seed(time.Now().UnixNano())
-
-    // Select a random node that is not the current machine
-    var target_node *Node
-    for {
-        random_index := rand.Intn(len(membership_list))
-        selected_node := membership_list[random_index]
-
-        if selected_node.NodeID != node_id && selected_node.Status == "alive" { 
-            target_node = &selected_node
-            break
-        }
-    }
+    target_node := SelectRandomNode()
 
     target_addr := target_node.NodeID[:36]
     // target_addr := "fa24-cs425-1202.cs.illinois.edu:9082"
 
 
-    addr, err := net.ResolveUDPAddr("udp", target_addr)
-    if err != nil {
-        fmt.Println("Error resolving target address:", err)
-        return
-    }
-
-    // Dial UDP to the target node
-    conn, err := net.DialUDP("udp", nil, addr)
-    if err != nil {
-        fmt.Println("Error connecting to target node:", err)
-        return
-    }
+    conn, err := DialUDPClient(target_addr)
     defer conn.Close()
 
     // Send a ping message
@@ -121,13 +82,9 @@ func PingClient() {
     _, _, err2 := conn.ReadFromUDP(buf)
     if err2 != nil {
         fmt.Println("Error reading ack from target node:", err2)
-        for index,node := range membership_list {
-            if target_node.NodeID == node.NodeID { // remove the node if it's found
-                membership_list = append(membership_list[:index], membership_list[index+1:]...)
-            }
-        }
+        RemoveNode(target_node.NodeID)
         for _,node := range membership_list {
-            sendFailure(node.NodeID, target_node.NodeID)
+            SendFailure(node.NodeID, target_node.NodeID)
         }
     }
 
@@ -135,25 +92,9 @@ func PingClient() {
     // fmt.Printf("Received ack from %s: %s\n", target_node.NodeID, ack_message)
 }
 
-func sendFailure(node_id string, to_delete string) {
-
+func SendFailure(node_id string, to_delete string) {
     target_addr := node_id[:36]
-    // target_addr := "fa24-cs425-1202.cs.illinois.edu:9082"
-
-
-    addr, err := net.ResolveUDPAddr("udp", target_addr)
-    if err != nil {
-        fmt.Println("Error resolving target address:", err)
-        return
-    }
-
-    // Dial UDP to the target node
-    conn, err := net.DialUDP("udp", nil, addr)
-    if err != nil {
-        fmt.Println("Error connecting to target node:", err)
-        return
-    }
-
+    conn, err := DialUDPClient(target_addr)
     defer conn.Close()
     message := fmt.Sprintf("fail %s", to_delete)
     _, err = conn.Write([]byte(message))
@@ -166,23 +107,17 @@ func sendFailure(node_id string, to_delete string) {
 func LeaveList() {
     // change own status to left, inform other machines to change status to left
     for _,node :=  range membership_list {
-        fmt.Println("global variable node id " + node_id)
         if node.NodeID == node_id { // check if at self
             node.Status = "left"
-        } else { // other machine
+        } else { 
+
+            // other machine
             node_address := node.NodeID[:36]
+            
             // connect to machine 
-            addr, err := net.ResolveUDPAddr("udp", node_address)
-            if err != nil {
-                fmt.Println("Error resolving target address:", err)
-                return
-            }
-            conn, err := net.DialUDP("udp", nil, addr)
-            if err != nil {
-                fmt.Println("Error connecting to target node:", err)
-                return
-            }
+            conn, err := DialUDPClient(node_address)
             defer conn.Close()
+
             // send leave message
             message := fmt.Sprintf("leave " + node_id)
             _, err = conn.Write([]byte(message))
@@ -193,3 +128,44 @@ func LeaveList() {
         }
     }
 }
+
+// helper function to resolve and dial a UDP connection.
+func DialUDPClient(target_addr string) (*net.UDPConn, error) {
+
+    // Resolve the UDP address
+    addr, err := net.ResolveUDPAddr("udp", target_addr)
+    if err != nil {
+        fmt.Println("Error resolving target address:", err)
+        return nil, err
+    }
+
+    // Dial UDP to the target node
+    conn, err := net.DialUDP("udp", nil, addr)
+    if err != nil {
+        fmt.Println("Error connecting to target node:", err)
+        return nil, err
+    }
+
+    return conn, nil
+}
+
+//function that selects random machine to pig
+func SelectRandomNode() *Node {
+    rand.Seed(time.Now().UnixNano())
+
+    // Select a random node that is not the current machine
+    var target_node *Node
+    for {
+        random_index := rand.Intn(len(membership_list))
+        selected_node := membership_list[random_index]
+
+        if selected_node.NodeID != node_id && selected_node.Status == "alive" { 
+            target_node = &selected_node
+            break
+        }
+    }
+    return target_node
+}
+
+
+
