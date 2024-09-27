@@ -11,7 +11,7 @@ import (
 )
 
 var addr string = os.Getenv("MACHINE_ADDRESS")
-
+var stopPing chan bool
 
 func main() {
 
@@ -44,6 +44,26 @@ func main() {
     }
 }
 
+func startPinging() {
+	// Initialize or reset the stop channel for a new pinging session
+	stopPing = make(chan bool)
+
+	// Start the ping loop in a Goroutine
+	go func() {
+		for {
+			select {
+			case <-stopPing: // Check if a signal to stop the loop is received
+				fmt.Println("Stopping PingClient...")
+				return
+			default:
+				// Sleep and then ping a random node
+				time.Sleep(5 * time.Second)
+				udp.PingClient()
+			}
+		}
+	}()
+}
+
 func commandLoop() {
     scanner := bufio.NewScanner(os.Stdin)
     for {
@@ -55,15 +75,19 @@ func commandLoop() {
 
         case "join":
             go udp.JoinSystem(addr)
-            go func() {
-                for {
-                    time.Sleep(5 * time.Second)  // Sleep for 5 seconds between pings
-                    udp.PingClient()              // Call PingClient to ping a random node
-                }
-            }()
-            
+    
+            // Start pinging if joining the system
+            startPinging()
+    
         case "list_mem":
             go udp.ListMem()
+    
+        case "leave":
+            // Send a signal to stop the ping loop
+            if stopPing != nil {
+                close(stopPing) // Close the stopPing channel to stop the ping loop
+            }
+            go udp.LeaveList()
 
         default:
             fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")

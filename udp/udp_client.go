@@ -9,10 +9,10 @@ import (
     "os"
 )
 
-var node_id = ""
+var node_id string = ""
 
 func JoinSystem(address string) {
-    addr, err := net.ResolveUDPAddr("udp", "fa24-cs425-1203.cs.illinois.edu:9083")
+    addr, err := net.ResolveUDPAddr("udp", "fa24-cs425-1210.cs.illinois.edu:9080")
     if err != nil {
         fmt.Println("Error resolving introducer address:", err)
         return
@@ -26,7 +26,8 @@ func JoinSystem(address string) {
     defer conn.Close()
 
     // Send the address to the introducer
-    message := fmt.Sprintf("join %s", address) // Format the message as "join <address>"
+    node_id := address + "_" + time.Now().Format("2006-01-02_15:04:05")
+    message := fmt.Sprintf("join %s", node_id) // Format the message as "join <address>"
     _, err = conn.Write([]byte(message))
     if err != nil {
         fmt.Println("Error sending message to introducer:", err)
@@ -154,48 +155,33 @@ func sendFailure(node_id string, to_delete string) {
     }
 }
 
-
-
-
-
-// Function to act as a client and send ping messages to a target server
-// func PingClient(targetAddr string, type string) {
-//     addr, err := net.ResolveUDPAddr("udp", targetAddr)
-//     if err != nil {
-//         fmt.Println("Error resolving server address:", err)
-//         return
-//     }
-
-//     conn, err := net.DialUDP("udp", nil, addr)
-//     if err != nil {
-//         fmt.Println("Error connecting to server:", err)
-//         return
-//     }
-//     defer conn.Close()
-
-//     // Periodically send ping messages
-//     for {
-//         message := "Ping from client"
-//         _, err = conn.Write([]byte(message))
-//         if err != nil {
-//             fmt.Println("Error sending message:", err)
-//             return
-//         }
-
-//         // Buffer to store the response from the server
-//         buf := make([]byte, 1024)
-
-//         // Read the response from the server (acknowledgment)
-//         n, _, err := conn.ReadFromUDP(buf)
-//         if err != nil {
-//             fmt.Println("Error reading from server:", err)
-//             return
-//         }
-
-//         // Print the response from the server
-//         fmt.Printf("Received response from server: %s\n", string(buf[:n]))
-
-//         // Sleep for a while before sending the next ping
-//         time.Sleep(6 * time.Second) // adjust the interval as needed
-//     }
-// }
+func LeaveList() {
+    // change own status to left, inform other machines to change status to left
+    for _,node :=  range membership_list {
+        fmt.Println("global variable node id " + node_id)
+        if node.NodeID == node_id { // check if at self
+            node.Status = "left"
+        } else { // other machine
+            node_address := node.NodeID[:36]
+            // connect to machine 
+            addr, err := net.ResolveUDPAddr("udp", node_address)
+            if err != nil {
+                fmt.Println("Error resolving target address:", err)
+                return
+            }
+            conn, err := net.DialUDP("udp", nil, addr)
+            if err != nil {
+                fmt.Println("Error connecting to target node:", err)
+                return
+            }
+            defer conn.Close()
+            // send leave message
+            message := fmt.Sprintf("leave " + node_id)
+            _, err = conn.Write([]byte(message))
+            if err != nil {
+                fmt.Println("Error sending ping message:", err)
+                return
+            }
+        }
+    }
+}
