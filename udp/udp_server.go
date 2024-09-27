@@ -74,9 +74,10 @@ func UdpServer() {
             node_id := message[5:]
             node_timestamp := message[len(message)-19:]
             found := false
-            for _,node := range membership_list {
+            for i,node := range membership_list {
                 if node_id == node.NodeID {
                     found = true
+                    changeStatus(i, "alive")
                     break
                 }
             }
@@ -87,7 +88,7 @@ func UdpServer() {
                     Timestamp: node_timestamp,
                 }
                 membership_list = append(membership_list, new_node)
-            }
+            } 
             fmt.Println("%s joined", node_id)
             message := fmt.Sprintf("%s joined", node_id)
             conn.WriteToUDP([]byte(message), addr)
@@ -97,15 +98,15 @@ func UdpServer() {
             fmt.Println("checking this node: " + node_id)
             for index,node := range membership_list {
                 if node_id == node.NodeID {
-                    changeStatus(index)
+                    changeStatus(index, "left")
                 }
             }
         }
     }
 }
 
-func changeStatus(index int){
-    membership_list[index].Status = "left"
+func changeStatus(index int, message string){
+    membership_list[index].Status = message
 }
 
 // func HandleIntroducerRejoin() {
