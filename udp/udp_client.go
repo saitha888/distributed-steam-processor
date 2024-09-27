@@ -118,17 +118,21 @@ func PingClient() {
 
     conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 
-    n, _, err := conn.ReadFromUDP(buf)
-    if err != nil {
-        fmt.Println("Error reading ack from target node:", err)
-        
+    _, _, err2 := conn.ReadFromUDP(buf)
+    if err2 != nil {
+        fmt.Println("Error reading ack from target node:", err2)
+        for index,node := range membership_list {
+            if target_node.NodeID == node.NodeID { // remove the node if it's found
+                membership_list = append(membership_list[:index], membership_list[index+1:]...)
+            }
+        }
         for _,node := range membership_list {
             sendFailure(node.NodeID, target_node.NodeID)
         }
     }
 
-    ack_message := string(buf[:n])
-    fmt.Printf("Received ack from %s: %s\n", target_node.NodeID, ack_message)
+    // ack_message := string(buf[:n])
+    // fmt.Printf("Received ack from %s: %s\n", target_node.NodeID, ack_message)
 }
 
 func sendFailure(node_id string, to_delete string) {
