@@ -6,6 +6,7 @@ import (
     "os"
     "github.com/joho/godotenv"
     "strings"
+    "time"
 )
 
 // global variables
@@ -45,6 +46,7 @@ func UdpServer() {
             conn.WriteToUDP([]byte(ack), addr)
         } else if message[:4] == "fail" { // machine failure detected
             failed_node := message[5:]
+            fmt.Println("Failed node deleted: " + failed_node + " " + time.Now().Format("15:04:05"))
             RemoveNode(failed_node)
         } else if message[:4] == "join" { // new machine joined
             joined_node := message[5:]
@@ -53,7 +55,7 @@ func UdpServer() {
             if index >= 0 { // machine was found
                 changeStatus(index, "alive")
             } else { // machine was not found
-                AddNode(joined_node, node_timestamp, "alive")
+                AddNode(joined_node, "alive",  node_timestamp)
             }
         } else if message[:5] == "leave" { // machine left
             left_node := message[6:]
@@ -109,13 +111,14 @@ func MembershiplistToString() string{
 
 // Remove a machine from the membership list
 func RemoveNode(node_id string) {
-    index = FindNode(node_id)
-    if index >= 0 {
-        membership_list = append(membership_list[:index], membership_list[index+1:]...)
+    for index,node := range membership_list {
+        if node_id == node.NodeID { // remove the node if it's found
+            membership_list = append(membership_list[:index], membership_list[index+1:]...)
+        }
     }
 }
 
-// Add a machine to the membership list
+//function to add node
 func AddNode(node_id string, node_timestamp string, status string){
     new_node := Node{
         NodeID:    node_id,  
@@ -124,6 +127,7 @@ func AddNode(node_id string, node_timestamp string, status string){
     }
     membership_list = append(membership_list, new_node)
 }
+
 
 // Get the index of a machine in the list
 func FindNode(node_id string) int {
