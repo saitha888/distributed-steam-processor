@@ -76,8 +76,6 @@ func PingClient() {
     }
     buf := make([]byte, 1024)
 
-    // Give machine 2 seconds to receive the acknowledgement
-    conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 
     _, _, err2 := conn.ReadFromUDP(buf)
     if err2 != nil {
@@ -86,7 +84,9 @@ func PingClient() {
         fmt.Println("Failure detected: " + target_node.NodeID + " " + time.Now().Format("15:04:05"))
         RemoveNode(target_node.NodeID)
         for _,node := range membership_list {
-            SendFailure(node.NodeID, target_node.NodeID)
+            if node.Status == "alive" {
+                SendFailure(node.NodeID, target_node.NodeID)
+            }
         }
     }
 

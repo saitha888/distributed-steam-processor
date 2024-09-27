@@ -55,12 +55,14 @@ func UdpServer() {
             if index >= 0 { // machine was found
                 changeStatus(index, "alive")
             } else { // machine was not found
-                AddNode(joined_node, "alive",  node_timestamp)
+                AddNode(joined_node, node_timestamp, "alive")
             }
         } else if message[:5] == "leave" { // machine left
             left_node := message[6:]
             index := FindNode(left_node)
-            changeStatus(index, "left")
+            if index >= 0 { // machine was found
+                changeStatus(index, "alive")
+            }
         }
     }
 }
