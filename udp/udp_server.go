@@ -109,10 +109,9 @@ func MembershiplistToString() string{
 
 // Remove a machine from the membership list
 func RemoveNode(node_id string) {
-    for index,node := range membership_list {
-        if node_id == node.NodeID { // remove the node if it's found
-            membership_list = append(membership_list[:index], membership_list[index+1:]...)
-        }
+    index = FindNode(node_id)
+    if index >= 0 {
+        membership_list = append(membership_list[:index], membership_list[index+1:]...)
     }
 }
 
