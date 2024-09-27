@@ -23,7 +23,8 @@ type Node struct {
 
 //starts udp server that listens for pings
 func UdpServer() {
-    conn, err = ConnectToMachine(udp_port)
+    conn, _ := ConnectToMachine(udp_port)
+    defer conn.Close()
 
     buf := make([]byte, 1024)
 
@@ -56,7 +57,7 @@ func UdpServer() {
             }
         } else if message[:5] == "leave" { // machine left
             left_node := message[6:]
-            index := FindNode(joined_node)
+            index := FindNode(left_node)
             changeStatus(index, "left")
         }
     }
@@ -86,15 +87,12 @@ func ConnectToMachine(port string) (*net.UDPConn, error){
     addr, err := net.ResolveUDPAddr("udp", ":" + port)
     if err != nil {
         fmt.Println("Error resolving address:", err)
-        return
     }
 
     conn, err := net.ListenUDP("udp", addr)
     if err != nil {
         fmt.Println("Error starting UDP server:", err)
-        return
     }
-    defer conn.Close()
     return conn, nil
 }
 
