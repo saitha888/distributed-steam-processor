@@ -91,8 +91,21 @@ func UdpServer() {
             fmt.Println("%s joined", node_id)
             message := fmt.Sprintf("%s joined", node_id)
             conn.WriteToUDP([]byte(message), addr)
+        } else if message[:5] == "leave" {
+            fmt.Println("leave req received")
+            node_id := message[6:]
+            fmt.Println("checking this node: " + node_id)
+            for index,node := range membership_list {
+                if node_id == node.NodeID {
+                    changeStatus(index)
+                }
+            }
         }
     }
+}
+
+func changeStatus(index int){
+    membership_list[index].Status = "left"
 }
 
 // func HandleIntroducerRejoin() {
