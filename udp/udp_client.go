@@ -26,7 +26,9 @@ func JoinSystem(address string) {
     defer conn.Close()
 
     // Send the address to the introducer
-    node_id := address + "_" + time.Now().Format("2006-01-02_15:04:05")
+    if node_id == "" {
+                node_id = address + "_" + time.Now().Format("2006-01-02_15:04:05")
+            }
     message := fmt.Sprintf("join %s", node_id) // Format the message as "join <address>"
     _, err = conn.Write([]byte(message))
     if err != nil {
@@ -46,6 +48,8 @@ func JoinSystem(address string) {
     memb_list_string := string(buf[:n])
     memb_list := strings.Split(memb_list_string,", ")
     fmt.Println(memb_list)
+
+    membership_list = nil
 
     for _,node :=  range memb_list {
         node_vars := strings.Split(node, " ")
@@ -78,7 +82,7 @@ func PingClient() {
         random_index := rand.Intn(len(membership_list))
         selected_node := membership_list[random_index]
 
-        if selected_node.NodeID != node_id { 
+        if selected_node.NodeID != node_id && selected_node.Status == "alive" { 
             target_node = &selected_node
             break
         }
