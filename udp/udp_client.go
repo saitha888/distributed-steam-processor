@@ -41,7 +41,6 @@ func JoinSystem(address string) {
     }
     memb_list_string := string(buf[:n])
     memb_list := strings.Split(memb_list_string,", ")
-    fmt.Println(memb_list)
 
     // Clear existing membership list if dealing with a node that left
     membership_list = nil
@@ -53,7 +52,7 @@ func JoinSystem(address string) {
     }
 
     // Print the response from the introducer (e.g., acknowledgment or membership list)
-    fmt.Printf("Received mem_list from introducer")
+    fmt.Printf("Received mem_list from introducer\n")
 
 }
 
@@ -113,9 +112,9 @@ func SendFailure(node_id string, to_delete string) {
 func LeaveList() {
 
     // Change own status to left, inform other machines to change status to left
-    for _,node :=  range membership_list {
+    for i,node :=  range membership_list {
         if node.NodeID == node_id { // check if at self
-            node.Status = "left"
+            changeStatus(i, "leave")
         } else { 
             node_address := node.NodeID[:36]
             conn, err := DialUDPClient(node_address)
@@ -164,4 +163,8 @@ func SelectRandomNode() *Node {
         }
     }
     return target_node
+}
+
+func GetSelfID() string {
+    return node_id
 }

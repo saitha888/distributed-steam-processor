@@ -88,6 +88,9 @@ func commandLoop() {
                 close(stopPing) // Close the stopPing channel to stop the ping loop
             }
             go udp.LeaveList()
+        
+        case "list_self":
+            fmt.Println("\n" + udp.GetSelfID() + "\n")
 
         default:
             fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")

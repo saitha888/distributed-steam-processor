@@ -61,7 +61,7 @@ func UdpServer() {
             left_node := message[6:]
             index := FindNode(left_node)
             if index >= 0 { // machine was found
-                changeStatus(index, "alive")
+                changeStatus(index, "leave")
             }
         }
     }
@@ -83,6 +83,8 @@ func ListMem() {
     for _, node := range membership_list {
         fmt.Printf("%s | %s  | %s\n",node.NodeID, node.Status, node.Timestamp)
     }
+    fmt.Println()
+    fmt.Print("> ")
 }
 
 
@@ -145,3 +147,4 @@ func FindNode(node_id string) int {
 func changeStatus(index int, message string){
     membership_list[index].Status = message
 }
+
