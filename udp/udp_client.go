@@ -27,8 +27,8 @@ func JoinSystem(address string) {
 
     // Send the address to the introducer
     if node_id == "" {
-                node_id = address + "_" + time.Now().Format("2006-01-02_15:04:05")
-            }
+        node_id = address + "_" + time.Now().Format("2006-01-02_15:04:05")
+    }
     message := fmt.Sprintf("join %s", node_id) // Format the message as "join <address>"
     _, err = conn.Write([]byte(message))
     if err != nil {
