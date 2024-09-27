@@ -49,7 +49,7 @@ func JoinSystem(address string) {
     // Update machine's membership list
     for _,node :=  range memb_list {
         node_vars := strings.Split(node, " ")
-        AddNode(node_vars[0], node_vars[1], node_vars[2])
+        AddNode(node_vars[0], node_vars[2], node_vars[1])
     }
 
     // Print the response from the introducer (e.g., acknowledgment or membership list)
