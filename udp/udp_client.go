@@ -109,21 +109,21 @@ func PingClient() {
         return
     }
 
-    // buf := make([]byte, 1024)
+    buf := make([]byte, 1024)
 
-    // conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+    conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 
-    // n, _, err := conn.ReadFromUDP(buf)
-    // if err != nil {
-    //     fmt.Println("Error reading ack from target node:", err)
+    n, _, err := conn.ReadFromUDP(buf)
+    if err != nil {
+        fmt.Println("Error reading ack from target node:", err)
         
-    //     for _,node := range membership_list {
-    //         sendFailure(node.NodeID, target_node)
-    //     }
-    // }
+        for _,node := range membership_list {
+            sendFailure(node.NodeID, target_node.NodeID)
+        }
+    }
 
-    // ack_message := string(buf[:n])
-    // fmt.Printf("Received ack from %s: %s\n", target_node.NodeID, ack_message)
+    ack_message := string(buf[:n])
+    fmt.Printf("Received ack from %s: %s\n", target_node.NodeID, ack_message)
 }
 
 func sendFailure(node_id string, to_delete string) {
