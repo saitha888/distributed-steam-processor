@@ -128,7 +128,7 @@ func PingClient() {
 
 func sendFailure(node_id string, to_delete string) {
 
-    target_addr := to_delete[:36]
+    target_addr := node_id[:36]
     // target_addr := "fa24-cs425-1202.cs.illinois.edu:9082"
 
 
@@ -146,7 +146,7 @@ func sendFailure(node_id string, to_delete string) {
     }
 
     defer conn.Close()
-    message := fmt.Sprintf("fail %s", node_id)
+    message := fmt.Sprintf("fail %s", to_delete)
     _, err = conn.Write([]byte(message))
     if err != nil {
         fmt.Println("Error sending fail message:", err)
