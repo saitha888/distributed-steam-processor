@@ -8,6 +8,7 @@ import (
     "strings"
     "time"
     "strconv"
+    "math/rand"
 )
 
 // global variables
@@ -45,8 +46,11 @@ func UdpServer() {
             result := MembershiplistToString()
             conn.WriteToUDP([]byte(result), addr)
         } else if message == "ping" { // machine checking health
-            ack := node_id + " " + strconv.Itoa(inc_num)
-            conn.WriteToUDP([]byte(ack), addr)
+            dropped := induceDrop(.10)
+            if !dropped {
+                ack := node_id + " " + strconv.Itoa(inc_num)
+                conn.WriteToUDP([]byte(ack), addr)
+            }
         } else if message[:4] == "fail" { // machine failure detected
             failed_node := message[5:]
             RemoveNode(failed_node)
@@ -74,10 +78,13 @@ func UdpServer() {
             sus_node := message[10:]
             message := "Node suspect detected for: " + sus_node + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
+            index := FindNode(sus_node)
             if sus_node == node_id {
                 inc_num += 1
+                if index >= 0 { // machine was found
+                    membership_list[index].Inc = inc_num
+                }
             } else {
-                index := FindNode(sus_node)
                 if index >= 0 { // machine was found
                     changeStatus(index, " sus ")
                 }
@@ -184,5 +191,13 @@ func appendToFile(content string, filename string) error {
 	}
 
 	return nil
+}
+
+func induceDrop(x float64) bool {
+    // Seed the random number generator
+    rand.Seed(time.Now().UnixNano())
+
+    // Generate a random float between 0 and 1
+    return rand.Float64() < x
 }
 

@@ -78,7 +78,20 @@ func PingClient(plus_s bool) {
     buf := make([]byte, 1024)
 
 
-    _, _, err2 := conn.ReadFromUDP(buf)
+    n, _, err2 := conn.ReadFromUDP(buf)
+    if err2 != nil {
+        fmt.Println("Error reading from introducer:", err)
+    } else {
+        ack := string(buf[:n])
+        recieved_node_id := ack[:36]
+        recieved_inc, _ := strconv.Atoi(ack[38:])
+        index := FindNode(recieved_node_id)
+        if index >= 0 {
+            membership_list[index].Status = "alive"
+            membership_list[index].Inc = recieved_inc
+        }
+
+    }
     if err2 != nil {
         if plus_s == false {
             message := "Node failure detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
@@ -94,7 +107,7 @@ func PingClient(plus_s bool) {
             for _,node := range membership_list {
                 SendSuspected(node.NodeID, target_node.NodeID)
             }
-            susTimeout(4*time.Second, target_node.NodeID)
+            susTimeout(4*time.Second, target_node.NodeID, target_node.Inc)
             index := FindNode(target_node.NodeID)
             if index < 0 {
                 for _, node := range(membership_list) {
@@ -201,7 +214,7 @@ func GetSelfID() string {
 }
 
 // Run the function for exactly 4 seconds
-func susTimeout(duration time.Duration, sus_id string ) {
+func susTimeout(duration time.Duration, sus_id string, inc_num int) {
 	// Create a channel that will send a signal after the specified duration
 	timeout := time.After(duration)
 	// Run the work in a loop
@@ -212,18 +225,10 @@ func susTimeout(duration time.Duration, sus_id string ) {
             return
 		default:
 			// Continue doing the work
-			status := checkStatus(sus_id)
-            if status == "alive" {
+            index := FindNode(sus_id)
+            if index >= 0 && membership_list[index].Inc > inc_num {
                 break
             }
 		}
 	}
-}
-
-func checkStatus(id string) string {
-    index := FindNode(id)
-    if index >= 0 {
-        return membership_list[index].Status 
-    }
-    return " sus "
 }
