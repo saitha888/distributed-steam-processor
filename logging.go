@@ -12,6 +12,7 @@ import (
 
 var addr string = os.Getenv("MACHINE_ADDRESS")
 var stopPing chan bool
+var stopSusPing chan bool
 
 func main() {
 
@@ -19,6 +20,13 @@ func main() {
 
     // clear the output file 
     file, err := os.OpenFile("output.txt", os.O_WRONLY|os.O_TRUNC, 0644)
+    if err != nil {
+        fmt.Println("Error opening file: ", err)
+        return
+    }
+    defer file.Close()
+    // clear logging file 
+    file, err = os.OpenFile(os.Getenv("LOG_FILENAME"), os.O_WRONLY|os.O_TRUNC, 0644)
     if err != nil {
         fmt.Println("Error opening file: ", err)
         return
@@ -44,25 +52,31 @@ func main() {
     }
 }
 
-func startPinging() {
-	// Initialize or reset the stop channel for a new pinging session
-	stopPing = make(chan bool)
+func startPinging(plus_s bool) {
+    // Initialize or reset the stop channel for a new pinging session
+    stopPing = make(chan bool)
 
-	// Start the ping loop in a Goroutine
-	go func() {
-		for {
-			select {
-			case <-stopPing: // Check if a signal to stop the loop is received
-				fmt.Println("Stopping PingClient...")
-				return
-			default:
-				// Sleep and then ping a random node
-				time.Sleep(2 * time.Second)
-				udp.PingClient()
-			}
-		}
-	}()
+    // Start the ping loop in a Goroutine
+    go func() {
+        for {
+            select {
+            case <-stopPing: // Check if a signal to stop the loop is received
+                fmt.Println("Stopping PingClient...")
+                return
+            default:
+                // Sleep and then ping a random node
+                time.Sleep(2 * time.Second)
+                if plus_s {
+                    udp.PingClient(true)
+                } else {
+                    udp.PingClient(false)
+                }
+                
+            }
+        }
+    }()
 }
+
 
 func commandLoop() {
     scanner := bufio.NewScanner(os.Stdin)
@@ -77,7 +91,7 @@ func commandLoop() {
             go udp.JoinSystem(addr)
     
             // Start pinging if joining the system
-            startPinging()
+            startPinging(false)
     
         case "list_mem":
             go udp.ListMem()
@@ -87,13 +101,38 @@ func commandLoop() {
             if stopPing != nil {
                 close(stopPing) // Close the stopPing channel to stop the ping loop
             }
+            if stopSusPing != nil {
+                close(stopSusPing)
+            }
             go udp.LeaveList()
         
         case "list_self":
             fmt.Println("\n" + udp.GetSelfID() + "\n")
 
+        case "enable_sus" :
+            if stopPing != nil {
+                close(stopPing) // Close the stopPing channel to stop the ping loop
+                fmt.Println("Enabled sus pinging")
+                stopPing = nil
+            } else {
+                fmt.Println("Sus pinging already enabled ")
+            }
+            startPinging(true)
+        
+        case "disable_sus" :
+            if stopPing != nil {
+                close(stopPing)
+                fmt.Println("Disabled sus pinging")
+                stopSusPing = nil
+            } else {
+                fmt.Println("Sus pinging already disabled ")
+            }
+            startPinging(false)
+            
         default:
             fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")
         }
     }
 }
+
+

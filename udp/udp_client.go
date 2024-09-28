@@ -6,6 +6,7 @@ import (
     "time"
     "strings"
     "math/rand"
+    "strconv"
 )
 
 // Global variable to save unique node ID
@@ -48,7 +49,8 @@ func JoinSystem(address string) {
     // Update machine's membership list
     for _,node :=  range memb_list {
         node_vars := strings.Split(node, " ")
-        AddNode(node_vars[0], node_vars[2], node_vars[1])
+        inc, _ := strconv.Atoi(node_vars[2])
+        AddNode(node_vars[0], inc, node_vars[1])
     }
 
     // Print the response from the introducer (e.g., acknowledgment or membership list)
@@ -57,7 +59,7 @@ func JoinSystem(address string) {
 }
 
 // Function to randomly select a node from the system and ping it
-func PingClient() {
+func PingClient(plus_s bool) {
 
     target_node := SelectRandomNode()
     target_addr := target_node.NodeID[:36]
@@ -80,11 +82,16 @@ func PingClient() {
     if err2 != nil {
 
         // If machine does not receive ack, mark it as failed and send fail message to the system
-        fmt.Println("Failure detected: " + target_node.NodeID + " " + time.Now().Format("15:04:05"))
         RemoveNode(target_node.NodeID)
+        message := "Node failure detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
+        appendToFile(message, logfile)
         for _,node := range membership_list {
             if node.Status == "alive" {
-                SendFailure(node.NodeID, target_node.NodeID)
+                if plus_s == false {
+                    SendFailure(node.NodeID, target_node.NodeID)
+                } else {
+                    // handle failure
+                }
             }
         }
     }
