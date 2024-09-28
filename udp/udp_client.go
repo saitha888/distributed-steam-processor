@@ -11,6 +11,7 @@ import (
 
 // Global variable to save unique node ID
 var node_id string = ""
+var enabled_sus = false
 
 // Function to join system through the introducer
 func JoinSystem(address string) {
@@ -61,6 +62,7 @@ func JoinSystem(address string) {
 
 // Function to randomly select a node from the system and ping it
 func PingClient(plus_s bool) {
+    enabled_sus = plus_s
     target_node := SelectRandomNode()
     target_addr := target_node.NodeID[:36]
 

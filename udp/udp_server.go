@@ -46,8 +46,8 @@ func UdpServer() {
             result := MembershiplistToString()
             conn.WriteToUDP([]byte(result), addr)
         } else if message == "ping" { // machine checking health
-            dropped := induceDrop(.10)
-            if !dropped {
+            dropped := induceDrop(.25)
+            if dropped == false {
                 ack := node_id + " " + strconv.Itoa(inc_num)
                 conn.WriteToUDP([]byte(ack), addr)
             }
@@ -62,7 +62,7 @@ func UdpServer() {
             if index >= 0 { // machine was found
                 changeStatus(index, "alive")
             } else { // machine was not found
-                AddNode(joined_node, 0, "alive")
+                AddNode(joined_node, 1, "alive")
             }
             message := "Node join detected for: " + joined_node + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
@@ -75,18 +75,20 @@ func UdpServer() {
             message := "Node leave detected for: " + left_node + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
         } else if message[:9] == "suspected" { // machine left
-            sus_node := message[10:]
-            message := "Node suspect detected for: " + sus_node + " at " + time.Now().Format("15:04:05") + "\n"
-            appendToFile(message, logfile)
-            index := FindNode(sus_node)
-            if sus_node == node_id {
-                inc_num += 1
-                if index >= 0 { // machine was found
-                    membership_list[index].Inc = inc_num
-                }
-            } else {
-                if index >= 0 { // machine was found
-                    changeStatus(index, " sus ")
+            if enabled_sus {
+                sus_node := message[10:]
+                message := "Node suspect detected for: " + sus_node + " at " + time.Now().Format("15:04:05") + "\n"
+                appendToFile(message, logfile)
+                index := FindNode(sus_node)
+                if sus_node == node_id {
+                    inc_num += 1
+                    if index >= 0 { // machine was found
+                        membership_list[index].Inc = inc_num
+                    }
+                } else {
+                    if index >= 0 { // machine was found
+                        changeStatus(index, " sus ")
+                    }
                 }
             }
         }
