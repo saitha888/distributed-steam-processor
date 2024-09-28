@@ -60,7 +60,7 @@ func JoinSystem(address string) {
 
 // Function to randomly select a node from the system and ping it
 func PingClient(plus_s bool) {
-
+    fmt.Println(plus_s)
     target_node := SelectRandomNode()
     target_addr := target_node.NodeID[:36]
 
@@ -80,16 +80,20 @@ func PingClient(plus_s bool) {
 
     _, _, err2 := conn.ReadFromUDP(buf)
     if err2 != nil {
-
+        if plus_s == false {
+            message := "Node failure detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
+            appendToFile(message, logfile)
+            RemoveNode(target_node.NodeID)
+        }
         // If machine does not receive ack, mark it as failed and send fail message to the system
-        RemoveNode(target_node.NodeID)
-        message := "Node failure detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
-        appendToFile(message, logfile)
         for _,node := range membership_list {
             if node.Status == "alive" {
                 if plus_s == false {
                     SendFailure(node.NodeID, target_node.NodeID)
                 } else {
+                    fmt.Println("IN SUSPICION MODE")
+                    message := "Node suspect detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
+                    appendToFile(message, logfile)
                     SendSuspected(node.NodeID, target_node.NodeID)
                     go susTimeout(4, target_node.NodeID)
                 }
@@ -215,5 +219,9 @@ func susTimeout(duration time.Duration, sus_id string ) {
 }
 
 func checkStatus(id string) string {
-    return membership_list[FindNode(id)].Status 
+    index := FindNode(id)
+    if index >= 0 {
+        return membership_list[FindNode(id)].Status 
+    }
+    return " sus "
 }
