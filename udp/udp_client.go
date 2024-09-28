@@ -7,6 +7,7 @@ import (
     "strings"
     "math/rand"
     "strconv"
+
 )
 
 // Global variable to save unique node ID
@@ -79,6 +80,7 @@ func PingClient(plus_s bool) {
     }
     buf := make([]byte, 1024)
 
+    conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
 
     n, _, err2 := conn.ReadFromUDP(buf)
     if err2 != nil {
