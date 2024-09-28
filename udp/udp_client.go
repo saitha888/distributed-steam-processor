@@ -90,7 +90,8 @@ func PingClient(plus_s bool) {
                 if plus_s == false {
                     SendFailure(node.NodeID, target_node.NodeID)
                 } else {
-                    // handle failure
+                    SendSuspected(node.NodeID, target_node.NodeID)
+                    go susTimeout(4, target_node.NodeID)
                 }
             }
         }
@@ -108,6 +109,21 @@ func SendFailure(node_id string, to_delete string) {
     defer conn.Close()
 
     message := fmt.Sprintf("fail %s", to_delete)
+    _, err = conn.Write([]byte(message))
+    if err != nil {
+        fmt.Println("Error sending fail message:", err)
+        return
+    }
+}
+
+// Function to send that a node is suspected
+func SendSuspected(node_id string, sus_node string) {
+
+    target_addr := node_id[:36]
+    conn, err := DialUDPClient(target_addr)
+    defer conn.Close()
+
+    message := fmt.Sprintf("suspected %s", sus_node)
     _, err = conn.Write([]byte(message))
     if err != nil {
         fmt.Println("Error sending fail message:", err)
@@ -174,4 +190,30 @@ func SelectRandomNode() *Node {
 
 func GetSelfID() string {
     return node_id
+}
+
+// Run the function for exactly 4 seconds
+func susTimeout(duration time.Duration, sus_id string ) {
+	// Create a channel that will send a signal after the specified duration
+	timeout := time.After(duration)
+	// Run the work in a loop
+	for {
+		select {
+		case <-timeout:
+            RemoveNode(sus_id)
+			for _, node := range(membership_list) {
+                SendFailure(node.NodeID, sus_id)
+            }
+		default:
+			// Continue doing the work
+			status := checkStatus(sus_id)
+            if status == "alive" {
+                break
+            }
+		}
+	}
+}
+
+func checkStatus(id string) string {
+    return membership_list[FindNode(id)].Status 
 }

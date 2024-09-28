@@ -70,6 +70,17 @@ func UdpServer() {
             }
             message := "Node leave detected for: " + left_node + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
+        } else if message[:9] == "suspected" { // machine left
+            sus_node := message[10:]
+            if sus_node == node_id {
+                inc_num += 1
+                fmt.Println(node_id + " is suspected")
+            } else {
+                index := FindNode(sus_node)
+                if index >= 0 { // machine was found
+                    changeStatus(index, " sus ")
+                }
+            }
         }
     }
 }
