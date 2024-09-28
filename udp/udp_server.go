@@ -46,12 +46,11 @@ func UdpServer() {
             result := MembershiplistToString()
             conn.WriteToUDP([]byte(result), addr)
         } else if message == "ping" { // machine checking health
-            dropped := induceDrop(.1)
-            if dropped == false {
+            dropped := induceDrop(0)
+            if !dropped {
                 ack := node_id + " " + strconv.Itoa(inc_num)
-                fmt.Println("sending ack: " + ack)
                 conn.WriteToUDP([]byte(ack), addr)
-            } 
+            }
         } else if message[:4] == "fail" { // machine failure detected
             failed_node := message[5:]
             RemoveNode(failed_node)
@@ -82,7 +81,6 @@ func UdpServer() {
                 appendToFile(message, logfile)
                 index := FindNode(sus_node)
                 if sus_node == node_id {
-                    fmt.Println("Node was detected as sus")
                     inc_num += 1
                     if index >= 0 { // machine was found
                         membership_list[index].Inc = inc_num
@@ -96,7 +94,6 @@ func UdpServer() {
         } else if message[:5] == "alive" { // machine unsuspected
             alive_node := message[6:43]
             inc_num, _ := strconv.Atoi(message[44:])
-            fmt.Println(alive_node + " " + message[44:])
             message := "Suspected node cleared for: " + alive_node + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
             index := FindNode(alive_node)
