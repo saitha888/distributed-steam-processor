@@ -72,6 +72,8 @@ func UdpServer() {
             appendToFile(message, logfile)
         } else if message[:9] == "suspected" { // machine left
             sus_node := message[10:]
+            message := "Node suspect detected for: " + sus_node + " at " + time.Now().Format("15:04:05") + "\n"
+            appendToFile(message, logfile)
             if sus_node == node_id {
                 inc_num += 1
                 fmt.Println(node_id + " is suspected")

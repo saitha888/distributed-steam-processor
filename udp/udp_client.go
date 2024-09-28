@@ -14,7 +14,8 @@ var node_id string = ""
 
 // Function to join system through the introducer
 func JoinSystem(address string) {
-
+    // increment the incarnation number
+    inc_num += 1
     // Connect to introducer
     conn, err := DialUDPClient("fa24-cs425-1210.cs.illinois.edu:9080")
     defer conn.Close()
@@ -60,7 +61,6 @@ func JoinSystem(address string) {
 
 // Function to randomly select a node from the system and ping it
 func PingClient(plus_s bool) {
-    fmt.Println(plus_s)
     target_node := SelectRandomNode()
     target_addr := target_node.NodeID[:36]
 
@@ -91,11 +91,10 @@ func PingClient(plus_s bool) {
                 if plus_s == false {
                     SendFailure(node.NodeID, target_node.NodeID)
                 } else {
-                    fmt.Println("IN SUSPICION MODE")
                     message := "Node suspect detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
                     appendToFile(message, logfile)
                     SendSuspected(node.NodeID, target_node.NodeID)
-                    go susTimeout(4, target_node.NodeID)
+                    go susTimeout(4*time.Second, target_node.NodeID)
                 }
             }
         }
@@ -204,6 +203,7 @@ func susTimeout(duration time.Duration, sus_id string ) {
 	for {
 		select {
 		case <-timeout:
+            fmt.Println("TIMEOUT HAPPENED")
             RemoveNode(sus_id)
 			for _, node := range(membership_list) {
                 SendFailure(node.NodeID, sus_id)
@@ -221,7 +221,7 @@ func susTimeout(duration time.Duration, sus_id string ) {
 func checkStatus(id string) string {
     index := FindNode(id)
     if index >= 0 {
-        return membership_list[FindNode(id)].Status 
+        return membership_list[index].Status 
     }
     return " sus "
 }
