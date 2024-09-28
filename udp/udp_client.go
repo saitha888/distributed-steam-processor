@@ -88,6 +88,7 @@ func PingClient(plus_s bool) {
     } else {
         ack := string(buf[:n])
         recieved_node_id := ack[:36]
+        recieved_inc_str := ack[38:]
         recieved_inc, _ := strconv.Atoi(ack[38:])
         index := FindNode(recieved_node_id)
         if index >= 0 {
@@ -96,7 +97,7 @@ func PingClient(plus_s bool) {
                 message := "Node suspect cleared for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
                 appendToFile(message, logfile)
                 for _,node := range membership_list {
-                    SendAlive(node.NodeID, target_node.NodeID)
+                    SendAlive(node.NodeID, target_node.NodeID, recieved_inc_str)
                 }
 
             }
@@ -150,13 +151,13 @@ func SendFailure(node_id string, to_delete string) {
 }
 
 // Function to send a failure message
-func SendAlive(node_id string, to_clear string) {
+func SendAlive(node_id string, to_clear string, inc_num string) {
 
     target_addr := node_id[:36]
     conn, err := DialUDPClient(target_addr)
     defer conn.Close()
 
-    message := fmt.Sprintf("alive %s", to_clear)
+    message := "alive " + to_clear + " " + inc_num
     _, err = conn.Write([]byte(message))
     if err != nil {
         fmt.Println("Error sending alive message:", err)

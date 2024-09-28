@@ -93,12 +93,15 @@ func UdpServer() {
                 }
             }
         } else if message[:5] == "alive" { // machine unsuspected
-            alive_node := message[6:]
+            alive_node := message[6:43]
+            inc_num, _ := strconv.Atoi(message[44:])
+            fmt.Println(alive_node + " " + message[44:])
             message := "Suspected node cleared for: " + alive_node + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
             index := FindNode(alive_node)
             if index >= 0 {
                 changeStatus(index, "alive")
+                changeInc(index, inc_num)
             }
         }   
     }
@@ -183,6 +186,11 @@ func FindNode(node_id string) int {
 // Change the status of a machine in the list
 func changeStatus(index int, message string){
     membership_list[index].Status = message
+}
+
+// Change the status of a machine in the list
+func changeInc(index int, message int){
+    membership_list[index].Inc = message
 }
 
 
