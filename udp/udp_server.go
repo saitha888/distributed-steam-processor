@@ -81,6 +81,7 @@ func UdpServer() {
                 appendToFile(message, logfile)
                 index := FindNode(sus_node)
                 if sus_node == node_id {
+                    fmt.Println("Node was detected as sus")
                     inc_num += 1
                     if index >= 0 { // machine was found
                         membership_list[index].Inc = inc_num
@@ -91,7 +92,15 @@ func UdpServer() {
                     }
                 }
             }
-        }
+        } else if message[:5] == "alive" { // machine unsuspected
+            alive_node := message[6:]
+            message := "Suspected node cleared for: " + alive_node + " at " + time.Now().Format("15:04:05") + "\n"
+            appendToFile(message, logfile)
+            index := FindNode(alive_node)
+            if index >= 0 {
+                changeStatus(index, "alive")
+            }
+        }   
     }
 }
 

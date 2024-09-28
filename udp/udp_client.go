@@ -84,7 +84,7 @@ func PingClient(plus_s bool) {
 
     n, _, err2 := conn.ReadFromUDP(buf)
     if err2 != nil {
-        fmt.Println("Error reading from introducer:", err)
+        fmt.Println("Error reading from target node:", err2)
     } else {
         ack := string(buf[:n])
         recieved_node_id := ack[:36]
@@ -92,6 +92,14 @@ func PingClient(plus_s bool) {
         index := FindNode(recieved_node_id)
         if index >= 0 {
             membership_list[index].Status = "alive"
+            if membership_list[index].Inc < recieved_inc {
+                message := "Node suspect cleared for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
+                appendToFile(message, logfile)
+                for _,node := range membership_list {
+                    SendAlive(node.NodeID, target_node.NodeID)
+                }
+
+            }
             membership_list[index].Inc = recieved_inc
         }
 
@@ -111,7 +119,7 @@ func PingClient(plus_s bool) {
             for _,node := range membership_list {
                 SendSuspected(node.NodeID, target_node.NodeID)
             }
-            susTimeout(4*time.Second, target_node.NodeID, target_node.Inc)
+            susTimeout(9*time.Second, target_node.NodeID, target_node.Inc)
             index := FindNode(target_node.NodeID)
             if index < 0 {
                 for _, node := range(membership_list) {
@@ -141,6 +149,21 @@ func SendFailure(node_id string, to_delete string) {
     }
 }
 
+// Function to send a failure message
+func SendAlive(node_id string, to_clear string) {
+
+    target_addr := node_id[:36]
+    conn, err := DialUDPClient(target_addr)
+    defer conn.Close()
+
+    message := fmt.Sprintf("alive %s", to_clear)
+    _, err = conn.Write([]byte(message))
+    if err != nil {
+        fmt.Println("Error sending alive message:", err)
+        return
+    }
+}
+
 // Function to send that a node is suspected
 func SendSuspected(node_id string, sus_node string) {
 
@@ -151,7 +174,7 @@ func SendSuspected(node_id string, sus_node string) {
     message := fmt.Sprintf("suspected %s", sus_node)
     _, err = conn.Write([]byte(message))
     if err != nil {
-        fmt.Println("Error sending fail message:", err)
+        fmt.Println("Error sending suspect message:", err)
         return
     }
 }
@@ -172,7 +195,7 @@ func LeaveList() {
             message := fmt.Sprintf("leave " + node_id)
             _, err = conn.Write([]byte(message))
             if err != nil {
-                fmt.Println("Error sending ping message:", err)
+                fmt.Println("Error sending leave message:", err)
                 return
             }
         }
@@ -231,6 +254,8 @@ func susTimeout(duration time.Duration, sus_id string, inc_num int) {
 			// Continue doing the work
             index := FindNode(sus_id)
             if index >= 0 && membership_list[index].Inc > inc_num {
+                message := "Node suspect removed for: " + sus_id
+                appendToFile(message, logfile)
                 break
             }
 		}
