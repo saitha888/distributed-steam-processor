@@ -11,7 +11,7 @@ import (
     "math/rand"
 )
 
-// global variables
+// global variables``
 var err = godotenv.Load(".env")
 var udp_port string = os.Getenv("UDP_PORT")
 var membership_list []Node
