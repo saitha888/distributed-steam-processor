@@ -97,9 +97,7 @@ func PingClient(plus_s bool) {
             susTimeout(4*time.Second, target_node.NodeID)
             index := FindNode(target_node.NodeID)
             if index < 0 {
-                fmt.Println("node was removed")
                 for _, node := range(membership_list) {
-                    fmt.Println("failure being sent to " + node.NodeID)
                     SendFailure(node.NodeID, target_node.NodeID)
                 }
             }

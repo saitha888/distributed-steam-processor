@@ -100,13 +100,11 @@ func commandLoop() {
         case "enable_sus":
             // Toggle suspicion flag
             suspicionEnabled = true
-            fmt.Println("Suspicion mechanism enabled.")
             fmt.Println(suspicionEnabled)
     
         case "disable_sus":
             // Disable suspicion mechanism
             suspicionEnabled = false
-            fmt.Println("Suspicion mechanism disabled.")
         
         case "status_sus":
             if suspicionEnabled {
