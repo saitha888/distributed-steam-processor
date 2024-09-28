@@ -107,6 +107,13 @@ func commandLoop() {
             // Disable suspicion mechanism
             suspicionEnabled = false
             fmt.Println("Suspicion mechanism disabled.")
+        
+        case "status_sus":
+            if suspicionEnabled {
+                fmt.Println("Suspicion enabled")
+            } else {
+                fmt.Println("Suspicion disabled")
+            }
 
         default:
             fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")

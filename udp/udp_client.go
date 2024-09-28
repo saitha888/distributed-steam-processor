@@ -84,19 +84,26 @@ func PingClient(plus_s bool) {
             message := "Node failure detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
             RemoveNode(target_node.NodeID)
+            for _,node := range membership_list {
+                SendFailure(node.NodeID, target_node.NodeID)
+            }
         }
-        // If machine does not receive ack, mark it as failed and send fail message to the system
-        for _,node := range membership_list {
-            if node.Status == "alive" {
-                if plus_s == false {
+        if plus_s {
+            message := "Node suspect detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
+            appendToFile(message, logfile)
+            for _,node := range membership_list {
+                SendSuspected(node.NodeID, target_node.NodeID)
+            }
+            susTimeout(4*time.Second, target_node.NodeID)
+            index := FindNode(target_node.NodeID)
+            if index < 0 {
+                fmt.Println("node was removed")
+                for _, node := range(membership_list) {
+                    fmt.Println("failure being sent to " + node.NodeID)
                     SendFailure(node.NodeID, target_node.NodeID)
-                } else {
-                    message := "Node suspect detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
-                    appendToFile(message, logfile)
-                    SendSuspected(node.NodeID, target_node.NodeID)
-                    go susTimeout(4*time.Second, target_node.NodeID)
                 }
             }
+
         }
     }
 
@@ -203,11 +210,8 @@ func susTimeout(duration time.Duration, sus_id string ) {
 	for {
 		select {
 		case <-timeout:
-            fmt.Println("TIMEOUT HAPPENED")
             RemoveNode(sus_id)
-			for _, node := range(membership_list) {
-                SendFailure(node.NodeID, sus_id)
-            }
+            return
 		default:
 			// Continue doing the work
 			status := checkStatus(sus_id)
