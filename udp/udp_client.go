@@ -12,7 +12,7 @@ import (
 
 // Global variable to save unique node ID
 var node_id string = ""
-var enabled_sus = false
+var enabled_sus = true
 
 // Function to join system through the introducer
 func JoinSystem(address string) {
@@ -87,9 +87,9 @@ func PingClient(plus_s bool) {
         fmt.Println("Error reading from target node:", err2)
     } else {
         ack := string(buf[:n])
-        recieved_node_id := ack[:36]
-        recieved_inc_str := ack[38:]
-        recieved_inc, _ := strconv.Atoi(ack[38:])
+        recieved_node_id := ack[:56]
+        recieved_inc_str := ack[57:]
+        recieved_inc, _ := strconv.Atoi(ack[57:])
         index := FindNode(recieved_node_id)
         if index >= 0 {
             membership_list[index].Status = "alive"
@@ -114,7 +114,7 @@ func PingClient(plus_s bool) {
                 SendFailure(node.NodeID, target_node.NodeID)
             }
         }
-        if plus_s {
+        if plus_s && checkStatus(target_node.NodeID) != " sus "  {
             message := "Node suspect detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
             for _,node := range membership_list {
@@ -229,7 +229,7 @@ func SelectRandomNode() *Node {
     for {
         random_index := rand.Intn(len(membership_list))
         selected_node := membership_list[random_index]
-        if selected_node.NodeID != node_id && selected_node.Status == "alive" { 
+        if selected_node.NodeID != node_id && selected_node.Status != "leave" { 
             target_node = &selected_node
             break
         }
@@ -261,4 +261,12 @@ func susTimeout(duration time.Duration, sus_id string, inc_num int) {
             }
 		}
 	}
+}
+
+func checkStatus(node string) string {
+    index := FindNode(node)
+    if index >= 0 {
+        return membership_list[index].Status
+    }
+    return "none"
 }
