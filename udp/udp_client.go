@@ -12,7 +12,7 @@ import (
 
 // Global variable to save unique node ID
 var node_id string = ""
-var enabled_sus = true
+var enabled_sus = false
 
 // Function to join system through the introducer
 func JoinSystem(address string) {

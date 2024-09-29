@@ -46,7 +46,7 @@ func UdpServer() {
             result := MembershiplistToString()
             conn.WriteToUDP([]byte(result), addr)
         } else if message == "ping" { // machine checking health
-            dropped := induceDrop(0.1)
+            dropped := induceDrop(0)
             if !dropped {
                 ack := node_id + " " + strconv.Itoa(inc_num)
                 conn.WriteToUDP([]byte(ack), addr)
