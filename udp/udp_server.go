@@ -81,6 +81,7 @@ func UdpServer() {
                 appendToFile(message, logfile)
                 index := FindNode(sus_node)
                 if sus_node == node_id {
+                    fmt.Println("Node is currently suspected")
                     inc_num += 1
                     if index >= 0 { // machine was found
                         membership_list[index].Inc = inc_num
