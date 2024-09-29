@@ -40,3 +40,5 @@ There are 2 versions of the code, but they work very similarily. In the "introdu
     - status_sus: suspicion on/off status
     - sus_list: command to list suspected nodes
     - client **pattern**: query all log files for a pattern
+
+7) If you would like to induce a specific drop rate, change the "DROP_RATE" variable in the .env file
