@@ -2,12 +2,9 @@ package udp
 
 import (
     "fmt"
-    "net"
     "time"
     "strings"
-    "math/rand"
     "strconv"
-
 )
 
 // Global variable to save unique node ID
@@ -80,193 +77,56 @@ func PingClient(plus_s bool) {
     }
     buf := make([]byte, 1024)
 
+    // If no response is recieved in .5 seconds close the connection
     conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
 
     n, _, err2 := conn.ReadFromUDP(buf)
     if err2 != nil {
         fmt.Println("Error reading from target node:", err2)
-    } else {
+    } else { // response was recieved
         ack := string(buf[:n])
         recieved_node_id := ack[:56]
         recieved_inc_str := ack[57:]
         recieved_inc, _ := strconv.Atoi(ack[57:])
         index := FindNode(recieved_node_id)
         if index >= 0 {
-            membership_list[index].Status = "alive"
-            if membership_list[index].Inc < recieved_inc {
+            if membership_list[index].Status == " sus " || membership_list[index].Inc < recieved_inc { // If the machine was suspected it is now cleared
                 message := "Node suspect cleared for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
                 appendToFile(message, logfile)
-                for _,node := range membership_list {
+                for _,node := range membership_list { // let all machines know suspected node is alive
                     SendAlive(node.NodeID, target_node.NodeID, recieved_inc_str)
                 }
 
             }
+            // update status and inc number
+            membership_list[index].Status = "alive"
             membership_list[index].Inc = recieved_inc
         }
 
     }
-    if err2 != nil {
-        if plus_s == false {
+    if err2 != nil { // no response was recieved
+        if plus_s == false { // if there's no suspicion immediately fail the machine
             message := "Node failure detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
             RemoveNode(target_node.NodeID)
             for _,node := range membership_list {
-                SendFailure(node.NodeID, target_node.NodeID)
+                SendMessage(node.NodeID, "fail", target_node.NodeID)
             }
         }
-        if plus_s && checkStatus(target_node.NodeID) != " sus "  {
+        if plus_s && checkStatus(target_node.NodeID) != " sus "  { // if there is suspicion and the node isn't already sus
             message := "Node suspect detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
-            for _,node := range membership_list {
-                SendSuspected(node.NodeID, target_node.NodeID)
+            for _,node := range membership_list { // let all machines know node is suspected
+                SendMessage(node.NodeID, "suspected",target_node.NodeID)
             }
-            susTimeout(9*time.Second, target_node.NodeID, target_node.Inc)
+            susTimeout(9*time.Second, target_node.NodeID, target_node.Inc) // wait 6 seconds to recieve update about node status
             index := FindNode(target_node.NodeID)
-            if index < 0 {
-                for _, node := range(membership_list) {
-                    SendFailure(node.NodeID, target_node.NodeID)
+            if index < 0 { // if node was removed
+                for _, node := range(membership_list) { // let all other nodes know node has failed
+                    SendMessage(node.NodeID, "fail", target_node.NodeID)
                 }
             }
 
         }
     }
-
-    // ack_message := string(buf[:n])
-    // fmt.Printf("Received ack from %s: %s\n", target_node.NodeID, ack_message)
-}
-
-// Function to send a failure message
-func SendFailure(node_id string, to_delete string) {
-
-    target_addr := node_id[:36]
-    conn, err := DialUDPClient(target_addr)
-    defer conn.Close()
-
-    message := fmt.Sprintf("fail %s", to_delete)
-    _, err = conn.Write([]byte(message))
-    if err != nil {
-        fmt.Println("Error sending fail message:", err)
-        return
-    }
-}
-
-// Function to send a failure message
-func SendAlive(node_id string, to_clear string, inc_num string) {
-
-    target_addr := node_id[:36]
-    conn, err := DialUDPClient(target_addr)
-    defer conn.Close()
-
-    message := "alive " + to_clear + " " + inc_num
-    _, err = conn.Write([]byte(message))
-    if err != nil {
-        fmt.Println("Error sending alive message:", err)
-        return
-    }
-}
-
-// Function to send that a node is suspected
-func SendSuspected(node_id string, sus_node string) {
-
-    target_addr := node_id[:36]
-    conn, err := DialUDPClient(target_addr)
-    defer conn.Close()
-
-    message := fmt.Sprintf("suspected %s", sus_node)
-    _, err = conn.Write([]byte(message))
-    if err != nil {
-        fmt.Println("Error sending suspect message:", err)
-        return
-    }
-}
-
-//Function to leave the system
-func LeaveList() {
-
-    // Change own status to left, inform other machines to change status to left
-    for i,node :=  range membership_list {
-        if node.NodeID == node_id { // check if at self
-            changeStatus(i, "leave")
-        } else { 
-            node_address := node.NodeID[:36]
-            conn, err := DialUDPClient(node_address)
-            defer conn.Close()
-
-            // Send leave message
-            message := fmt.Sprintf("leave " + node_id)
-            _, err = conn.Write([]byte(message))
-            if err != nil {
-                fmt.Println("Error sending leave message:", err)
-                return
-            }
-        }
-    }
-}
-
-// Function to resolve and dial a UDP connection to a given address
-func DialUDPClient(target_addr string) (*net.UDPConn, error) {
-
-    // Resolve the UDP address
-    addr, err := net.ResolveUDPAddr("udp", target_addr)
-    if err != nil {
-        fmt.Println("Error resolving target address:", err)
-        return nil, err
-    }
-
-    // Dial UDP to the target node
-    conn, err := net.DialUDP("udp", nil, addr)
-    if err != nil {
-        fmt.Println("Error connecting to target node:", err)
-        return nil, err
-    }
-    return conn, nil
-}
-
-// Function to randomly select an alive node in the system
-func SelectRandomNode() *Node {
-    rand.Seed(time.Now().UnixNano())
-    var target_node *Node
-    for {
-        random_index := rand.Intn(len(membership_list))
-        selected_node := membership_list[random_index]
-        if selected_node.NodeID != node_id && selected_node.Status != "leave" { 
-            target_node = &selected_node
-            break
-        }
-    }
-    return target_node
-}
-
-func GetSelfID() string {
-    return node_id
-}
-
-// Run the function for exactly 4 seconds
-func susTimeout(duration time.Duration, sus_id string, inc_num int) {
-	// Create a channel that will send a signal after the specified duration
-	timeout := time.After(duration)
-	// Run the work in a loop
-	for {
-		select {
-		case <-timeout:
-            RemoveNode(sus_id)
-            return
-		default:
-			// Continue doing the work
-            index := FindNode(sus_id)
-            if index >= 0 && membership_list[index].Inc > inc_num {
-                message := "Node suspect removed for: " + sus_id + "\n"
-                appendToFile(message, logfile)
-                return
-            }
-		}
-	}
-}
-
-func checkStatus(node string) string {
-    index := FindNode(node)
-    if index >= 0 {
-        return membership_list[index].Status
-    }
-    return "none"
 }

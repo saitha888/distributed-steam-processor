@@ -2,13 +2,10 @@ package udp
 
 import (
     "fmt"
-    "net"
     "os"
     "github.com/joho/godotenv"
-    "strings"
     "time"
     "strconv"
-    "math/rand"
 )
 
 // global variables``
@@ -105,117 +102,3 @@ func UdpServer() {
         }   
     }
 }
-
-func ListMem() {
-    if len(membership_list) == 0 {
-        fmt.Println("Membership list is empty.")
-        return
-    }
-
-    nodeIDWidth := 54
-    statusWidth := 4
-
-    fmt.Printf("%-*s | %-*s | %s\n", nodeIDWidth, "NodeID", statusWidth, "Status", "Incarnation #")
-    fmt.Println(strings.Repeat("-", nodeIDWidth+statusWidth+25))
-
-    // Go through membership list and print each entry
-    for _, node := range membership_list {
-        fmt.Printf("%s | %s  | %s\n",node.NodeID, node.Status, strconv.Itoa(node.Inc))
-    }
-    fmt.Println()
-    fmt.Print("> ")
-}
-
-
-// Function to connect to another machine
-func ConnectToMachine(port string) (*net.UDPConn, error){
-    addr, err := net.ResolveUDPAddr("udp", ":" + port)
-    if err != nil {
-        fmt.Println("Error resolving address:", err)
-    }
-
-    conn, err := net.ListenUDP("udp", addr)
-    if err != nil {
-        fmt.Println("Error starting UDP server:", err)
-    }
-    return conn, nil
-}
-
-// Turn the membership list global variable into a string
-func MembershiplistToString() string{
-    nodes := make([]string, 0)
-    for _,node := range membership_list {
-        current_node := node.NodeID + " " + node.Status + " " + strconv.Itoa(node.Inc)
-        nodes = append(nodes, current_node)
-    }
-    result := strings.Join(nodes, ", ")
-    return result
-}
-
-// Remove a machine from the membership list
-func RemoveNode(node_id string) {
-    for index,node := range membership_list {
-        if node_id == node.NodeID { // remove the node if it's found
-            membership_list = append(membership_list[:index], membership_list[index+1:]...)
-        }
-    }
-}
-
-//function to add node
-func AddNode(node_id string, node_inc int, status string){
-    new_node := Node{
-        NodeID:    node_id,  
-        Status:    status,           
-        Inc: node_inc,
-    }
-    membership_list = append(membership_list, new_node)
-}
-
-
-// Get the index of a machine in the list
-func FindNode(node_id string) int {
-    for index,node := range membership_list { 
-        if node_id == node.NodeID {
-            return index
-        }
-    }
-    return -1
-}
-
-// Change the status of a machine in the list
-func changeStatus(index int, message string){
-    membership_list[index].Status = message
-}
-
-// Change the status of a machine in the list
-func changeInc(index int, message int){
-    membership_list[index].Inc = message
-}
-
-
-// Function to append a string to a file
-func appendToFile(content string, filename string) error {
-	// Open the file or create it 
-	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// Write the content to the file
-	_, err = file.WriteString(content)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func induceDrop(x float64) bool {
-    // Seed the random number generator
-    rand.Seed(time.Now().UnixNano())
-
-    // Generate a random float between 0 and 1
-    return rand.Float64() < x
-}
-
