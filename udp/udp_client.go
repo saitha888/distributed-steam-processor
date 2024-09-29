@@ -255,9 +255,9 @@ func susTimeout(duration time.Duration, sus_id string, inc_num int) {
 			// Continue doing the work
             index := FindNode(sus_id)
             if index >= 0 && membership_list[index].Inc > inc_num {
-                message := "Node suspect removed for: " + sus_id
+                message := "Node suspect removed for: " + sus_id + "\n"
                 appendToFile(message, logfile)
-                break
+                return
             }
 		}
 	}
