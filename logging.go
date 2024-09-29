@@ -76,6 +76,9 @@ func commandLoop() {
         fmt.Print("> ") // CLI prompt
         scanner.Scan()
         command := scanner.Text()
+        if strings.HasPrefix(command, "client"){
+            go tcp.TcpClient(command[7:])
+        }
 
         switch command {
 

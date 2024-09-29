@@ -39,3 +39,4 @@ There are 2 versions of the code, but they work very similarily. In the "introdu
     - enable_sus / disable_sus: enable/disable suspicion
     - status_sus: suspicion on/off status
     - sus_list: command to list suspected nodes
+    - client **pattern**: query all log files for a pattern
