@@ -12,7 +12,7 @@ import (
 
 var addr string = os.Getenv("MACHINE_ADDRESS")
 var stopPing chan bool
-var suspicionEnabled bool = true
+var suspicionEnabled bool = false
 
 func main() {
 
@@ -86,7 +86,8 @@ func commandLoop() {
             startPinging()
     
         case "list_mem":
-            go udp.ListMem()
+            membership_list := udp.GetMembershipList()
+            go udp.ListMem(membership_list)
     
         case "leave":
             // Send a signal to stop the ping loop
@@ -109,6 +110,11 @@ func commandLoop() {
             } else {
                 fmt.Println("Suspicion disabled")
             }
+        
+        case "list_sus":
+            sus_list := udp.FindSusMachines()
+            go udp.ListMem(sus_list)
+
 
         default:
             fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")

@@ -16,7 +16,7 @@ func JoinSystem(address string) {
     // increment the incarnation number
     inc_num += 1
     // Connect to introducer
-    conn, err := DialUDPClient("fa24-cs425-1210.cs.illinois.edu:9080")
+    conn, err := DialUDPClient(introducer_address)
     defer conn.Close()
 
     // Initialize node id for machine.

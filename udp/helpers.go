@@ -222,9 +222,9 @@ func induceDrop(x float64) bool {
 }
 
 
-func ListMem() {
-    if len(membership_list) == 0 {
-        fmt.Println("Membership list is empty.")
+func ListMem(list_to_print []Node) {
+    if len(list_to_print) == 0 {
+        fmt.Println("List is empty.")
         return
     }
 
@@ -235,9 +235,24 @@ func ListMem() {
     fmt.Println(strings.Repeat("-", nodeIDWidth+statusWidth+25))
 
     // Go through membership list and print each entry
-    for _, node := range membership_list {
+    for _, node := range list_to_print {
         fmt.Printf("%s | %s  | %s\n",node.NodeID, node.Status, strconv.Itoa(node.Inc))
     }
     fmt.Println()
     fmt.Print("> ")
+}
+
+
+func FindSusMachines() []Node {
+	var susList []Node
+	for _, node := range membership_list {
+        if node.Status == " sus "{
+			susList = append(susList, node)
+		}
+    }
+	return susList
+}
+
+func GetMembershipList() []Node {
+	return membership_list
 }

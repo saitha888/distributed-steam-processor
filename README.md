@@ -1,46 +1,41 @@
-# CS425-mp1-g12: Distributed Log Query System
+# CS425-mp2-g12: Distributed Log Membership System
 
-This project implements a distributed log querying system where each machine can act as both a server (listener) and a client (sender). The client sends `grep` queries to multiple machines, and the results are aggregated and returned. 
+
+This project implements a distributed group membership service as part of a distributed system. The system maintains a full membership list at each machine, keeping track of other machines that are connected and up in the network. It updates the membership list when:
+
+- A machine joins the group.
+- A machine voluntarily leaves the group.
+- A machine crashes.
+
+
+There are two failure detection methods included:
+
+- PingAck
+- PingAck + S
 
 ## Instructions
 
-### Cloning the Repository into a machine
-Cloning the repo into a machine so that it can run as a server and client involves a few additional steps:
-
-1. Change the port number to one you want to use
-2. Change the machine number to assigned number
-3. Change the filename variable to appropriate log file name for machine (_machine.i.log_)
-
-### Running a Server (Listener)
-
-To start a server on a machine, run the following command:
-
-go run logging.go
-
-### Running a Client 
-
-To start a client on a machine and send a grep command to all other machines in the system, run the following command:
-
-go run logging.go client "<**grep pattern**>"
-
-Make sure not to write the full grep command, but only the pattern which will query the files. For example, below is a valid call to the machine:
-
-go run logging.go client GET
-
-
-### Running the Test Suite
-
-To run the test suite on any machine, run the following command:
-
-go run test.go
-
-This will execute our test file, which will go through each of our unit test cases and print whether or not we passed them.
+There are 2 versions of the code, but they work very similarily. In the "introducer" branch you will find introducer code and in the "main" branch you will find code for every other machine.
 
 
 ### Common Workflow
 
-1) Run the server command on all machines that are part of your distributed system 
+1) Pull the introducer code onto one machine
 
-2) On one of the machines run the client command followed by a grep pattern 
+2) Pull the main branch code onto all other machines
 
-3) Check the output.txt file of the client machine for the aggregated output
+3) Once you've picked the machine to be your introducer, go to the .env file of each machine and change the "INTRODUCER_ADDRESS" variable to match the address of the chosen introducer
+
+4) Start the service by running *go run logging.go* on the introducer. Type *join* to join the system.
+
+5) Do the same steps on all other machines you want to be in the system 
+
+6) Other commands to run now are: 
+
+    - list_mem: list the membership list
+    - list_self: list self’s id
+    - join: join the group 
+    - leave: voluntarily leave the group
+    - enable_sus / disable_sus: enable/disable suspicion
+    - status_sus: suspicion on/off status
+    - sus_list: command to list suspected nodes
