@@ -5,12 +5,14 @@ import (
     "time"
     "strings"
     "strconv"
+    "sync"
 )
 
 // Global variable to save unique node ID
 var node_id string = ""
 var enabled_sus = false
 var target_ports []string
+var mutex sync.Mutex
 
 // Function to join system through the introducer
 func JoinSystem(address string) {
@@ -33,8 +35,7 @@ func JoinSystem(address string) {
     if err != nil {
         fmt.Println("Error sending message to introducer:", err)
         return
-    }
-
+    } 
     buf := make([]byte, 1024)
 
     // Read the response from the introducer (membership list to copy)
@@ -47,13 +48,17 @@ func JoinSystem(address string) {
     memb_list := strings.Split(memb_list_string,", ")
 
     // Clear existing membership list if dealing with a node that left
+    mutex.Lock()
     membership_list = nil
+    mutex.Unlock()
 
     // Update machine's membership list
     for _,node :=  range memb_list {
         node_vars := strings.Split(node, " ")
         inc, _ := strconv.Atoi(node_vars[2])
+        mutex.Lock()
         AddNode(node_vars[0], inc, node_vars[1])
+        mutex.Unlock()
     }
 
     // Print the response from the introducer (e.g., acknowledgment or membership list)
@@ -112,8 +117,10 @@ func PingClient(plus_s bool, target_node Node) {
 
             }
             // update status and inc number
+            mutex.Lock()
             membership_list[index].Status = "alive"
             membership_list[index].Inc = recieved_inc
+            mutex.Unlock()
         }
 
     }
@@ -121,7 +128,9 @@ func PingClient(plus_s bool, target_node Node) {
         if plus_s == false { // if there's no suspicion immediately fail the machine
             message := "Node failure detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
+            mutex.Lock()
             RemoveNode(target_node.NodeID)
+            mutex.Unlock()
             for _,node := range membership_list {
                 SendMessage(node.NodeID, "fail", target_node.NodeID)
             }

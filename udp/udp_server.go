@@ -52,16 +52,22 @@ func UdpServer() {
             }
         } else if message[:4] == "fail" { // machine failure detected
             failed_node := message[5:]
+            mutex.Lock()
             RemoveNode(failed_node)
+            mutex.Unlock()
             message := "Node failure message recieved for: " + failed_node + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
         } else if message[:4] == "join" { // new machine joined
             joined_node := message[5:]
             index := FindNode(joined_node)
             if index >= 0 { // machine was found
+                mutex.Lock()
                 changeStatus(index, "alive")
+                mutex.Unlock()
             } else { // machine was not found
+                mutex.Lock()
                 AddNode(joined_node, 1, "alive")
+                mutex.Unlock()
             }
             message := "Node join detected for: " + joined_node + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
@@ -69,7 +75,9 @@ func UdpServer() {
             left_node := message[6:]
             index := FindNode(left_node)
             if index >= 0 { // machine was found
+                mutex.Lock()
                 changeStatus(index, "leave")
+                mutex.Unlock()
             }
             message := "Node leave detected for: " + left_node + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
@@ -83,11 +91,15 @@ func UdpServer() {
                     fmt.Println("Node is currently suspected")
                     inc_num += 1
                     if index >= 0 { // machine was found
+                        mutex.Lock()
                         membership_list[index].Inc = inc_num
+                        mutex.Unlock()
                     }
                 } else {
                     if index >= 0 { // machine was found
+                        mutex.Lock()
                         changeStatus(index, " sus ")
+                        mutex.Unlock()
                     }
                 }
             }
@@ -98,8 +110,10 @@ func UdpServer() {
             appendToFile(message, logfile)
             index := FindNode(alive_node)
             if index >= 0 {
+                mutex.Lock()
                 changeStatus(index, "alive")
                 changeInc(index, inc_num)
+                mutex.Unlock()
             }
         }   
     }
