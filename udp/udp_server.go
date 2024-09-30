@@ -49,6 +49,7 @@ func UdpServer() {
             if !dropped {
                 ack := node_id + " " + strconv.Itoa(inc_num)
                 conn.WriteToUDP([]byte(ack), addr)
+                byte_counter += len([]byte(ack))
             }
         } else if message[:4] == "fail" { // machine failure detected
             failed_node := message[5:]
