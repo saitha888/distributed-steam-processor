@@ -35,14 +35,6 @@ func main() {
     }
     defer file.Close()
 
-    // clear the message file 
-    file, err = os.OpenFile("bandwith.log", os.O_WRONLY|os.O_TRUNC, 0644)
-    if err != nil {
-        fmt.Println("Error opening file: ", err)
-        return
-    }
-    defer file.Close()
-
     // check whether it's a server (receiver) or client (sender)
     if len(os.Args) > 1 && os.Args[1] == "client" { // run client
         grep := os.Args[2]
@@ -93,6 +85,8 @@ func commandLoop() {
 
         case "join":
             go udp.JoinSystem(addr)
+
+            go udp.PrintBytes(10)
     
             // Start pinging if joining the system
             startPinging()

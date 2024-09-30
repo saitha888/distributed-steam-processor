@@ -13,6 +13,7 @@ var node_id string = ""
 var enabled_sus = false
 var target_ports []string
 var mutex sync.Mutex
+var byte_counter = 0
 
 // Function to join system through the introducer
 func JoinSystem(address string) {
@@ -35,7 +36,9 @@ func JoinSystem(address string) {
     if err != nil {
         fmt.Println("Error sending message to introducer:", err)
         return
-    } 
+    } else {
+        byte_counter += len([]byte(message))
+    }
     buf := make([]byte, 1024)
 
     // Read the response from the introducer (membership list to copy)
@@ -92,6 +95,8 @@ func PingClient(plus_s bool, target_node Node) {
     if err != nil {
         fmt.Println("Error sending ping message:", err)
         return
+    } else {
+        byte_counter += len([]byte(message))
     }
     buf := make([]byte, 1024)
 
@@ -114,7 +119,6 @@ func PingClient(plus_s bool, target_node Node) {
                 for _,node := range membership_list { // let all machines know suspected node is alive
                     SendAlive(node.NodeID, target_node.NodeID, recieved_inc_str)
                 }
-
             }
             // update status and inc number
             mutex.Lock()
@@ -152,5 +156,13 @@ func PingClient(plus_s bool, target_node Node) {
         }
     }
 }
+
+func PrintBytes(seconds int) {
+    time.Sleep(time.Duration(seconds) * time.Second) // Wait for the specified number of seconds
+    fmt.Printf("Total bytes sent after %d seconds: %d bytes\n", seconds, byte_counter)
+}
+
+
+
 
 

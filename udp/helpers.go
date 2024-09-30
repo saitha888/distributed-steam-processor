@@ -20,6 +20,8 @@ func SendMessage(target_node string, to_send string, node_to_send string) {
     if err != nil {
         fmt.Println("Error sending fail message:", err)
         return
+    } else {
+        byte_counter += len([]byte(message))
     }
 }
 
@@ -35,6 +37,8 @@ func SendAlive(node_id string, to_clear string, inc_num string) {
     if err != nil {
         fmt.Println("Error sending alive message:", err)
         return
+    } else {
+        byte_counter += len([]byte(message))
     }
 }
 
@@ -56,6 +60,8 @@ func LeaveList() {
             if err != nil {
                 fmt.Println("Error sending leave message:", err)
                 return
+            } else {
+                byte_counter += len([]byte(message))
             }
         }
     }
