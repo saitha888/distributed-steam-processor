@@ -65,7 +65,7 @@ func startPinging() {
 			default:
 				// Sleep and then ping a random node
 				time.Sleep(2 * time.Second)
-				udp.PingClient(suspicionEnabled)
+				udp.PingNodes(suspicionEnabled)
 			}
 		}
 	}()

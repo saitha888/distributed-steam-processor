@@ -81,14 +81,14 @@ func DialUDPClient(target_addr string) (*net.UDPConn, error) {
 }
 
 // Function to randomly select an alive node in the system
-func SelectRandomNode() *Node {
+func SelectRandomNode() Node {
     rand.Seed(time.Now().UnixNano())
-    var target_node *Node
+    var target_node Node
     for {
         random_index := rand.Intn(len(membership_list))
         selected_node := membership_list[random_index]
         if selected_node.NodeID != node_id && selected_node.Status != "leave" { 
-            target_node = &selected_node
+            target_node = selected_node
             break
         }
     }
@@ -255,4 +255,21 @@ func FindSusMachines() []Node {
 
 func GetMembershipList() []Node {
 	return membership_list
+}
+
+func DefineTargetPorts() {
+    for i := 1; i < 5; i++ {
+        // index, _ := strconv.Itoa(i)
+        wanted_machine := "MACHINE_" + strconv.Itoa(i)
+        target_ports = append(target_ports, os.Getenv(wanted_machine))
+    }
+}
+
+func FindNodeWithPort(port string) int {
+    for index,node := range(membership_list) {
+        if port == node.NodeID[:36] {
+            return index
+        }
+    }
+    return -1
 }

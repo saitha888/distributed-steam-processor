@@ -10,11 +10,14 @@ import (
 // Global variable to save unique node ID
 var node_id string = ""
 var enabled_sus = false
+var target_ports []string
 
 // Function to join system through the introducer
 func JoinSystem(address string) {
     // increment the incarnation number
     inc_num += 1
+    // set the target ports
+    DefineTargetPorts()
     // Connect to introducer
     conn, err := DialUDPClient(introducer_address)
     defer conn.Close()
@@ -58,12 +61,22 @@ func JoinSystem(address string) {
 
 }
 
-// Function to randomly select a node from the system and ping it
-func PingClient(plus_s bool) {
-    enabled_sus = plus_s
+// ping 4 subset nodes, and 1 random node
+func PingNodes(plus_s bool) {
+    for _,node := range target_ports {
+        i := FindNodeWithPort(node)
+        if i >= 0{
+            PingClient(plus_s, membership_list[i])
+        }
+    }
     target_node := SelectRandomNode()
-    target_addr := target_node.NodeID[:36]
+    PingClient(plus_s, target_node)
+}
 
+// Function to randomly select a node from the system and ping it
+func PingClient(plus_s bool, target_node Node) {
+    enabled_sus = plus_s
+    target_addr := target_node.NodeID[:36]
     // Connect to the randomly selected node
     conn, err := DialUDPClient(target_addr)
     defer conn.Close()
@@ -130,3 +143,5 @@ func PingClient(plus_s bool) {
         }
     }
 }
+
+
