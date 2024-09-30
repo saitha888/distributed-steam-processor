@@ -77,6 +77,10 @@ func PingNodes(plus_s bool) {
 
 // Function to randomly select a node from the system and ping it
 func PingClient(plus_s bool, target_node Node) {
+    index := FindNode(target_node.NodeID)
+    if index < 0 {
+        return
+    }
     enabled_sus = plus_s
     target_addr := target_node.NodeID[:36]
     // Connect to the randomly selected node
@@ -95,7 +99,7 @@ func PingClient(plus_s bool, target_node Node) {
     buf := make([]byte, 1024)
 
     // If no response is recieved in .5 seconds close the connection
-    conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+    conn.SetReadDeadline(time.Now().Add(1000 * time.Millisecond))
 
     n, _, err2 := conn.ReadFromUDP(buf)
     if err2 != nil {

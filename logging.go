@@ -64,7 +64,7 @@ func startPinging() {
 				return
 			default:
 				// Sleep and then ping a random node
-				time.Sleep(2 * time.Second)
+				time.Sleep(5 * time.Second)
 				udp.PingNodes(suspicionEnabled)
 			}
 		}
@@ -84,7 +84,7 @@ func commandLoop() {
         switch command {
 
         case "join":
-            go udp.JoinSystem(addr)
+            udp.JoinSystem(addr)
 
             go func(){
                 udp.PrintBytes(10)
