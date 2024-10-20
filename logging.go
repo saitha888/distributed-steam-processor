@@ -13,7 +13,7 @@ import (
 
 var addr string = os.Getenv("MACHINE_ADDRESS")
 var stopPing chan bool
-var suspicionEnabled bool = false
+var suspicionEnabled bool = true
 
 func main() {
 
