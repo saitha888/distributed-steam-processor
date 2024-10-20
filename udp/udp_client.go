@@ -63,20 +63,9 @@ func JoinSystem(address string) {
 
 }
 
-// ping 4 subset nodes, and 1 random node
-func PingNodes(plus_s bool) {
-    for _,node := range target_ports {
-        i := FindNodeWithPort(node)
-        if i >= 0{
-            PingClient(plus_s, membership_list[i])
-        }
-    }
-    target_node := SelectRandomNode()
-    PingClient(plus_s, target_node)
-}
-
 // Function to randomly select a node from the system and ping it
-func PingClient(plus_s bool, target_node Node) {
+func PingClient(plus_s bool) {
+    target_node := SelectRandomNode()
     index := FindNode(target_node.NodeID)
     if index < 0 {
         return
@@ -99,7 +88,7 @@ func PingClient(plus_s bool, target_node Node) {
     buf := make([]byte, 1024)
 
     // If no response is recieved in .5 seconds close the connection
-    conn.SetReadDeadline(time.Now().Add(1000 * time.Millisecond))
+    conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
 
     n, _, err2 := conn.ReadFromUDP(buf)
     if err2 != nil {
@@ -139,7 +128,7 @@ func PingClient(plus_s bool, target_node Node) {
             for _,node := range membership_list { // let all machines know node is suspected
                 SendMessage(node.NodeID, "suspected",target_node.NodeID)
             }
-            susTimeout(9*time.Second, target_node.NodeID, target_node.Inc) // wait 6 seconds to recieve update about node status
+            susTimeout(6*time.Second, target_node.NodeID, target_node.Inc) // wait 6 seconds to recieve update about node status
             index := FindNode(target_node.NodeID)
             if index < 0 { // if node was removed
                 for _, node := range(membership_list) { // let all other nodes know node has failed
