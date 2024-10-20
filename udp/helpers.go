@@ -20,8 +20,6 @@ func SendMessage(target_node string, to_send string, node_to_send string) {
     if err != nil {
         fmt.Println("Error sending fail message:", err)
         return
-    } else {
-        byte_counter += len([]byte(message))
     }
 }
 
@@ -37,8 +35,6 @@ func SendAlive(node_id string, to_clear string, inc_num string) {
     if err != nil {
         fmt.Println("Error sending alive message:", err)
         return
-    } else {
-        byte_counter += len([]byte(message))
     }
 }
 
@@ -60,8 +56,6 @@ func LeaveList() {
             if err != nil {
                 fmt.Println("Error sending leave message:", err)
                 return
-            } else {
-                byte_counter += len([]byte(message))
             }
         }
     }
@@ -217,14 +211,6 @@ func appendToFile(content string, filename string) error {
 	}
 
 	return nil
-}
-
-func induceDrop(x float64) bool {
-    // Seed the random number generator
-    rand.Seed(time.Now().UnixNano())
-
-    // Generate a random float between 0 and 1
-    return rand.Float64() < x
 }
 
 

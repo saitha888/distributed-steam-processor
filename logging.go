@@ -85,11 +85,6 @@ func commandLoop() {
 
         case "join":
             udp.JoinSystem(addr)
-
-            go func(){
-                udp.PrintBytes(10)
-                udp.PrintBytes(10)
-            }()
     
             // Start pinging if joining the system
             startPinging()
