@@ -6,12 +6,16 @@ import (
     "github.com/joho/godotenv"
     "time"
     "strconv"
+    "github.com/emirpasic/gods/maps/treemap"
+
 )
 
 // global variables``
 var err = godotenv.Load(".env")
 var udp_port string = os.Getenv("UDP_PORT")
 var membership_list []Node
+var ring_map = treemap.NewWithStringComparator()
+
 var logfile string = os.Getenv("LOG_FILENAME")
 var inc_num int = 0
 var introducer_address string = os.Getenv("INTRODUCER_ADDRESS")

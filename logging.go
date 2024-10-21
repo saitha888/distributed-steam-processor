@@ -88,7 +88,10 @@ func commandLoop() {
     
             // Start pinging if joining the system
             startPinging()
-    
+        case "list_ring":
+            ring_map := udp.GetRing()
+            go udp.ListRing(ring_map)
+
         case "list_mem":
             membership_list := udp.GetMembershipList()
             go udp.ListMem(membership_list)

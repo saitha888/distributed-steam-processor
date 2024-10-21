@@ -8,6 +8,8 @@ import (
     "time"
     "strconv"
     "math/rand"
+    "crypto/sha256"
+    "github.com/emirpasic/gods/maps/treemap"
 )
 
 func SendMessage(target_node string, to_send string, node_to_send string) {
@@ -40,7 +42,6 @@ func SendAlive(node_id string, to_clear string, inc_num string) {
 
 //Function to leave the system
 func LeaveList() {
-
     // Change own status to left, inform other machines to change status to left
     for i,node :=  range membership_list {
         if node.NodeID == node_id { // check if at self
@@ -161,6 +162,7 @@ func RemoveNode(node_id string) {
             membership_list = append(membership_list[:index], membership_list[index+1:]...)
         }
     }
+    ring_map.Remove(GetHash(node_id))
 }
 
 //function to add node
@@ -171,6 +173,7 @@ func AddNode(node_id string, node_inc int, status string){
         Inc: node_inc,
     }
     membership_list = append(membership_list, new_node)
+    ring_map.Put(GetHash(node_id), node_id)
 }
 
 
@@ -182,6 +185,11 @@ func FindNode(node_id string) int {
         }
     }
     return -1
+}
+
+func GetHash(data string) string {
+	hash := sha256.Sum256([]byte(data))
+	return fmt.Sprintf("%x", hash)  // Returns the hex string representation of the hash
 }
 
 // Change the status of a machine in the list
@@ -234,6 +242,17 @@ func ListMem(list_to_print []Node) {
     fmt.Print("> ")
 }
 
+func GetRing() *treemap.Map {
+    return ring_map
+}
+
+func ListRing(treeMap *treemap.Map) {
+    keys := treeMap.Keys()
+    for _, hash := range keys {
+        id, _ := treeMap.Get(hash)  // Get the value associated with the key
+		fmt.Printf("Hash: %s, Node: %s\n", hash, id)
+    }
+}
 
 func FindSusMachines() []Node {
 	var susList []Node
