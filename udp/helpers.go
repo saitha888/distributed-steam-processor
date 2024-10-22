@@ -10,6 +10,8 @@ import (
     "math/rand"
     "crypto/sha256"
     "github.com/emirpasic/gods/maps/treemap"
+    "log"
+    "io/ioutil"
 )
 
 func SendMessage(target_node string, to_send string, node_to_send string) {
@@ -252,6 +254,21 @@ func ListRing(treeMap *treemap.Map) {
         id, _ := treeMap.Get(hash)  // Get the value associated with the key
 		fmt.Printf("Hash: %s, Node: %s\n", hash, id)
     }
+}
+
+func PrintFiles(dirName string) {
+	if _, err := os.Stat(dirName); os.IsNotExist(err) {
+		log.Fatalf("Directory %s does not exist\n", dirName)
+	}
+
+	files, err := ioutil.ReadDir(dirName)
+	if err != nil {
+		log.Fatalf("Failed to read directory: %v", err)
+	}
+
+	for _, file := range files {
+		fmt.Println(file.Name())
+	}
 }
 
 func FindSusMachines() []Node {

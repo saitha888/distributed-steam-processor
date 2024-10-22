@@ -9,6 +9,7 @@ import (
     "bufio"
     "strings"
     "time"
+    "log"
 )
 
 var addr string = os.Getenv("MACHINE_ADDRESS")
@@ -34,6 +35,26 @@ func main() {
         return
     }
     defer file.Close()
+
+
+    if _, err := os.Stat("file-store"); os.IsNotExist(err) {
+		err := os.Mkdir("file-store", 0755)
+		if err != nil {
+			log.Fatalf("Failed to create directory: %v", err)
+		}
+	} else {
+		err := os.RemoveAll("file-store")
+		if err != nil {
+			log.Fatalf("Failed to remove directory contents: %v", err)
+		}
+		err = os.Mkdir("file-store", 0755)
+		if err != nil {
+			log.Fatalf("Failed to recreate directory: %v", err)
+		}
+	}
+
+
+
 
     // check whether it's a server (receiver) or client (sender)
     if len(os.Args) > 1 && os.Args[1] == "client" { // run client
@@ -95,6 +116,9 @@ func commandLoop() {
         case "list_mem":
             membership_list := udp.GetMembershipList()
             go udp.ListMem(membership_list)
+        
+        case "store":
+            go udp.PrintFiles("file-store")
     
         case "leave":
             // Send a signal to stop the ping loop
