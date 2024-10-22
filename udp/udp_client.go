@@ -51,7 +51,6 @@ func JoinSystem(address string) {
 
     // Update machine's membership list
     for _,node :=  range memb_list {
-        ring_map.Put(GetHash(node), node)
         node_vars := strings.Split(node, " ")
         inc, _ := strconv.Atoi(node_vars[2])
         AddNode(node_vars[0], inc, node_vars[1])
