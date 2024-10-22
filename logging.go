@@ -110,6 +110,11 @@ func commandLoop() {
                 fmt.Println(pattern)
                 tcp.TcpClient(pattern)
 
+            case "get":
+                hydfs_file := args[1]
+                local_file := args[2]
+                tcp.GetFile(hydfs_file, local_file)
+
             case "join":
                 udp.JoinSystem(addr)
         

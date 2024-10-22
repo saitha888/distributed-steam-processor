@@ -6,6 +6,7 @@ import (
     "os"
     "os/exec"
     "io"
+    "io/ioutil"
     "strconv"
     "github.com/joho/godotenv"
     "strings"
@@ -72,7 +73,23 @@ func handleConnection(conn net.Conn) {
 
     //if not grep or command call, must be call to create a log file
     } else if message[:3] == "get" {
-        fmt.Println("get")
+        filename := message[4:]
+        filepath := "file-store/" + filename
+        if _, err := os.Stat(filepath); os.IsNotExist(err) {
+            // If the file does not exist, send an error message
+            conn.Write([]byte("Error: File not found\n"))
+        }
+
+        file_content, err := ioutil.ReadFile(filepath)
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+    
+        // Send the file contents to the client
+        conn.Write(file_content)
+        fmt.Printf("Sent file contents of %s to client\n", filename)
+
     } else if message[:6] == "create" {
         words := strings.Split(message, " ")
         HyDFSfilename := words[1]
