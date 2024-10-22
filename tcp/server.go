@@ -76,6 +76,14 @@ func handleConnection(conn net.Conn) {
     } else if message[:6] == "create" {
         words := strings.Split(message, " ")
         HyDFSfilename := words[1]
+
+        // check if the file already exists
+        _, err := os.Stat(filename)
+	
+        if os.IsNotExist(err) {
+            return
+        }
+
         argument_length := 8 + len(HyDFSfilename)
         file_contents := message[argument_length:]
 
