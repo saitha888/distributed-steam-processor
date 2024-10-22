@@ -98,9 +98,6 @@ func commandLoop() {
         fmt.Print("> ") // CLI prompt
         scanner.Scan()
         command := scanner.Text()
-        // if strings.HasPrefix(command, "client"){
-        //     go tcp.TcpClient(command[7:])
-        // }
         args := strings.Fields(command)
 
         switch args[0] {
@@ -154,7 +151,6 @@ func commandLoop() {
             case "list_sus":
                 sus_list := udp.FindSusMachines()
                 go udp.ListMem(sus_list)
-
 
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")

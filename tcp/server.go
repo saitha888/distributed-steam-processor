@@ -70,6 +70,10 @@ func handleConnection(conn net.Conn) {
         conn.Write([]byte(strconv.Itoa(totalLines)))
 
     //if not grep or command call, must be call to create a log file
+    } else if message[:3] == "get" {
+        fmt.Println("get")
+    } else if message[:6] == "create" {
+        fmt.Println("create")
     } else { 
 
         // Open the file to write the contents
