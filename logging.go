@@ -156,6 +156,11 @@ func commandLoop() {
             case "list_sus":
                 sus_list := udp.FindSusMachines()
                 go udp.ListMem(sus_list)
+            
+            case "create":
+                localfilename := args[1]
+                HyDFSfilename := args[2]
+                tcp.CreateFile(localfilename, HyDFSfilename)
 
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")

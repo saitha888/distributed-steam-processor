@@ -105,20 +105,20 @@ func TcpClient(pattern string) int {
         //case for connecting to other machines and running grep command
         } else {
         
-        grep_response := "grep -nH " + pattern
-        grep_count := "grep -c " + pattern
+            grep_response := "grep -nH " + pattern
+            grep_count := "grep -c " + pattern
 
-        // connect to machine and send grep command
-        sendCommand(ports[i], grep_response)
+            // connect to machine and send grep command
+            sendCommand(ports[i], grep_response)
 
-        //connect to machine and send grep line command
-        lineCount := sendLineCommand(ports[i], grep_count)
-        
-        //append line counts for connected machine
-        lineStr := fmt.Sprintf("Machine %s: %d", ports[i][13:15], lineCount) + "\n"
-        linesArr = append(linesArr, lineStr)
+            //connect to machine and send grep line command
+            lineCount := sendLineCommand(ports[i], grep_count)
+            
+            //append line counts for connected machine
+            lineStr := fmt.Sprintf("Machine %s: %d", ports[i][13:15], lineCount) + "\n"
+            linesArr = append(linesArr, lineStr)
 
-        totalLines += lineCount
+            totalLines += lineCount
         }
     }
 

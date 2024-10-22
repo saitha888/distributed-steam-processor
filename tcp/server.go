@@ -9,6 +9,7 @@ import (
     "io/ioutil"
     "strconv"
     "github.com/joho/godotenv"
+    "strings"
 )
 
 var err = godotenv.Load(".env")
@@ -90,7 +91,33 @@ func handleConnection(conn net.Conn) {
         fmt.Printf("Sent file contents of %s to client\n", filename)
 
     } else if message[:6] == "create" {
-        fmt.Println("create")
+        words := strings.Split(message, " ")
+        HyDFSfilename := words[1]
+
+        // check if the file already exists
+        _, err := os.Stat(filename)
+	
+        if os.IsNotExist(err) {
+            return
+        }
+
+        argument_length := 8 + len(HyDFSfilename)
+        file_contents := message[argument_length:]
+
+        file, err := os.Create("file-store/" + HyDFSfilename)
+        if err != nil {
+            fmt.Println("Error creating the file:", err)
+            return
+        }
+
+        defer file.Close()
+
+        _, err = file.WriteString(file_contents)
+        if err != nil {
+            fmt.Println("Error writing to the file:", err)
+            return
+        }
+        
     } else { 
 
         // Open the file to write the contents
