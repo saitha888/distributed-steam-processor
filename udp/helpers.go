@@ -164,6 +164,13 @@ func RemoveNode(node_id string) {
             membership_list = append(membership_list[:index], membership_list[index+1:]...)
         }
     }
+    
+    bytes := []byte(node_id)
+	
+	bytes[32] = '8'
+	
+	node_id = string(bytes)
+
     ring_map.Remove(GetHash(node_id))
 }
 
@@ -175,6 +182,13 @@ func AddNode(node_id string, node_inc int, status string){
         Inc: node_inc,
     }
     membership_list = append(membership_list, new_node)
+
+    bytes := []byte(node_id)
+	
+	bytes[32] = '8'
+	
+	node_id = string(bytes)
+
     ring_map.Put(GetHash(node_id), node_id)
 }
 

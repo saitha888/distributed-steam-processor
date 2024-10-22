@@ -1,4 +1,5 @@
 .env
 machine.*
 output.txt
+file-store
 
