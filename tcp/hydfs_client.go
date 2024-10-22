@@ -41,14 +41,6 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 	// connect to the machine 
 	node_port := node_id[:36]
 
-	bytes := []byte(node_port)
-	
-	// Change the second character (index 1) from 'e' to 'a'
-	bytes[32] = '8'
-	
-	// Convert back to string
-	node_port = string(bytes)
-
     conn, err := net.Dial("tcp", node_port)
     if err != nil {
         fmt.Println(err)
