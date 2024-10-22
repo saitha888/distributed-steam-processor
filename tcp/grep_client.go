@@ -14,16 +14,16 @@ import (
 )
 
 var ports = []string{
-    // "fa24-cs425-1201.cs.illinois.edu:8081", 
-    // "fa24-cs425-1202.cs.illinois.edu:8082", 
-    // "fa24-cs425-1203.cs.illinois.edu:8083", 
-    // "fa24-cs425-1204.cs.illinois.edu:8084", 
-    // "fa24-cs425-1205.cs.illinois.edu:8085", 
+    "fa24-cs425-1201.cs.illinois.edu:8081", 
+    "fa24-cs425-1202.cs.illinois.edu:8082", 
+    "fa24-cs425-1203.cs.illinois.edu:8083", 
+    "fa24-cs425-1204.cs.illinois.edu:8084", 
+    "fa24-cs425-1205.cs.illinois.edu:8085", 
     "fa24-cs425-1206.cs.illinois.edu:8086", 
     "fa24-cs425-1207.cs.illinois.edu:8087", 
-    // "fa24-cs425-1208.cs.illinois.edu:8088", 
-    // "fa24-cs425-1209.cs.illinois.edu:8089",
-    // "fa24-cs425-1210.cs.illinois.edu:8080",
+    "fa24-cs425-1208.cs.illinois.edu:8088", 
+    "fa24-cs425-1209.cs.illinois.edu:8089",
+    "fa24-cs425-1210.cs.illinois.edu:8080",
 }
 
 var err2 = godotenv.Load(".env")
@@ -105,20 +105,20 @@ func TcpClient(pattern string) int {
         //case for connecting to other machines and running grep command
         } else {
         
-        grep_response := "grep -nH " + pattern
-        grep_count := "grep -c " + pattern
+            grep_response := "grep -nH " + pattern
+            grep_count := "grep -c " + pattern
 
-        // connect to machine and send grep command
-        sendCommand(ports[i], grep_response)
+            // connect to machine and send grep command
+            sendCommand(ports[i], grep_response)
 
-        //connect to machine and send grep line command
-        lineCount := sendLineCommand(ports[i], grep_count)
-        
-        //append line counts for connected machine
-        lineStr := fmt.Sprintf("Machine %s: %d", ports[i][13:15], lineCount) + "\n"
-        linesArr = append(linesArr, lineStr)
+            //connect to machine and send grep line command
+            lineCount := sendLineCommand(ports[i], grep_count)
+            
+            //append line counts for connected machine
+            lineStr := fmt.Sprintf("Machine %s: %d", ports[i][13:15], lineCount) + "\n"
+            linesArr = append(linesArr, lineStr)
 
-        totalLines += lineCount
+            totalLines += lineCount
         }
     }
 

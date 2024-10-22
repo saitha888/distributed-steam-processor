@@ -9,11 +9,12 @@ import (
     "bufio"
     "strings"
     "time"
+    "log"
 )
 
 var addr string = os.Getenv("MACHINE_ADDRESS")
 var stopPing chan bool
-var suspicionEnabled bool = false
+var suspicionEnabled bool = true
 
 func main() {
 
@@ -34,6 +35,26 @@ func main() {
         return
     }
     defer file.Close()
+
+
+    if _, err := os.Stat("file-store"); os.IsNotExist(err) {
+		err := os.Mkdir("file-store", 0755)
+		if err != nil {
+			log.Fatalf("Failed to create directory: %v", err)
+		}
+	} else {
+		err := os.RemoveAll("file-store")
+		if err != nil {
+			log.Fatalf("Failed to remove directory contents: %v", err)
+		}
+		err = os.Mkdir("file-store", 0755)
+		if err != nil {
+			log.Fatalf("Failed to recreate directory: %v", err)
+		}
+	}
+
+
+
 
     // check whether it's a server (receiver) or client (sender)
     if len(os.Args) > 1 && os.Args[1] == "client" { // run client
@@ -64,8 +85,8 @@ func startPinging() {
 				return
 			default:
 				// Sleep and then ping a random node
-				time.Sleep(5 * time.Second)
-				udp.PingNodes(suspicionEnabled)
+				time.Sleep(1 * time.Second)
+				udp.PingClient(suspicionEnabled)
 			}
 		}
 	}()
@@ -77,56 +98,67 @@ func commandLoop() {
         fmt.Print("> ") // CLI prompt
         scanner.Scan()
         command := scanner.Text()
-        if strings.HasPrefix(command, "client"){
-            go tcp.TcpClient(command[7:])
-        }
+        args := strings.Fields(command)
 
-        switch command {
+        switch args[0] {
+            case "grep":   
+                if len(args) < 2 {
+                    fmt.Println("Error: Missing pattern parameter. Usage: grep <pattern>")
+                    continue
+                }
+                pattern := args[1]
+                fmt.Println(pattern)
+                tcp.TcpClient(pattern)
 
-        case "join":
-            udp.JoinSystem(addr)
-
-            go func(){
-                udp.PrintBytes(10)
-                udp.PrintBytes(10)
-            }()
-    
-            // Start pinging if joining the system
-            startPinging()
-    
-        case "list_mem":
-            membership_list := udp.GetMembershipList()
-            go udp.ListMem(membership_list)
-    
-        case "leave":
-            // Send a signal to stop the ping loop
-            if stopPing != nil {
-                close(stopPing) // Close the stopPing channel to stop the ping loop
-            }
-            go udp.LeaveList()
-        case "enable_sus":
-            // Toggle suspicion flag
-            suspicionEnabled = true
-            fmt.Println(suspicionEnabled)
-    
-        case "disable_sus":
-            // Disable suspicion mechanism
-            suspicionEnabled = false
+            case "join":
+                udp.JoinSystem(addr)
         
-        case "status_sus":
-            if suspicionEnabled {
-                fmt.Println("Suspicion enabled")
-            } else {
-                fmt.Println("Suspicion disabled")
-            }
+                // Start pinging if joining the system
+                startPinging()
+            case "list_ring":
+                ring_map := udp.GetRing()
+                go udp.ListRing(ring_map)
+
+            case "list_mem":
+                membership_list := udp.GetMembershipList()
+                go udp.ListMem(membership_list)
+            
+            case "store":
+                go udp.PrintFiles("file-store")
         
-        case "list_sus":
-            sus_list := udp.FindSusMachines()
-            go udp.ListMem(sus_list)
+            case "leave":
+                // Send a signal to stop the ping loop
+                if stopPing != nil {
+                    close(stopPing) // Close the stopPing channel to stop the ping loop
+                }
+                go udp.LeaveList()
+            case "enable_sus":
+                // Toggle suspicion flag
+                suspicionEnabled = true
+                fmt.Println(suspicionEnabled)
+        
+            case "disable_sus":
+                // Disable suspicion mechanism
+                suspicionEnabled = false
+            
+            case "status_sus":
+                if suspicionEnabled {
+                    fmt.Println("Suspicion enabled")
+                } else {
+                    fmt.Println("Suspicion disabled")
+                }
+            
+            case "list_sus":
+                sus_list := udp.FindSusMachines()
+                go udp.ListMem(sus_list)
+            
+            case "create":
+                localfilename := args[1]
+                HyDFSfilename := args[2]
+                tcp.CreateFile(localfilename, HyDFSfilename)
 
-
-        default:
-            fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")
-        }
+            default:
+                fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")
+            }
     }
 }

@@ -6,12 +6,16 @@ import (
     "github.com/joho/godotenv"
     "time"
     "strconv"
+    "github.com/emirpasic/gods/maps/treemap"
+
 )
 
 // global variables``
 var err = godotenv.Load(".env")
 var udp_port string = os.Getenv("UDP_PORT")
 var membership_list []Node
+var ring_map = treemap.NewWithStringComparator()
+
 var logfile string = os.Getenv("LOG_FILENAME")
 var inc_num int = 0
 var introducer_address string = os.Getenv("INTRODUCER_ADDRESS")
@@ -44,13 +48,8 @@ func UdpServer() {
             result := MembershiplistToString()
             conn.WriteToUDP([]byte(result), addr)
         } else if message == "ping" { // machine checking health
-            rate, _ := strconv.ParseFloat(os.Getenv("DROP_RATE"), 64)
-            dropped := induceDrop(rate)
-            if !dropped {
-                ack := node_id + " " + strconv.Itoa(inc_num)
-                conn.WriteToUDP([]byte(ack), addr)
-                byte_counter += len([]byte(ack))
-            }
+            ack := node_id + " " + strconv.Itoa(inc_num)
+            conn.WriteToUDP([]byte(ack), addr)
         } else if message[:4] == "fail" { // machine failure detected
             failed_node := message[5:]
             RemoveNode(failed_node)

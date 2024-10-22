@@ -8,6 +8,10 @@ import (
     "time"
     "strconv"
     "math/rand"
+    "crypto/sha256"
+    "github.com/emirpasic/gods/maps/treemap"
+    "log"
+    "io/ioutil"
 )
 
 func SendMessage(target_node string, to_send string, node_to_send string) {
@@ -20,8 +24,6 @@ func SendMessage(target_node string, to_send string, node_to_send string) {
     if err != nil {
         fmt.Println("Error sending fail message:", err)
         return
-    } else {
-        byte_counter += len([]byte(message))
     }
 }
 
@@ -37,14 +39,11 @@ func SendAlive(node_id string, to_clear string, inc_num string) {
     if err != nil {
         fmt.Println("Error sending alive message:", err)
         return
-    } else {
-        byte_counter += len([]byte(message))
     }
 }
 
 //Function to leave the system
 func LeaveList() {
-
     // Change own status to left, inform other machines to change status to left
     for i,node :=  range membership_list {
         if node.NodeID == node_id { // check if at self
@@ -60,8 +59,6 @@ func LeaveList() {
             if err != nil {
                 fmt.Println("Error sending leave message:", err)
                 return
-            } else {
-                byte_counter += len([]byte(message))
             }
         }
     }
@@ -167,6 +164,7 @@ func RemoveNode(node_id string) {
             membership_list = append(membership_list[:index], membership_list[index+1:]...)
         }
     }
+    ring_map.Remove(GetHash(node_id))
 }
 
 //function to add node
@@ -177,6 +175,7 @@ func AddNode(node_id string, node_inc int, status string){
         Inc: node_inc,
     }
     membership_list = append(membership_list, new_node)
+    ring_map.Put(GetHash(node_id), node_id)
 }
 
 
@@ -188,6 +187,11 @@ func FindNode(node_id string) int {
         }
     }
     return -1
+}
+
+func GetHash(data string) string {
+	hash := sha256.Sum256([]byte(data))
+	return fmt.Sprintf("%x", hash)  // Returns the hex string representation of the hash
 }
 
 // Change the status of a machine in the list
@@ -219,14 +223,6 @@ func appendToFile(content string, filename string) error {
 	return nil
 }
 
-func induceDrop(x float64) bool {
-    // Seed the random number generator
-    rand.Seed(time.Now().UnixNano())
-
-    // Generate a random float between 0 and 1
-    return rand.Float64() < x
-}
-
 
 func ListMem(list_to_print []Node) {
     if len(list_to_print) == 0 {
@@ -248,6 +244,32 @@ func ListMem(list_to_print []Node) {
     fmt.Print("> ")
 }
 
+func GetRing() *treemap.Map {
+    return ring_map
+}
+
+func ListRing(treeMap *treemap.Map) {
+    keys := treeMap.Keys()
+    for _, hash := range keys {
+        id, _ := treeMap.Get(hash)  // Get the value associated with the key
+		fmt.Printf("Hash: %s, Node: %s\n", hash, id)
+    }
+}
+
+func PrintFiles(dirName string) {
+	if _, err := os.Stat(dirName); os.IsNotExist(err) {
+		log.Fatalf("Directory %s does not exist\n", dirName)
+	}
+
+	files, err := ioutil.ReadDir(dirName)
+	if err != nil {
+		log.Fatalf("Failed to read directory: %v", err)
+	}
+
+	for _, file := range files {
+		fmt.Println(file.Name())
+	}
+}
 
 func FindSusMachines() []Node {
 	var susList []Node
