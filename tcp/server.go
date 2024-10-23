@@ -95,28 +95,30 @@ func handleConnection(conn net.Conn) {
         HyDFSfilename := words[1]
 
         // check if the file already exists
-        _, err := os.Stat(filename)
+        _, err := os.Stat("file-store/" + HyDFSfilename)
 	
         if os.IsNotExist(err) {
-            return
+            argument_length := 8 + len(HyDFSfilename)
+            file_contents := message[argument_length:]
+
+            file, err := os.Create("file-store/" + HyDFSfilename)
+            if err != nil {
+                fmt.Println("Error creating the file:", err)
+                return
+            }
+
+            defer file.Close()
+
+            _, err = file.WriteString(file_contents)
+            if err != nil {
+                fmt.Println("Error writing to the file:", err)
+                return
+            }
+        } else {
+            fmt.Println("File already exists")
         }
 
-        argument_length := 8 + len(HyDFSfilename)
-        file_contents := message[argument_length:]
-
-        file, err := os.Create("file-store/" + HyDFSfilename)
-        if err != nil {
-            fmt.Println("Error creating the file:", err)
-            return
-        }
-
-        defer file.Close()
-
-        _, err = file.WriteString(file_contents)
-        if err != nil {
-            fmt.Println("Error writing to the file:", err)
-            return
-        }
+        
         
     } else { 
 
