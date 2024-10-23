@@ -93,9 +93,10 @@ func handleConnection(conn net.Conn) {
     } else if message[:6] == "create" {
         words := strings.Split(message, " ")
         HyDFSfilename := words[1]
+        replica_num := words[2]
 
         // check if the file already exists
-        _, err := os.Stat("file-store/" + HyDFSfilename)
+        _, err := os.Stat("file-store/" + replica_num + "\"" + HyDFSfilename)
 	
         if os.IsNotExist(err) {
             argument_length := 8 + len(HyDFSfilename)

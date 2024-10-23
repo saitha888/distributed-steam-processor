@@ -26,6 +26,7 @@ type Node struct {
     NodeID    string  
     Status    string    
     Inc int 
+    Index string
 }
 
 //starts udp server that listens for pings
@@ -61,7 +62,8 @@ func UdpServer() {
             if index >= 0 { // machine was found
                 changeStatus(index, "alive")
             } else { // machine was not found
-                AddNode(joined_node, 1, "alive")
+                i := joined_node[13:15]
+                AddNode(joined_node, 1, "alive", i)
             }
             message := "Node join detected for: " + joined_node + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)

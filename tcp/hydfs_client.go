@@ -73,16 +73,27 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 	file_hash := udp.GetHash(HyDFSfilename)
 
 	// Find the smallest key that is greater than or equal to the hash
-	node_id := ""
+	node_ids := []string{}
 	iterator := ring_map.Iterator()
 	for iterator.Next() {
 		if utils.StringComparator(iterator.Key(), file_hash) == 1 {
-			node_id = iterator.Value().(string)
+			node_ids = append(node_ids, iterator.Value().(string))
+			for i := 0; i < 2; i++ {
+				if (iterator.Next()) {
+					node_ids = append(node_ids, iterator.Value().(string))
+				} else {
+					iterator.First()
+					node_ids = append(node_ids, iterator.Value().(string))
+				}
+			}
 		}
 	} 
-	if node_id == "" {
+	if len(node_ids) == 0 {
 		iterator.First()
-		node_id = iterator.Value().(string)
+		for i := 0; i < 3; i++ {
+			node_ids = append(node_ids, iterator.Value().(string))
+			iterator.Next()
+		}
 	}
 
 
@@ -96,16 +107,22 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 	content := string(file_contents)
 
 	// connect to the machine 
-	node_port := node_id[:36]
+	for i,node_id := range node_ids {
+		replica_num := "0"
+		if i == 0 {
+			replica_num = node_id[13:15]
+		}
+		node_port := node_id[:36]
 
-    conn, err := net.Dial("tcp", node_port)
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-    defer conn.Close()
-
-    // send the file message to the machine
-	message := "create " + HyDFSfilename + " " + content
-    conn.Write([]byte(message))
+		conn, err := net.Dial("tcp", node_port)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer conn.Close()
+	
+		// send the file message to the machine
+		message := "create " + HyDFSfilename + " " + replica_num + " " + content
+		conn.Write([]byte(message))
+	}
 }
