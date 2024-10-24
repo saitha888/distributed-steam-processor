@@ -26,7 +26,7 @@ func JoinSystem(address string) {
     if node_id == "" {
         node_id = address + "_" + time.Now().Format("2006-01-02_15:04:05")
     }
-    ring_map.Put(GetHash(node_id), node_id)
+
 
     // Send join message to introducer
     message := fmt.Sprintf("join %s", node_id)
@@ -53,7 +53,8 @@ func JoinSystem(address string) {
     for _,node :=  range memb_list {
         node_vars := strings.Split(node, " ")
         inc, _ := strconv.Atoi(node_vars[2])
-        AddNode(node_vars[0], inc, node_vars[1])
+        index := node_vars[0][13:15]
+        AddNode(node_vars[0], inc, node_vars[1], index)
     }
 
     // Print the response from the introducer (e.g., acknowledgment or membership list)

@@ -175,11 +175,12 @@ func RemoveNode(node_id string) {
 }
 
 //function to add node
-func AddNode(node_id string, node_inc int, status string){
+func AddNode(node_id string, node_inc int, status string, i string){
     new_node := Node{
         NodeID:    node_id,  
         Status:    status,           
         Inc: node_inc,
+        Index: i,
     }
     membership_list = append(membership_list, new_node)
 
