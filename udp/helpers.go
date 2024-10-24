@@ -300,14 +300,6 @@ func GetMembershipList() []Node {
 	return membership_list
 }
 
-func DefineTargetPorts() {
-    for i := 1; i < 5; i++ {
-        // index, _ := strconv.Itoa(i)
-        wanted_machine := "MACHINE_" + strconv.Itoa(i)
-        target_ports = append(target_ports, os.Getenv(wanted_machine))
-    }
-}
-
 func FindNodeWithPort(port string) int {
     for index,node := range(membership_list) {
         if port == node.NodeID[:36] {
@@ -407,8 +399,6 @@ func IntroducerJoin() {
 func ProcessJoin(address string) {
     // increment the incarnation number
     inc_num += 1
-    // set the target ports
-    DefineTargetPorts()
     // Connect to introducer
     conn, err := DialUDPClient(introducer_address)
     defer conn.Close()
