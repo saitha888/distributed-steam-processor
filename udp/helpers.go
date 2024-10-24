@@ -328,7 +328,11 @@ func IntroducerJoin() {
     } 
 
     // go through ports, get first alive membership list
-    for _,port := range ports {
+    for i,port := range ports {
+        machine, _ := strconv.Atoi(machine_number)
+        if i == machine - 1 {
+            continue
+        }
         // connect to the port
 
         conn, _ := DialUDPClient(port)
@@ -361,6 +365,7 @@ func IntroducerJoin() {
             for _,node :=  range memb_list {
                 node_vars := strings.Split(node, " ")
                 inc, _ := strconv.Atoi(node_vars[2])
+                fmt.Println("adding node again: " + node_vars[0])
                 AddNode(node_vars[0], inc, node_vars[1], node_vars[2])
             }
             // change own node status to alive
