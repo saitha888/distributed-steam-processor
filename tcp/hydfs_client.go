@@ -106,11 +106,10 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 	}
 
 	content := string(file_contents)
-
+	replica_num := "0"
 	// connect to the machine 
 	for i,node_id := range node_ids {
 		fmt.Println(node_id)
-		replica_num := "0"
 		if i == 0 {
 			replica_num = node_id[13:15]
 			fmt.Println(replica_num)

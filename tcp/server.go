@@ -96,14 +96,14 @@ func handleConnection(conn net.Conn) {
         replica_num := words[2]
 
         // check if the file already exists
-        _, err := os.Stat("file-store/" + replica_num + "\"" + HyDFSfilename)
+        _, err := os.Stat("file-store/" + replica_num + "-" + HyDFSfilename)
 	
         if os.IsNotExist(err) {
             argument_length := 11 + len(HyDFSfilename)
             fmt.Println(message[:argument_length+1])
             file_contents := message[argument_length:]
 
-            file, err := os.Create("file-store/" + replica_num + "\"" + HyDFSfilename)
+            file, err := os.Create("file-store/" + replica_num + "-" + HyDFSfilename)
             if err != nil {
                 fmt.Println("Error creating the file:", err)
                 return
