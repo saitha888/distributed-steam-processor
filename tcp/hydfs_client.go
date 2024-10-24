@@ -86,6 +86,7 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 					node_ids = append(node_ids, iterator.Value().(string))
 				}
 			}
+			break
 		}
 	} 
 	if len(node_ids) == 0 {
@@ -108,9 +109,11 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 
 	// connect to the machine 
 	for i,node_id := range node_ids {
+		fmt.Println(node_id)
 		replica_num := "0"
 		if i == 0 {
 			replica_num = node_id[13:15]
+			fmt.Println(replica_num)
 		}
 		node_port := node_id[:36]
 
