@@ -316,3 +316,148 @@ func FindNodeWithPort(port string) int {
     }
     return -1
 }
+
+
+func IntroducerJoin() {
+    // create unique node_id and add to list
+    membership_list = nil
+    inc_num += 1
+    if node_id == ""{
+        node_id  = os.Getenv("MACHINE_ADDRESS") + "_" + time.Now().Format("2006-01-02_15:04:05")
+        AddNode(node_id, 1, "alive", machine_number)
+    } 
+
+    // go through ports, get first alive membership list
+    for _,port := range ports {
+        // connect to the port
+
+        conn, _ := DialUDPClient(port)
+        defer conn.Close()
+
+        // request membership list
+        message := fmt.Sprintf("mem_list") 
+        _, err = conn.Write([]byte(message))
+        if err != nil {
+            fmt.Println("Error getting result from :" + port, err)
+            continue
+        }
+        // Read the response from the port
+        buf := make([]byte, 1024)
+
+        conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+
+        n, _, err := conn.ReadFromUDP(buf)
+        if err != nil {
+            fmt.Println("Error reading from :" + port, err)
+            continue
+        }
+        memb_list_string := string(buf[:n])
+        memb_list := strings.Split(memb_list_string,", ")
+
+        // if none keep membership list empty
+        if memb_list_string == "" {
+            continue
+        } else { // else set membership list to recieved membership list and break
+            for _,node :=  range memb_list {
+                node_vars := strings.Split(node, " ")
+                inc, _ := strconv.Atoi(node_vars[2])
+                AddNode(node_vars[0], inc, node_vars[1], node_vars[2])
+            }
+            // change own node status to alive
+            index := FindNode(node_id)
+            if index >= 0 {
+                changeStatus(index, "alive")
+            }        
+            break
+        }
+    }
+
+    // send to all other machines it joined 
+    for _,node := range membership_list {
+        if node.Status == "alive" {
+            node_address := node.NodeID[:36]
+            if node_address != os.Getenv("MACHINE_ADDRESS") { // check that it's not self
+                // connect to node
+                addr, err := net.ResolveUDPAddr("udp", node_address)
+                if err != nil {
+                    fmt.Println("Error resolving target address:", err)
+                }
+
+                // Dial UDP to the target node
+                conn, err := net.DialUDP("udp", nil, addr)
+                if err != nil {
+                    fmt.Println("Error connecting to target node:", err)
+                }
+                defer conn.Close()
+
+                result := "join " + node_id
+                // send join message
+                conn.Write([]byte(result))
+            }
+        }
+    }
+}
+
+
+func ProcessJoin(address string) {
+    // increment the incarnation number
+    inc_num += 1
+    // set the target ports
+    DefineTargetPorts()
+    // Connect to introducer
+    conn, err := DialUDPClient(introducer_address)
+    defer conn.Close()
+
+    // Initialize node id for machine.
+    if node_id == "" {
+        node_id = address + "_" + time.Now().Format("2006-01-02_15:04:05")
+    }
+
+
+    // Send join message to introducer
+    message := fmt.Sprintf("join %s", node_id)
+    _, err = conn.Write([]byte(message))
+    if err != nil {
+        fmt.Println("Error sending message to introducer:", err)
+        return
+    }
+    buf := make([]byte, 1024)
+
+    // Read the response from the introducer (membership list to copy)
+    n, _, err := conn.ReadFromUDP(buf)
+    if err != nil {
+        fmt.Println("Error reading from introducer:", err)
+        return
+    }
+    memb_list_string := string(buf[:n])
+    memb_list := strings.Split(memb_list_string,", ")
+
+    // Clear existing membership list if dealing with a node that left
+    membership_list = nil
+
+    // Update machine's membership list
+    for _,node :=  range memb_list {
+        node_vars := strings.Split(node, " ")
+        inc, _ := strconv.Atoi(node_vars[2])
+        index := node_vars[0][13:15]
+        AddNode(node_vars[0], inc, node_vars[1], index)
+    }
+
+    // Print the response from the introducer (e.g., acknowledgment or membership list)
+    fmt.Printf("Received mem_list from introducer\n")
+
+}
+
+
+func ProcessJoinMessage(message string) {
+    joined_node := message[5:]
+    index := FindNode(joined_node)
+    if index >= 0 { // machine was found
+        changeStatus(index, "alive")
+    } else { // machine was not found
+        i := joined_node[13:15]
+        AddNode(joined_node, 1, "alive", i)
+    }
+    send := "Node join detected for: " + joined_node + " at " + time.Now().Format("15:04:05") + "\n"
+    appendToFile(send, logfile)
+}

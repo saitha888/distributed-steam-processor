@@ -3,7 +3,6 @@ package udp
 import (
     "fmt"
     "time"
-    "strings"
     "strconv"
 )
 
@@ -12,54 +11,26 @@ var node_id string = ""
 var enabled_sus = false
 var target_ports []string
 
-// Function to join system through the introducer
+var ports = []string{
+    "fa24-cs425-1201.cs.illinois.edu:9081", 
+    "fa24-cs425-1202.cs.illinois.edu:9082", 
+    "fa24-cs425-1203.cs.illinois.edu:9083", 
+    "fa24-cs425-1204.cs.illinois.edu:9084", 
+    "fa24-cs425-1205.cs.illinois.edu:9085", 
+    "fa24-cs425-1206.cs.illinois.edu:9086", 
+    "fa24-cs425-1207.cs.illinois.edu:9087", 
+    "fa24-cs425-1208.cs.illinois.edu:9088", 
+    "fa24-cs425-1209.cs.illinois.edu:9089",
+    "fa24-cs425-1210.cs.illinois.edu:9080",
+}
+
+// Function to join system
 func JoinSystem(address string) {
-    // increment the incarnation number
-    inc_num += 1
-    // set the target ports
-    DefineTargetPorts()
-    // Connect to introducer
-    conn, err := DialUDPClient(introducer_address)
-    defer conn.Close()
-
-    // Initialize node id for machine.
-    if node_id == "" {
-        node_id = address + "_" + time.Now().Format("2006-01-02_15:04:05")
+    if machine_address == introducer_address {
+        IntroducerJoin()
+    } else {
+        ProcessJoin(address)
     }
-
-
-    // Send join message to introducer
-    message := fmt.Sprintf("join %s", node_id)
-    _, err = conn.Write([]byte(message))
-    if err != nil {
-        fmt.Println("Error sending message to introducer:", err)
-        return
-    }
-    buf := make([]byte, 1024)
-
-    // Read the response from the introducer (membership list to copy)
-    n, _, err := conn.ReadFromUDP(buf)
-    if err != nil {
-        fmt.Println("Error reading from introducer:", err)
-        return
-    }
-    memb_list_string := string(buf[:n])
-    memb_list := strings.Split(memb_list_string,", ")
-
-    // Clear existing membership list if dealing with a node that left
-    membership_list = nil
-
-    // Update machine's membership list
-    for _,node :=  range memb_list {
-        node_vars := strings.Split(node, " ")
-        inc, _ := strconv.Atoi(node_vars[2])
-        index := node_vars[0][13:15]
-        AddNode(node_vars[0], inc, node_vars[1], index)
-    }
-
-    // Print the response from the introducer (e.g., acknowledgment or membership list)
-    fmt.Printf("Received mem_list from introducer\n")
-
 }
 
 // Function to randomly select a node from the system and ping it
@@ -136,7 +107,3 @@ func PingClient(plus_s bool) {
         }
     }
 }
-
-
-
-
