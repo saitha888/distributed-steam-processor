@@ -102,7 +102,7 @@ func handleConnection(conn net.Conn) {
             argument_length := 8 + len(HyDFSfilename)
             file_contents := message[argument_length:]
 
-            file, err := os.Create("file-store/" + HyDFSfilename)
+            file, err := os.Create("file-store/" + "\"" + HyDFSfilename)
             if err != nil {
                 fmt.Println("Error creating the file:", err)
                 return
