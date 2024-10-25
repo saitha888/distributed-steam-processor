@@ -158,20 +158,113 @@ func MembershiplistToString() string{
 }
 
 // Remove a machine from the membership list
-func RemoveNode(node_id string) {
+func RemoveNode(id_to_remove string) {
     for index,node := range membership_list {
-        if node_id == node.NodeID { // remove the node if it's found
+        if id_to_remove == node.NodeID { // remove the node if it's found
             membership_list = append(membership_list[:index], membership_list[index+1:]...)
         }
     }
+    ring_map := GetRing()
+    node_key := GetKeyByValue(ring_map, id_to_remove)
+    iterator := IteratorAt(ring_map,node_key)
+    iterator.Next()
+    if (iterator.Value().(string) == node_id) {
+        //if removed node is right before this node
+        //this node becomes new origin for failed node, rename files
+
+        dir := "filestore"
+
+        // Read the directory contents
+        files, err := ioutil.ReadDir(dir)
+        if err != nil {
+            log.Fatalf("Error reading directory: %v", err)
+        }
+        // Regular expression to match filenames starting with a number followed by a dash (e.g., "2-", "9-", "8-")
+        re := regexp.MustCompile(`^(\d+)-(.*)`)
+        // Iterate through all the files
+        for _, file := range files {
+            // Get the file name
+            oldName := file.Name()
     
-    bytes := []byte(node_id)
+            // Use regex to check if the filename starts with a number and a dash (like "2-", "9-", "8-")
+            matches := re.FindStringSubmatch(oldName)
+            if matches == nil {
+                // If there's no match, skip the file
+                continue
+            }
+    
+            // Convert the machine number to an integer and increment it by 1
+            if matches[1] == id_to_remove[13:15] {
+                newMachineID := strconv.Atoi(machine_number)
+        
+                // Create the new filename by incrementing the machine number
+                newName := fmt.Sprintf("%d-%s", newMachineID, matches[2])
+        
+                // Construct full paths for renaming
+                oldPath := fmt.Sprintf("%s/%s", dir, oldName)
+                newPath := fmt.Sprintf("%s/%s", dir, newName)
+        
+                // Rename the file
+                err = os.Rename(oldPath, newPath)
+                if err != nil {
+                    log.Printf("Error renaming file %s to %s: %v", oldPath, newPath, err)
+                } else {
+                    fmt.Printf("Renamed %s to %s\n", oldName, newName)
+                }
+            }
+        }
+
+        //pull files of origin n-3
+        iterator := iteratorAtNMinusSteps(ring_map, GetKeyByValue(ring_map, node_id, 3))
+        port := iterator.Value().(string)[:36]
+        // pull for files
+        conn, err := net.Dial("tcp", port )
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+        defer conn.Close()
+        message := fmt.Sprintf("pull %s", node_id)
+
+        conn.Write([]byte(message))
+
+        // write the command to an output file
+        buf := make([]byte, 1024)
+        n, err := conn.Read(buf)
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+        response := string(buf[:n])
+        err = WriteToFile(local_file, response)
+        if err != nil {
+            return
+        }
+
+
+    } else {
+        iterator.Next()
+        if (iterator.Value().(string) == node_id) {
+            //if removed node is 2 nodes before this node
+            //rename files of origin n-2 to n-1 
+            //pull files of origin n-3 from n-1
+        }
+    }
+    
+    bytes := []byte(id_to_remove)
 	
 	bytes[32] = '8'
 	
-	node_id = string(bytes)
+	id_to_remove = string(bytes)
 
-    ring_map.Remove(GetHash(node_id))
+
+    ring_map.Remove(GetHash(id_to_remove))
+
+    // say node that fails is n
+    // files with n origin, n-1 origin, n-2 origin
+    // give files of origin n to nodes n+3
+    // give files of origin n-1 to n+2
+    // give files of origin n-2 to n+1
 }
 
 //function to add node
