@@ -12,7 +12,7 @@ import (
     "log"
 )
 
-var addr string = os.Getenv("MACHINE_ADDRESS")
+var addr string = os.Getenv("MACHINE_UDP_ADDRESS")
 var stopPing chan bool
 var suspicionEnabled bool = true
 

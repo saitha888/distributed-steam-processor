@@ -18,7 +18,7 @@ var ring_map = treemap.NewWithStringComparator()
 var logfile string = os.Getenv("LOG_FILENAME")
 var inc_num int = 0
 var introducer_address string = os.Getenv("INTRODUCER_ADDRESS")
-var machine_address string = os.Getenv("MACHINE_ADDRESS")
+var machine_address string = os.Getenv("MACHINE_UDP_ADDRESS")
 var machine_number string = os.Getenv("MACHINE_NUMBER")
 
 
@@ -78,7 +78,7 @@ func UdpServer() {
                 for _,node := range membership_list {
                     if node.Status == "alive" {
                         node_address := node.NodeID[:36]
-                        if node_address != os.Getenv("MACHINE_ADDRESS") { // check that it's not self
+                        if node_address != os.Getenv("MACHINE_UDP_ADDRESS") { // check that it's not self
                             conn, _ := DialUDPClient(node_address)
 
                             result := "join " + recieved_node

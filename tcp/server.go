@@ -118,12 +118,17 @@ func handleConnection(conn net.Conn) {
             }
         } else {
             fmt.Println("File already exists")
-        }
-
-        
-        
-    } else { 
-
+        } 
+    } else if message == "pull" {
+        // messages := []string{"Response 1", "Response 2", "Response 3"}
+		// for _, msg := range messages {
+		// 	fmt.Fprintf(conn, msg+"\n") // Send each message with a newline
+		// 	time.Sleep(1 * time.Second) // Simulate delay between messages
+		// }
+        fmt.Println("pull")
+    } else if message == "split" {
+        fmt.Println("split")
+    }else { 
         // Open the file to write the contents
         file, err := os.Create(filename)
         if err != nil {

@@ -12,6 +12,7 @@ import (
     "github.com/emirpasic/gods/maps/treemap"
     "log"
     "io/ioutil"
+    "bufio"
 )
 
 func SendMessage(target_node string, to_send string, node_to_send string) {
@@ -315,7 +316,7 @@ func IntroducerJoin() {
     membership_list = nil
     inc_num += 1
     if node_id == ""{
-        node_id  = os.Getenv("MACHINE_ADDRESS") + "_" + time.Now().Format("2006-01-02_15:04:05")
+        node_id  = os.Getenv("MACHINE_UDP_ADDRESS") + "_" + time.Now().Format("2006-01-02_15:04:05")
         AddNode(node_id, 1, "alive", machine_number)
     } 
 
@@ -373,7 +374,7 @@ func IntroducerJoin() {
     for _,node := range membership_list {
         if node.Status == "alive" {
             node_address := node.NodeID[:36]
-            if node_address != os.Getenv("MACHINE_ADDRESS") { // check that it's not self
+            if node_address != os.Getenv("MACHINE_UDP_ADDRESS") { // check that it's not self
                 // connect to node
                 addr, err := net.ResolveUDPAddr("udp", node_address)
                 if err != nil {
@@ -400,18 +401,140 @@ func ProcessJoin(address string) {
     // increment the incarnation number
     inc_num += 1
     // Connect to introducer
-    conn, err := DialUDPClient(introducer_address)
-    defer conn.Close()
+    conn_introducer, err := DialUDPClient(introducer_address)
+    defer conn_introducer.Close()
 
     // Initialize node id for machine.
     if node_id == "" {
         node_id = address + "_" + time.Now().Format("2006-01-02_15:04:05")
     }
 
+    target_value := os.Getenv("MACHINE_TCP_ADDRESS")
+    successor := ""
+    // find successor and get files
+    it := ring_map.Iterator()
+    for it.Next() {
+		if it.Value().(string) == target_value {
+            if it.Next() {
+				successor = it.Value().(string)
+			} else {
+				_, successor_val := ring_map.Min()
+                successor = successor_val.(string)
+			}
+		}
+	}
+
+    conn_successor, err := net.Dial("tcp", successor)
+	if err != nil {
+		fmt.Println("Error connecting to server:", err)
+		return
+	}
+	defer conn_successor.Close()
+
+	// Send a message to the server
+	fmt.Fprintln(conn_successor, "split")
+
+	// Read multiple responses from the server
+	scanner := bufio.NewScanner(conn_successor)
+	for scanner.Scan() {
+		server_response := scanner.Text()
+		filename := strings.Split(server_response, " ")[0]
+        argument_length := 1 + len(filename)
+        contents := server_response[argument_length:]
+        new_filename := machine_address[13:15] + "-" + filename
+
+        file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+        if err != nil {
+            fmt.Println(err)
+        }
+        defer file.Close()
+
+        _, err = file.WriteString(contents)
+        if err != nil {
+            fmt.Println(err)
+        }
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Error reading from server:", err)
+	}
+
+    // find the predecessors and get files
+	var prev1, prev2 string
+	var prev_key1 string
+
+	it = ring_map.Iterator()
+
+	for it.Next() {
+		if it.Value().(string) == target_value {
+			break
+		}
+
+		prev2 = prev1
+		prev1 = it.Value().(string)
+		prev_key1 = it.Key().(string)
+	}
+
+    if prev1 == "" {
+        k1, v1 := ring_map.Max()
+        prev_key1 = k1.(string)
+        prev1 = v1.(string)
+    }
+    if prev2 == "" { 
+        max_key, max_value := ring_map.Max()
+        
+        if prev_key1 == max_key.(string) {
+            it := ring_map.Iterator()
+            for it.Next() {
+                if it.Key() == prev_key1 {
+                    break
+                }
+                _, prev2 = it.Key(), it.Value().(string)
+            }
+        } else {
+            prev2 = max_value.(string)
+        }
+    }
+    predecessors := [2]string{prev1, prev2}
+    // get files from predecessors
+    for _,p :=  range predecessors {
+        conn_pred, err := net.Dial("tcp", p)
+        if err != nil {
+            fmt.Println("Error connecting to server:", err)
+            return
+        }
+        defer conn_pred.Close()
+
+        // Send a message to the server
+        fmt.Fprintln(conn_pred, "pull")
+
+        // Read multiple responses from the server
+        scanner := bufio.NewScanner(conn_pred)
+        for scanner.Scan() {
+            server_response := scanner.Text()
+            filename := strings.Split(server_response, " ")[0]
+            argument_length := 1 + len(filename)
+            contents := server_response[argument_length:]
+            new_filename := machine_address[13:15] + "-" + filename
+
+            file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+            if err != nil {
+                fmt.Println(err)
+            }
+            defer file.Close()
+
+            _, err = file.WriteString(contents)
+            if err != nil {
+                fmt.Println(err)
+            }
+        }
+        if err := scanner.Err(); err != nil {
+            fmt.Println("Error reading from server:", err)
+        }
+    }
 
     // Send join message to introducer
     message := fmt.Sprintf("join %s", node_id)
-    _, err = conn.Write([]byte(message))
+    _, err = conn_introducer.Write([]byte(message))
     if err != nil {
         fmt.Println("Error sending message to introducer:", err)
         return
@@ -419,7 +542,7 @@ func ProcessJoin(address string) {
     buf := make([]byte, 1024)
 
     // Read the response from the introducer (membership list to copy)
-    n, _, err := conn.ReadFromUDP(buf)
+    n, _, err := conn_introducer.ReadFromUDP(buf)
     if err != nil {
         fmt.Println("Error reading from introducer:", err)
         return
@@ -440,7 +563,6 @@ func ProcessJoin(address string) {
 
     // Print the response from the introducer (e.g., acknowledgment or membership list)
     fmt.Printf("Received mem_list from introducer\n")
-
 }
 
 
@@ -455,4 +577,13 @@ func ProcessJoinMessage(message string) {
     }
     send := "Node join detected for: " + joined_node + " at " + time.Now().Format("15:04:05") + "\n"
     appendToFile(send, logfile)
+    // check if a predecessor got added
+
+    // if it's immediate predecessor
+    // change any needed files prefix
+    // remove any old second predecessor files
+
+    // if it's second predecessor
+    // remove any old second predecessor files
+    // split old first predecessor and second predecessor files
 }
