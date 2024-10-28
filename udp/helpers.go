@@ -406,9 +406,8 @@ func ProcessJoin(address string) {
 
     // Initialize node id for machine.
     if node_id == "" {
-        node_id = address + "_" + time.Now().Format("2006-01-02_15:04:05")
+        node_id = machine_address + "_" + time.Now().Format("2006-01-02_15:04:05")
     }
-
     target_value := os.Getenv("MACHINE_TCP_ADDRESS")
 
     bytes := []byte(node_id)
@@ -417,11 +416,44 @@ func ProcessJoin(address string) {
 	
 	ring_id := string(bytes)
 
+    // Send join message to introducer
+    message := fmt.Sprintf("join %s", node_id)
+    _, err = conn_introducer.Write([]byte(message))
+    if err != nil {
+        fmt.Println("Error sending message to introducer:", err)
+        return
+    }
+    buf := make([]byte, 1024)
+
+    // Read the response from the introducer (membership list to copy)
+    n, _, err := conn_introducer.ReadFromUDP(buf)
+    if err != nil {
+        fmt.Println("Error reading from introducer:", err)
+        return
+    }
+    memb_list_string := string(buf[:n])
+    memb_list := strings.Split(memb_list_string,", ")
+
+    // Clear existing membership list if dealing with a node that left
+    membership_list = nil
+
+    // Update machine's membership list
+    for _,node :=  range memb_list {
+        node_vars := strings.Split(node, " ")
+        fmt.Println(node_vars)
+        inc, _ := strconv.Atoi(node_vars[2])
+        index := node_vars[0][13:15]
+        AddNode(node_vars[0], inc, node_vars[1], index)
+    }
+
+    // Print the response from the introducer (e.g., acknowledgment or membership list)
+    fmt.Printf("Received mem_list from introducer\n")
+
     successor := ""
     // find successor and get files
     it := ring_map.Iterator()
     for it.Next() {
-		if it.Value().(string) == target_value {
+		if it.Value().(string)[:36] == target_value {
             if it.Next() {
 				successor = it.Value().(string)
 			} else {
@@ -430,11 +462,10 @@ func ProcessJoin(address string) {
 			}
 		}
 	}
-
-    conn_successor, err := net.Dial("tcp", successor)
+    successor_port := successor[:36]
+    conn_successor, err := net.Dial("tcp", successor_port)
 	if err != nil {
 		fmt.Println("Error connecting to server:", err)
-		return
 	}
 	defer conn_successor.Close()
 
@@ -504,10 +535,10 @@ func ProcessJoin(address string) {
     predecessors := [2]string{prev1, prev2}
     // get files from predecessors
     for _,p :=  range predecessors {
-        conn_pred, err := net.Dial("tcp", p)
+        fmt.Println("predecessor: ",p)
+        conn_pred, err := net.Dial("tcp", p[:36])
         if err != nil {
             fmt.Println("Error connecting to server:", err)
-            return
         }
         defer conn_pred.Close()
 
@@ -538,38 +569,6 @@ func ProcessJoin(address string) {
             fmt.Println("Error reading from server:", err)
         }
     }
-
-    // Send join message to introducer
-    message := fmt.Sprintf("join %s", node_id)
-    _, err = conn_introducer.Write([]byte(message))
-    if err != nil {
-        fmt.Println("Error sending message to introducer:", err)
-        return
-    }
-    buf := make([]byte, 1024)
-
-    // Read the response from the introducer (membership list to copy)
-    n, _, err := conn_introducer.ReadFromUDP(buf)
-    if err != nil {
-        fmt.Println("Error reading from introducer:", err)
-        return
-    }
-    memb_list_string := string(buf[:n])
-    memb_list := strings.Split(memb_list_string,", ")
-
-    // Clear existing membership list if dealing with a node that left
-    membership_list = nil
-
-    // Update machine's membership list
-    for _,node :=  range memb_list {
-        node_vars := strings.Split(node, " ")
-        inc, _ := strconv.Atoi(node_vars[2])
-        index := node_vars[0][13:15]
-        AddNode(node_vars[0], inc, node_vars[1], index)
-    }
-
-    // Print the response from the introducer (e.g., acknowledgment or membership list)
-    fmt.Printf("Received mem_list from introducer\n")
 }
 
 
@@ -642,7 +641,6 @@ func ProcessJoinMessage(message string) {
 	// Collect all three predecessors in a slice
 	predecessors := [3]string{prev1, prev2, prev3}
 
-
     bytes := []byte(joined_node)
 	
 	bytes[32] = '8'
@@ -651,9 +649,16 @@ func ProcessJoinMessage(message string) {
 
     dir := "./file-store" 
     curr_prefix := target_value[13:15]
-    first_pred_prefix := predecessors[0][13:15]
-    second_pred_prefix := predecessors[1][13:15]
-    third_pred_prefix := predecessors[2][13:15]
+    first_pred_prefix, second_pred_prefix, third_pred_prefix := "","",""
+    if len(predecessors[0]) > 0 {
+        first_pred_prefix = predecessors[0][13:15]
+    }
+    if len(predecessors[1]) > 0 {
+        second_pred_prefix = predecessors[0][13:15]
+    }
+    if len(predecessors[2]) > 0 {
+        third_pred_prefix = predecessors[0][13:15]
+    }
 
     files, err := ioutil.ReadDir(dir)
     if err != nil {

@@ -150,6 +150,7 @@ func handleConnection(conn net.Conn) {
             }
         }
     } else if message[:5] == "split" {
+        fmt.Println(message)
         dir := "./file-store"
 
         files, err := ioutil.ReadDir(dir)
