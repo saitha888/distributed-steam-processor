@@ -526,6 +526,7 @@ func ProcessJoin(address string) {
 	self_id := string(bytes)
 
     predecessors := GetPredecessors(self_id)
+    fmt.Println("predcessors: ", predecessors)
     // get files from predecessors
     for i,p :=  range predecessors {
         if i == 2 {

@@ -2,7 +2,6 @@ package tcp
 
 import (
 	"distributed_system/udp"
-	"github.com/emirpasic/gods/utils"
 	"fmt"
     "net"
     "os"
@@ -13,11 +12,13 @@ func GetFile(hydfs_file string, local_file string) {
 	ring_map := udp.GetRing()
 	file_server := ""
 	iterator := ring_map.Iterator()
+	server_num := ""
 	for iterator.Next() {
-		if utils.StringComparator(iterator.Key(), file_hash) == 1 {
+		if iterator.Key().(int) > file_hash {
 			file_server = iterator.Value().(string)[:36]
-			break
+			server_num = iterator.Value().(string)[13:15]
 		}
+		break
 	} 
 	if file_server == "" {
 		iterator.First()
@@ -31,8 +32,8 @@ func GetFile(hydfs_file string, local_file string) {
     }
     defer conn.Close()
 
-    message := fmt.Sprintf("get %s", hydfs_file)
-	fmt.Println(message)
+    message := fmt.Sprintf("get %s-%s", server_num, hydfs_file)
+
     conn.Write([]byte(message))
 
     // write the command to an output file
@@ -77,7 +78,7 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 	node_ids := []string{}
 	iterator := ring_map.Iterator()
 	for iterator.Next() {
-		if utils.StringComparator(iterator.Key(), file_hash) == 1 {
+		if iterator.Key().(int)> file_hash {
 			node_ids = append(node_ids, iterator.Value().(string))
 			for i := 0; i < 2; i++ {
 				if (iterator.Next()) {
