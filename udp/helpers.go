@@ -12,6 +12,8 @@ import (
     "github.com/emirpasic/gods/maps/treemap"
     "log"
     "io/ioutil"
+    "regexp"
+    "bufio"
 )
 
 func SendMessage(target_node string, to_send string, node_to_send string) {
@@ -171,52 +173,11 @@ func RemoveNode(id_to_remove string) {
     if (iterator.Value().(string) == node_id) {
         //if removed node is right before this node
         //this node becomes new origin for failed node, rename files
-
-        dir := "filestore"
-
-        // Read the directory contents
-        files, err := ioutil.ReadDir(dir)
-        if err != nil {
-            log.Fatalf("Error reading directory: %v", err)
-        }
-        // Regular expression to match filenames starting with a number followed by a dash (e.g., "2-", "9-", "8-")
-        re := regexp.MustCompile(`^(\d+)-(.*)`)
-        // Iterate through all the files
-        for _, file := range files {
-            // Get the file name
-            oldName := file.Name()
-    
-            // Use regex to check if the filename starts with a number and a dash (like "2-", "9-", "8-")
-            matches := re.FindStringSubmatch(oldName)
-            if matches == nil {
-                // If there's no match, skip the file
-                continue
-            }
-    
-            // Convert the machine number to an integer and increment it by 1
-            if matches[1] == id_to_remove[13:15] {
-                newMachineID := strconv.Atoi(machine_number)
-        
-                // Create the new filename by incrementing the machine number
-                newName := fmt.Sprintf("%d-%s", newMachineID, matches[2])
-        
-                // Construct full paths for renaming
-                oldPath := fmt.Sprintf("%s/%s", dir, oldName)
-                newPath := fmt.Sprintf("%s/%s", dir, newName)
-        
-                // Rename the file
-                err = os.Rename(oldPath, newPath)
-                if err != nil {
-                    log.Printf("Error renaming file %s to %s: %v", oldPath, newPath, err)
-                } else {
-                    fmt.Printf("Renamed %s to %s\n", oldName, newName)
-                }
-            }
-        }
+        RenameFilesWithPrefix(id_to_remove[13:15], node_id[13:15])
 
         //pull files of origin n-3
-        iterator := iteratorAtNMinusSteps(ring_map, GetKeyByValue(ring_map, node_id, 3))
-        port := iterator.Value().(string)[:36]
+        nod := IteratorAtNMinusSteps(ring_map, GetKeyByValue(ring_map, node_id), 3)
+        port := nod[:36]
         // pull for files
         conn, err := net.Dial("tcp", port )
         if err != nil {
@@ -224,30 +185,51 @@ func RemoveNode(id_to_remove string) {
             return
         }
         defer conn.Close()
-        message := fmt.Sprintf("pull %s", node_id)
+        message := fmt.Sprintf("pull")
 
         conn.Write([]byte(message))
 
-        // write the command to an output file
-        buf := make([]byte, 1024)
-        n, err := conn.Read(buf)
-        if err != nil {
-            fmt.Println(err)
-            return
-        }
-        response := string(buf[:n])
-        err = WriteToFile(local_file, response)
-        if err != nil {
-            return
-        }
+        // // write the command to an output file
+        // buf := make([]byte, 1024)
+        // n, err := conn.Read(buf)
+        // if err != nil {
+        //     fmt.Println(err)
+        //     return
+        // }
 
+        // Read multiple responses from the server
+        scanner := bufio.NewScanner(conn)
+        for scanner.Scan() {
+            server_response := scanner.Text()
+            filename := strings.Split(server_response, " ")[0]
+            argument_length := 1 + len(filename)
+            contents := server_response[argument_length:]
+            new_filename := machine_address[13:15] + "-" + filename
+
+            file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+            if err != nil {
+                return
+            }
+            defer file.Close()
+
+            _, err = file.WriteString(contents)
+            if err != nil {
+                return
+            }
+        }
+        if err := scanner.Err(); err != nil {
+            fmt.Println("Error reading from server:", err)
+        }
 
     } else {
         iterator.Next()
         if (iterator.Value().(string) == node_id) {
             //if removed node is 2 nodes before this node
             //rename files of origin n-2 to n-1 
-            //pull files of origin n-3 from n-1
+            RenameFilesWithPrefix(IteratorAtNMinusSteps(ring_map, node_id, 2)[13:15], node_id[13:15])
+
+            //pull files of origin n-3
+
         }
     }
     
@@ -265,6 +247,120 @@ func RemoveNode(id_to_remove string) {
     // give files of origin n to nodes n+3
     // give files of origin n-1 to n+2
     // give files of origin n-2 to n+1
+}
+
+// iteratorAt finds the iterator positioned at the given key
+func IteratorAt(ringMap *treemap.Map, startKey interface{}) *treemap.Iterator {
+	iterator := ringMap.Iterator()
+	for iterator.Next() {
+		if iterator.Key() == startKey {
+			// Return the iterator at the position of startKey
+			return &iterator
+		}
+	}
+	// Return nil if the key is not found
+	return nil
+}
+
+// Function to find the key by its value in a TreeMap
+func GetKeyByValue(ringMap *treemap.Map, value string) interface{} {
+	iterator := ringMap.Iterator()
+	for iterator.Next() {
+		if iterator.Value() == value {
+			return iterator.Key() // Return the corresponding key
+		}
+	}
+	return nil
+}
+
+// Function to find the iterator positioned at the nth key and move backwards by steps
+func IteratorAtNMinusSteps(ringMap *treemap.Map, startKey interface{}, steps int) string {
+	// Get an iterator at the beginning of the TreeMap
+	iterator := ringMap.Iterator()
+	found := false
+
+	// First, find the position of startKey (n)
+	for iterator.Next() {
+		if iterator.Key() == startKey {
+			found = true
+			break
+		}
+	}
+
+	// If startKey is found, move backwards by the specified steps
+	if found {
+		// Move backwards by `steps`
+		for i := 0; i < steps; i++ {
+			if iterator.Prev() {
+				// Move backwards
+			} else {
+				// If there's no previous element (we hit the beginning of the map), return nil
+				return ""
+			}
+		}
+		return iterator.Key().(string)
+	}
+	return ""
+}
+
+// Function to write content to a local file
+func WriteToFile(filename string, content string) error {
+	// Create or truncate the file
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Write the content to the file
+	_, err = file.WriteString(content)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// renameFilesWithPrefix renames files in the "filestore" directory that start with oldPrefix to start with newPrefix
+func RenameFilesWithPrefix(oldPrefix string, newPrefix string) {
+	dir := "filestore"
+
+	// Read the directory contents
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		log.Fatalf("Error reading directory: %v", err)
+	}
+
+	// Regular expression to match filenames starting with the oldPrefix followed by a dash
+	re := regexp.MustCompile(fmt.Sprintf(`^(%s)-(.*)`, oldPrefix))
+
+	// Iterate through all the files
+	for _, file := range files {
+		// Get the file name
+		oldName := file.Name()
+
+		// Use regex to check if the filename starts with oldPrefix and a dash
+		matches := re.FindStringSubmatch(oldName)
+		if matches == nil {
+			// If there's no match, skip the file
+			continue
+		}
+
+		// Create the new filename with newPrefix instead of oldPrefix
+		newName := fmt.Sprintf("%s-%s", newPrefix, matches[2])
+
+		// Construct full paths for renaming
+		oldPath := fmt.Sprintf("%s/%s", dir, oldName)
+		newPath := fmt.Sprintf("%s/%s", dir, newName)
+
+		// Rename the file
+		err = os.Rename(oldPath, newPath)
+		if err != nil {
+			log.Printf("Error renaming file %s to %s: %v", oldPath, newPath, err)
+		} else {
+			fmt.Printf("Renamed %s to %s\n", oldName, newName)
+		}
+	}
 }
 
 //function to add node
