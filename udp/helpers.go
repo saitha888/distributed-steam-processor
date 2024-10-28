@@ -168,8 +168,8 @@ func RemoveNode(id_to_remove string) {
         }
     }
     ring_map := GetRing()
-    // node_key := GetKeyByValue(ring_map, id_to_remove)
     iterator := IteratorAt(ring_map, id_to_remove)
+    fmt.Println("id to retrieve files:" + iterator.Value().(string))
     id := ""
     if (!iterator.Next()) {
         iterator.First()
@@ -177,6 +177,7 @@ func RemoveNode(id_to_remove string) {
     } else {
         id = iterator.Value().(string)
     }
+    fmt.Println("Next id: " + id)
     if (id == node_id) {
         fmt.Println("immediate predecessor failed")
         //if removed node is right before this node
