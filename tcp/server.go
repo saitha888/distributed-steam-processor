@@ -182,7 +182,7 @@ func handleConnection(conn net.Conn) {
                         if err != nil {
                             fmt.Println("Error sending file content:", err)
                         }
-                        err = os.Rename(dir+"/"+filename, dir+"/"+new_filename)
+                        err = os.Rename(dir+"/"+filename, dir+"/"+pred_port[13:15]+"-"+new_filename)
                         if err != nil {
                             fmt.Println("Error renaming file:", err)
                         }
