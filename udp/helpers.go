@@ -563,6 +563,7 @@ func ProcessJoin(address string) {
             scanner := bufio.NewScanner(conn_pred)
             for scanner.Scan() {
                 server_response := scanner.Text()
+                fmt.Println("response from pull: ", server_response)
                 filename := strings.Split(server_response, " ")[0]
                 argument_length := 1 + len(filename)
                 contents := server_response[argument_length:]
@@ -733,7 +734,7 @@ func ProcessJoinMessage(message string) {
                 }
                 // find files with prefix of second predecessor and remove
                 if !file.IsDir() && strings.HasPrefix(filename, third_pred_prefix) {
-                    err := os.Remove(filename)
+                    err := os.Remove(dir + "/" + filename)
                     if err != nil {
                         fmt.Println("Error removing file:", err)
                     }
