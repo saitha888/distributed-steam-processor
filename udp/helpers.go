@@ -358,7 +358,6 @@ func IntroducerJoin() {
             for _,node :=  range memb_list {
                 node_vars := strings.Split(node, " ")
                 inc, _ := strconv.Atoi(node_vars[2])
-                fmt.Println("adding node again: " + node_vars[0])
                 AddNode(node_vars[0], inc, node_vars[1], node_vars[2])
             }
             // change own node status to alive
@@ -440,7 +439,6 @@ func ProcessJoin(address string) {
     // Update machine's membership list
     for _,node :=  range memb_list {
         node_vars := strings.Split(node, " ")
-        fmt.Println(node_vars)
         inc, _ := strconv.Atoi(node_vars[2])
         index := node_vars[0][13:15]
         AddNode(node_vars[0], inc, node_vars[1], index)
@@ -537,7 +535,6 @@ func ProcessJoin(address string) {
     predecessors := [2]string{prev1, prev2}
     // get files from predecessors
     for _,p :=  range predecessors {
-        fmt.Println("predecessor: ",p)
         pred_port := p[:36]
         if pred_port != os.Getenv("MACHINE_TCP_ADDRESS"){
             conn_pred, err := net.Dial("tcp", pred_port)

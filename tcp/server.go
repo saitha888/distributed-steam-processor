@@ -51,7 +51,6 @@ func handleConnection(conn net.Conn) {
     n, _ := conn.Read(buf)
     message := string(buf[:n])
 
-    fmt.Println("message: ", message)
 
     // Check if message is a grep command
     if len(message) >= 4 && message[:4] == "grep" {
@@ -68,12 +67,10 @@ func handleConnection(conn net.Conn) {
         
         // send the result back to the initial machine
         conn.Write(output)
-
     // Check if message is a client call (for testing)
     } else if len(message) >= 6 && message[:6] == "client" {
         totalLines := TcpClient(message[7:])
         conn.Write([]byte(strconv.Itoa(totalLines)))
-
     //if not grep or command call, must be call to create a log file
     } else if len(message) >= 3 && message[:3] == "get" {
         filename := message[4:]
@@ -92,7 +89,6 @@ func handleConnection(conn net.Conn) {
         // Send the file contents to the client
         conn.Write(file_content)
         fmt.Printf("Sent file contents of %s to client\n", filename)
-
     } else if len(message) >= 6 && message[:6] == "create" {
         words := strings.Split(message, " ")
         HyDFSfilename := words[1]
@@ -103,7 +99,6 @@ func handleConnection(conn net.Conn) {
 	
         if os.IsNotExist(err) {
             argument_length := 11 + len(HyDFSfilename)
-            fmt.Println(message[:argument_length+1])
             file_contents := message[argument_length:]
 
             file, err := os.Create("file-store/" + replica_num + "-" + HyDFSfilename)
@@ -117,14 +112,12 @@ func handleConnection(conn net.Conn) {
             _, err = file.WriteString(file_contents)
             if err != nil {
                 fmt.Println("Error writing to the file:", err)
-                return
             }
         } else {
             fmt.Println("File already exists")
         } 
-    } else if message == "pull" {
+    } else if len(message) >= 4 && message[:4] == "pull" {
         dir := "./file-store"
-
         files, err := ioutil.ReadDir(dir)
         if err != nil {
             fmt.Println("Error reading directory:", err)
@@ -152,7 +145,6 @@ func handleConnection(conn net.Conn) {
             }
         }
     } else if len(message) >= 5 && message[:5] == "split" {
-        fmt.Println(message)
         dir := "./file-store"
 
         files, err := ioutil.ReadDir(dir)
@@ -197,7 +189,6 @@ func handleConnection(conn net.Conn) {
         file, err := os.Create(filename)
         if err != nil {
             fmt.Println(err)
-            return
         }
         defer file.Close()
 
@@ -205,7 +196,6 @@ func handleConnection(conn net.Conn) {
         _, err = file.Write(buf[:n])
         if err != nil {
             fmt.Println(err)
-            return
         }
 
         // Read from the connection in chunks and write to the file
@@ -219,14 +209,12 @@ func handleConnection(conn net.Conn) {
                     break
                 }
                 fmt.Println(err)
-                return 
             }
 
             // Write the chunk to the file
             _, err = file.Write(buf[:n])
             if err != nil {
                 fmt.Println(err)
-                return
             }
         }
     }
