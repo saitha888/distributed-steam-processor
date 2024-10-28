@@ -646,14 +646,16 @@ func ProcessJoinMessage(message string) {
             fmt.Println("immediate predecessor joined")
             for _, file := range files {
                 filename := file.Name()
-                file_hash := GetHash(filename[4:])
+                file_hash := GetHash(filename[3:])
                 // find files with prefix of current server
                 if !file.IsDir() && strings.HasPrefix(filename, curr_prefix) {
                     // if the hash now routes to predecessor change the prefix
                     pred_hash := GetHash(p)
+                    fmt.Println("pred_hash: ", pred_hash)
+                    fmt.Println("file_hash: ", file_hash)
                     if pred_hash >= file_hash {
                         old_filename := "file-store/" + filename
-                        new_filename := "file-store/" + p[13:15] + "-" + filename[4:]
+                        new_filename := "file-store/" + p[13:15] + "-" + filename[3:]
                         fmt.Println("checking hash and sending: ", new_filename)
                         os.Rename(old_filename, new_filename)
                     }
