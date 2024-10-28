@@ -178,6 +178,7 @@ func RemoveNode(id_to_remove string) {
         id = iterator.Value().(string)
     }
     if (id == node_id) {
+        fmt.Println("immediate predecessor failed")
         //if removed node is right before this node
         //this node becomes new origin for failed node, rename files
         RenameFilesWithPrefix(id_to_remove[13:15], node_id[13:15])
@@ -401,12 +402,12 @@ func WriteToFile(filename string, content string) error {
 
 // renameFilesWithPrefix renames files in the "filestore" directory that start with oldPrefix to start with newPrefix
 func RenameFilesWithPrefix(oldPrefix string, newPrefix string) {
-	dir := "filestore"
+	dir := "file-store"
 
 	// Read the directory contents
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		log.Fatalf("Error reading directory: %v", err)
+        fmt.Println("cannot get to directory")
 	}
 
 	// Regular expression to match filenames starting with the oldPrefix followed by a dash
@@ -534,7 +535,7 @@ func ListRing(treeMap *treemap.Map) {
     keys := treeMap.Keys()
     for _, hash := range keys {
         id, _ := treeMap.Get(hash)  // Get the value associated with the key
-		fmt.Printf("Hash: %s, Node: %s\n", hash, id)
+		fmt.Printf("Hash: %d, Node: %s\n", hash, id)
     }
 }
 
