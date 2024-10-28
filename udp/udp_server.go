@@ -58,9 +58,9 @@ func UdpServer() {
             message := "Node failure message recieved for: " + failed_node + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
         } else if message[:4] == "join" { // new machine joined
+            recieved_node := message[5:]
             if machine_address == introducer_address {
                 // get the node id and timestamp
-                recieved_node := message[5:]
                 message := "Node join detected for: " + recieved_node + " at " + time.Now().Format("15:04:05") + "\n"
                 appendToFile(message, logfile)
                 index := FindNode(recieved_node)
@@ -88,7 +88,9 @@ func UdpServer() {
                     }
                 }
             } else {
-                ProcessJoinMessage(message)
+                if recieved_node[:36] != os.Getenv("MACHINE_UDP_ADDRESS") {
+                    ProcessJoinMessage(message)
+                }
             }
         } else if message[:5] == "leave" { // machine left
             left_node := message[6:]
