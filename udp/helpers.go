@@ -14,6 +14,7 @@ import (
     "io/ioutil"
     "regexp"
     "bufio"
+    "encoding/binary"
 )
 
 func SendMessage(target_node string, to_send string, node_to_send string) {
@@ -439,9 +440,11 @@ func FindNode(node_id string) int {
     return -1
 }
 
-func GetHash(data string) string {
+func GetHash(data string) int {
 	hash := sha256.Sum256([]byte(data))
-	return fmt.Sprintf("%x", hash)  // Returns the hex string representation of the hash
+    truncated_hash := binary.BigEndian.Uint64(hash[:8])
+    ring_hash := truncated_hash % 2048
+	return (int)(ring_hash)
 }
 
 // Change the status of a machine in the list
