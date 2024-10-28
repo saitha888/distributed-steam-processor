@@ -526,50 +526,18 @@ func ProcessJoin(address string) {
     }
 
     // find the predecessors and get files
-	var prev1, prev2 string
-	var prev_key1 string
-
     bytes = []byte(node_id)
 	
 	bytes[32] = '8'
 	
 	self_id := string(bytes)
 
-	it = ring_map.Iterator()
-
-	for it.Next() {
-		if it.Value().(string) == self_id {
-			break
-		}
-
-		prev2 = prev1
-		prev1 = it.Value().(string)
-		prev_key1 = it.Key().(string)
-	}
-
-    if prev1 == "" {
-        k1, v1 := ring_map.Max()
-        prev_key1 = k1.(string)
-        prev1 = v1.(string)
-    }
-    if prev2 == "" { 
-        max_key, max_value := ring_map.Max()
-        
-        if prev_key1 == max_key.(string) {
-            it := ring_map.Iterator()
-            for it.Next() {
-                if it.Key() == prev_key1 {
-                    break
-                }
-                _, prev2 = it.Key(), it.Value().(string)
-            }
-        } else {
-            prev2 = max_value.(string)
-        }
-    }
-    predecessors := [2]string{prev1, prev2}
+    predecessors := GetPredecessors(self_id)
     // get files from predecessors
-    for _,p :=  range predecessors {
+    for i,p :=  range predecessors {
+        if i == 2 {
+            continue
+        }
         pred_port := p[:36]
         if pred_port != os.Getenv("MACHINE_TCP_ADDRESS"){
             conn_pred, err := net.Dial("tcp", pred_port)
@@ -650,64 +618,8 @@ func ProcessJoinMessage(message string) {
 	
 	self_id := string(bytes)
 
-    var prev1, prev2, prev3 string
-	var prev_key1, prev_key2 string
+    predecessors := GetPredecessors(self_id)
 
-	// Create an iterator to go through the TreeMap
-	it := ring_map.Iterator()
-
-	for it.Next() {
-        fmt.Println("curr iter: ", it.Value().(string))
-		if it.Value().(string) == self_id {
-			break
-		}
-		prev3 = prev2
-		prev2 = prev1
-		prev_key2 = prev_key1
-		prev1 = it.Value().(string)
-		prev_key1 = it.Key().(string)
-        fmt.Println("curr precv: ", prev1, prev2, prev3)
-	}
-
-	if prev1 == "" {
-		k1, v1 := ring_map.Max()
-		prev_key1 = k1.(string)
-		prev1 = v1.(string)
-        fmt.Println("prev 1 edge: ", prev1)
-	}
-	if prev2 == "" {
-		max_key, max_value := ring_map.Max()
-		if prev_key1 == max_key.(string) {
-			it = ring_map.Iterator()
-			for it.Next() {
-				if it.Key() == prev_key1 {
-					break
-				}
-				prev_key2, prev2 = it.Key().(string), it.Value().(string)
-			}
-		} else {
-			prev_key2, prev2 = max_key.(string), max_value.(string)
-		}
-        fmt.Println("prev 2 edge: ", prev2)
-	}
-	if prev3 == "" {
-		max_key, max_value := ring_map.Max()
-		if prev_key1 == max_key.(string) || prev_key2 == max_key.(string) {
-			it = ring_map.Iterator()
-			for it.Next() {
-				if it.Key() == prev_key1 || it.Key() == prev_key2 {
-					break
-				}
-				prev3 = it.Value().(string)
-			}
-		} else {
-			prev3 = max_value.(string)
-		}
-        fmt.Println("prev 3 edge: ", prev3)
-	}
-
-	// Collect all three predecessors in a slice
-	predecessors := [3]string{prev1, prev2, prev3}
     fmt.Println("predecessors for other process joining found as: ", predecessors)
 
     bytes = []byte(joined_node)
@@ -784,4 +696,67 @@ func ProcessJoinMessage(message string) {
             }
         }
     }
+}
+
+
+func GetPredecessors(self_id string) [3]string{
+    var prev1, prev2, prev3 string
+	var prev_key1, prev_key2 string
+
+	// Create an iterator to go through the TreeMap
+	it := ring_map.Iterator()
+
+	for it.Next() {
+        fmt.Println("curr iter: ", it.Value().(string))
+		if it.Value().(string) == self_id {
+			break
+		}
+		prev3 = prev2
+		prev2 = prev1
+		prev_key2 = prev_key1
+		prev1 = it.Value().(string)
+		prev_key1 = it.Key().(string)
+        fmt.Println("curr precv: ", prev1, prev2, prev3)
+	}
+
+	if prev1 == "" {
+		k1, v1 := ring_map.Max()
+		prev_key1 = k1.(string)
+		prev1 = v1.(string)
+        fmt.Println("prev 1 edge: ", prev1)
+	}
+	if prev2 == "" {
+		max_key, max_value := ring_map.Max()
+		if prev_key1 == max_key.(string) {
+			it = ring_map.Iterator()
+			for it.Next() {
+				if it.Key() == prev_key1 {
+					break
+				}
+				prev_key2, prev2 = it.Key().(string), it.Value().(string)
+			}
+		} else {
+			prev_key2, prev2 = max_key.(string), max_value.(string)
+		}
+        fmt.Println("prev 2 edge: ", prev2)
+	}
+	if prev3 == "" {
+		max_key, max_value := ring_map.Max()
+		if prev_key1 == max_key.(string) || prev_key2 == max_key.(string) {
+			it = ring_map.Iterator()
+			for it.Next() {
+				if it.Key() == prev_key1 || it.Key() == prev_key2 {
+					break
+				}
+				prev3 = it.Value().(string)
+			}
+		} else {
+			prev3 = max_value.(string)
+		}
+        fmt.Println("prev 3 edge: ", prev3)
+	}
+
+	// Collect all three predecessors in a slice
+	predecessors := [3]string{prev1, prev2, prev3}
+    return predecessors
 }
