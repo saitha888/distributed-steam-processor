@@ -163,7 +163,7 @@ func handleConnection(conn net.Conn) {
             if !file.IsDir() {
                 filename := file.Name()
                 // if file is from origin server send it back 
-                if filename[:2] == tcp_port[1:3] {
+                if filename[:2] == os.Getenv("MACHINE_UDP_ADDRESS")[13:15] {
                     file_hash := udp.GetHash(filename[3:])
                     pred_hash := udp.GetHash(pred_port)
                     file_path := dir + "/" + filename
