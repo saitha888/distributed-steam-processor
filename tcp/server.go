@@ -120,9 +120,36 @@ func handleConnection(conn net.Conn) {
             fmt.Println("File already exists")
         }
 
-        
-        
-    } else { 
+    } else if len(message) >= 4 && message[:4] == "pull" {
+        fmt.Println("message to pull")
+        dir := "./file-store"
+        files, err := ioutil.ReadDir(dir)
+        if err != nil {
+            fmt.Println("Error reading directory:", err)
+        }
+
+        // go through all the files
+        for _, file := range files {
+            if !file.IsDir() {
+                filename = file.Name()
+                // if file is from origin server send it back 
+                if filename[:2] == tcp_port[1:3] {
+                    file_path := dir + "/" + filename
+                    content, err := ioutil.ReadFile(file_path)
+                    if err != nil {
+                        fmt.Println("Error reading file:", filename, err)
+                    }
+
+                    // Send the file name and content to the client
+                    message := fmt.Sprintf("%s %s", filename, string(content))
+                    _, err = conn.Write([]byte(message))
+                    if err != nil {
+                        fmt.Println("Error sending file content:", err)
+                    }
+                }
+            }
+        }
+    }  else { 
 
         // Open the file to write the contents
         file, err := os.Create(filename)
