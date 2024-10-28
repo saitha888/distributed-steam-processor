@@ -447,20 +447,9 @@ func ProcessJoin(address string) {
     // Print the response from the introducer (e.g., acknowledgment or membership list)
     fmt.Printf("Received mem_list from introducer\n")
 
-    successor := ""
-    // find successor and get files
-    it := ring_map.Iterator()
-    for it.Next() {
-		if it.Value().(string)[:36] == target_value {
-            if it.Next() {
-				successor = it.Value().(string)
-			} else {
-				_, successor_val := ring_map.Min()
-                successor = successor_val.(string)
-			}
-		}
-	}
+    successor := GetSuccessor(target_value)
     successor_port := successor[:36]
+    
     if successor_port != os.Getenv("MACHINE_TCP_ADDRESS") {
         conn_successor, err := net.Dial("tcp", successor_port)
         if err != nil {
@@ -759,4 +748,21 @@ func GetPredecessors(self_id string) [3]string{
 	// Collect all three predecessors in a slice
 	predecessors := [3]string{prev1, prev2, prev3}
     return predecessors
+}
+
+func GetSuccessor(target_value string) string{
+    successor := ""
+    // find successor and get files
+    it := ring_map.Iterator()
+    for it.Next() {
+		if it.Value().(string)[:36] == target_value {
+            if it.Next() {
+				successor = it.Value().(string)
+			} else {
+				_, successor_val := ring_map.Min()
+                successor = successor_val.(string)
+			}
+		}
+	}
+    return successor
 }
