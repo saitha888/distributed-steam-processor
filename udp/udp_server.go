@@ -14,7 +14,7 @@ import (
 var err = godotenv.Load(".env")
 var udp_port string = os.Getenv("UDP_PORT")
 var membership_list []Node
-var ring_map = treemap.NewWithStringComparator()
+var ring_map = treemap.NewWithIntComparator()
 var logfile string = os.Getenv("LOG_FILENAME")
 var inc_num int = 0
 var introducer_address string = os.Getenv("INTRODUCER_ADDRESS")

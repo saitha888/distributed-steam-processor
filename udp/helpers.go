@@ -13,6 +13,7 @@ import (
     "log"
     "io/ioutil"
     "bufio"
+    "encoding/binary"
 )
 
 func SendMessage(target_node string, to_send string, node_to_send string) {
@@ -205,9 +206,12 @@ func FindNode(node_id string) int {
     return -1
 }
 
-func GetHash(data string) string {
+
+func GetHash(data string) int {
 	hash := sha256.Sum256([]byte(data))
-	return fmt.Sprintf("%x", hash) 
+    truncated_hash := binary.BigEndian.Uint64(hash[:8])
+    ring_hash := truncated_hash % 2048
+	return (int)(ring_hash)
 }
 
 // Change the status of a machine in the list
@@ -449,7 +453,7 @@ func ProcessJoin(address string) {
 
     successor := GetSuccessor(target_value)
     successor_port := successor[:36]
-    
+
     if successor_port != os.Getenv("MACHINE_TCP_ADDRESS") {
         conn_successor, err := net.Dial("tcp", successor_port)
         if err != nil {
