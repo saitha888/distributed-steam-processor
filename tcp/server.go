@@ -138,7 +138,7 @@ func handleConnection(conn net.Conn) {
 
                     // Send the file name and content to the client
                     fmt.Println("sending back own file: ", filename)
-                    message := fmt.Sprintf("%s %s", filename, string(content))
+                    message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", filename, string(content))
                     _, err = conn.Write([]byte(message))
                     if err != nil {
                         fmt.Println("Error sending file content:", err)
@@ -177,7 +177,7 @@ func handleConnection(conn net.Conn) {
                         new_filename := filename[3:]
                         fmt.Println("sending back file as new file: ", new_filename)
                         fmt.Println("file content: ", string(content))
-                        message := fmt.Sprintf("%s %s %s", "mine", new_filename, string(content))
+                        message := fmt.Sprintf("%s %s %s\n---END_OF_MESSAGE---\n", "mine", new_filename, string(content))
                         _, err = conn.Write([]byte(message))
                         if err != nil {
                             fmt.Println("Error sending file content:", err)
@@ -187,7 +187,7 @@ func handleConnection(conn net.Conn) {
                             fmt.Println("Error renaming file:", err)
                         }
                     } else {
-                        message := fmt.Sprintf("%s %s %s", "successor", filename, string(content))
+                        message := fmt.Sprintf("%s %s %s\n---END_OF_MESSAGE---\n", "successor", filename, string(content))
                         _, err = conn.Write([]byte(message))
                         if err != nil {
                             fmt.Println("Error sending file content:", err)
