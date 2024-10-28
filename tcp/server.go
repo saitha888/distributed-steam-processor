@@ -123,7 +123,7 @@ func handleConnection(conn net.Conn) {
         if err != nil {
             fmt.Println("Error reading directory:", err)
         }
-
+        fmt.Println(len(files))
         // go through all the files
         for _, file := range files {
             if !file.IsDir() {
@@ -154,6 +154,7 @@ func handleConnection(conn net.Conn) {
         if err != nil {
             fmt.Println("Error reading directory:", err)
         }
+        fmt.Println(len(files))
 
         pred_port := message[6:]
 
