@@ -303,7 +303,8 @@ func IteratorAt(ringMap *treemap.Map, startKey interface{}) *treemap.Iterator {
 		}
 	}
 	// Return nil if the key is not found
-	return nil
+    iterator.First()
+	return &iterator
 }
 
 // Function to find the key by its value in a TreeMap
@@ -314,7 +315,8 @@ func GetKeyByValue(ringMap *treemap.Map, value string) interface{} {
 			return iterator.Key() // Return the corresponding key
 		}
 	}
-	return nil
+    iterator.First()
+	return iterator.Key()
 }
 
 // Function to find the iterator positioned at the nth key and move backwards by steps
