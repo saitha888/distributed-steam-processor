@@ -710,7 +710,7 @@ func ProcessJoinMessage(message string) {
                 }
                 // find files with prefix of second predecessor and remove
                 if !file.IsDir() && strings.HasPrefix(filename, third_pred_prefix) {
-                    err := os.Remove(filename)
+                    err := os.Remove(dir + "/" + filename)
                     if err != nil {
                         fmt.Println("Error removing file:", err)
                     }
