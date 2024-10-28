@@ -137,6 +137,7 @@ func handleConnection(conn net.Conn) {
                     }
 
                     // Send the file name and content to the client
+                    fmt.Println("sending back own file: ", filename)
                     message := fmt.Sprintf("%s %s", filename, string(content))
                     _, err = conn.Write([]byte(message))
                     if err != nil {
@@ -164,15 +165,16 @@ func handleConnection(conn net.Conn) {
                 if filename[:2] == tcp_port[1:3] {
                     file_hash := udp.GetHash(filename[3:])
                     pred_hash := udp.GetHash(pred_port)
+                    file_path := dir + "/" + filename
+                    content, err := ioutil.ReadFile(file_path)
                     if pred_hash >= file_hash {
-                        file_path := dir + "/" + filename
-                        content, err := ioutil.ReadFile(file_path)
                         if err != nil {
                             fmt.Println("Error reading file:", filename, err)
                         }
 
                         // Send the file name and content to the client
                         new_filename := pred_port[13:15] + filename[3:]
+                        fmt.Println("sending back file as new file: ", new_filename)
                         message := fmt.Sprintf("%s %s", new_filename, string(content))
                         _, err = conn.Write([]byte(message))
                         if err != nil {
@@ -182,6 +184,13 @@ func handleConnection(conn net.Conn) {
                         if err != nil {
                             fmt.Println("Error renaming file:", err)
                         }
+                    } else {
+                        message := fmt.Sprintf("%s %s", filename, string(content))
+                        _, err = conn.Write([]byte(message))
+                        if err != nil {
+                            fmt.Println("Error sending file content:", err)
+                        }
+                        fmt.Println("sending back file as own file: ", filename)
                     }
                 }
             }

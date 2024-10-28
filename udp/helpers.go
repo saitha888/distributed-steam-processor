@@ -698,6 +698,7 @@ func ProcessJoinMessage(message string) {
                     if pred_hash >= file_hash {
                         old_filename := "file-store/" + filename
                         new_filename := "file-store/" + p[13:15] + "-" + filename[4:]
+                        fmt.Println("checking hash and sending: ", new_filename)
                         os.Rename(old_filename, new_filename)
                     }
                 }
