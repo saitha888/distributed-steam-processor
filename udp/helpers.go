@@ -476,11 +476,17 @@ func ProcessJoin(address string) {
         scanner := bufio.NewScanner(conn_successor)
         for scanner.Scan() {
             server_response := scanner.Text()
-            filename := strings.Split(server_response, " ")[0]
-            argument_length := 1 + len(filename)
+            filename := strings.Split(server_response, " ")[1]
+            filetype := strings.Split(server_response, " ")[0]
+            argument_length := 2 + len(filename) + len(filetype)
             contents := server_response[argument_length:]
-            new_filename := "./file-store/" + machine_address[13:15] + "-" + filename
-
+            new_filename := ""
+            if filetype == "successor" {
+                new_filename = "./file-store/" + filename
+            } else {
+                new_filename = "./file-store/" + machine_address[13:15] + "-" + filename
+            }
+            fmt.Println(new_filename)
             file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
             if err != nil {
                 fmt.Println(err)

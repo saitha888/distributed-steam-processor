@@ -173,19 +173,19 @@ func handleConnection(conn net.Conn) {
                         }
 
                         // Send the file name and content to the client
-                        new_filename := pred_port[13:15] + filename[3:]
+                        new_filename := filename[3:]
                         fmt.Println("sending back file as new file: ", new_filename)
-                        message := fmt.Sprintf("%s %s", new_filename, string(content))
+                        message := fmt.Sprintf("%s %s %s", "mine", new_filename, string(content))
                         _, err = conn.Write([]byte(message))
                         if err != nil {
                             fmt.Println("Error sending file content:", err)
                         }
-                        err = os.Rename(dir+filename, new_filename)
+                        err = os.Rename(dir+"/"+filename, dir+"/"+new_filename)
                         if err != nil {
                             fmt.Println("Error renaming file:", err)
                         }
                     } else {
-                        message := fmt.Sprintf("%s %s", filename, string(content))
+                        message := fmt.Sprintf("%s %s %s", "successor", filename, string(content))
                         _, err = conn.Write([]byte(message))
                         if err != nil {
                             fmt.Println("Error sending file content:", err)
