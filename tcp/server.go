@@ -73,8 +73,8 @@ func handleConnection(conn net.Conn) {
         conn.Write([]byte(strconv.Itoa(totalLines)))
     //if not grep or command call, must be call to create a log file
     } else if len(message) >= 3 && message[:3] == "get" {
-        filename := message[5:]
-        filepath := "file-store/" + tcp_port[1:3] + "-" + filename
+        filename := message[4:]
+        filepath := "file-store/" + os.Getenv("MACHINE_UDP_ADDRESS")[13:15] + "-" + filename
         if _, err := os.Stat(filepath); os.IsNotExist(err) {
             // If the file does not exist, send an error message
             conn.Write([]byte("Error: File not found\n"))

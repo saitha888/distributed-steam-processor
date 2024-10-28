@@ -32,7 +32,7 @@ func GetFile(hydfs_file string, local_file string) {
     defer conn.Close()
 
     message := fmt.Sprintf("get %s", hydfs_file)
-
+	fmt.Println(message)
     conn.Write([]byte(message))
 
     // write the command to an output file
