@@ -166,13 +166,14 @@ func handleConnection(conn net.Conn) {
                 if filename[:2] == os.Getenv("MACHINE_UDP_ADDRESS")[13:15] {
                     file_hash := udp.GetHash(filename[3:])
                     pred_hash := udp.GetHash(pred_port)
+                    fmt.Println("file_hash: ", file_hash)
+                    fmt.Println("pred_hash: ", pred_hash)
                     file_path := dir + "/" + filename
                     content, err := ioutil.ReadFile(file_path)
+                    if err != nil {
+                        fmt.Println("Error reading file:", filename, err)
+                    }
                     if pred_hash >= file_hash {
-                        if err != nil {
-                            fmt.Println("Error reading file:", filename, err)
-                        }
-
                         // Send the file name and content to the client
                         new_filename := filename[3:]
                         fmt.Println("sending back file as new file: ", new_filename)
