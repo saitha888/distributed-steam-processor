@@ -469,6 +469,7 @@ func ProcessJoin(address string) {
         defer conn_successor.Close()
 
         // Send a message to the server
+        fmt.Println("pulling from successor: ", successor_port)
         fmt.Fprintln(conn_successor, "split " + ring_id)
 
         // Read multiple responses from the server
@@ -478,7 +479,7 @@ func ProcessJoin(address string) {
             filename := strings.Split(server_response, " ")[0]
             argument_length := 1 + len(filename)
             contents := server_response[argument_length:]
-            new_filename := machine_address[13:15] + "-" + filename
+            new_filename := "./file-store/" + machine_address[13:15] + "-" + filename
 
             file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
             if err != nil {
