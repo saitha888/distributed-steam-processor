@@ -582,31 +582,51 @@ func ProcessJoin(address string) {
             fmt.Fprintln(conn_pred, "pull")
 
             // Read multiple responses from the server
-            scanner := bufio.NewScanner(conn_pred)
-            for scanner.Scan() {
-                server_response := scanner.Text()
-                fmt.Println("response from pull: ", server_response)
-                filename := strings.Split(server_response, " ")[0]
-                argument_length := 1 + len(filename)
-                contents := server_response[argument_length:]
-                new_filename := "./file-store/" + filename
+            reader := bufio.NewReader(conn_pred)
+            buffer := ""
 
-                file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+            for {
+                // Read up to the next newline in chunks
+                part, err := reader.ReadString('\n')
                 if err != nil {
-                    fmt.Println(err)
+                    fmt.Println("Error reading from server:", err)
+                    break
                 }
-                defer file.Close()
 
-                _, err = file.WriteString(contents)
-                if err != nil {
-                    fmt.Println(err)
+                // Append the read part to the buffer
+                buffer += part
+
+                // Check if buffer contains the custom delimiter
+                if strings.Contains(buffer, "\n---END_OF_MESSAGE---\n") {
+                    // Split buffer by the custom delimiter
+                    parts := strings.Split(buffer, "\n---END_OF_MESSAGE---\n")
+
+                    // Process all complete messages in parts
+                    for i := 0; i < len(parts)-1; i++ {
+                        if strings.TrimSpace(parts[i]) != "" { // Ignore empty messages
+                            fmt.Println("Received message:", parts[i])
+                            filename := strings.Split(parts[i], " ")[0]
+                            argument_length := 1 + len(filename)
+                            contents := parts[i][argument_length:]
+                            new_filename := "./file-store/" + filename
+            
+                            file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+                            if err != nil {
+                                fmt.Println(err)
+                            }
+                            defer file.Close()
+            
+                            _, err = file.WriteString(contents)
+                            if err != nil {
+                                fmt.Println(err)
+                            }
+                        }
+                    }
+                    // Retain the last part in the buffer (incomplete message)
+                    buffer = parts[len(parts)-1]
                 }
-            }
-            if err := scanner.Err(); err != nil {
-                fmt.Println("Error reading from server:", err)
             }
         }
-        
     }
 }
 
