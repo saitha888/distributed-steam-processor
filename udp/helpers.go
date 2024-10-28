@@ -461,7 +461,6 @@ func ProcessJoin(address string) {
 		}
 	}
     successor_port := successor[:36]
-    fmt.Println("successor found as: ", successor_port)
     if successor_port != os.Getenv("MACHINE_TCP_ADDRESS") {
         conn_successor, err := net.Dial("tcp", successor_port)
         if err != nil {
@@ -504,7 +503,7 @@ func ProcessJoin(address string) {
 	it = ring_map.Iterator()
 
 	for it.Next() {
-		if it.Value().(string) == target_value {
+		if it.Value().(string) == node_id {
 			break
 		}
 
@@ -534,7 +533,6 @@ func ProcessJoin(address string) {
         }
     }
     predecessors := [2]string{prev1, prev2}
-    fmt.Println("predecessors found as: ", predecessors)
     // get files from predecessors
     for _,p :=  range predecessors {
         pred_port := p[:36]
