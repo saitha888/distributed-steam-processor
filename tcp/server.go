@@ -117,6 +117,7 @@ func handleConnection(conn net.Conn) {
             fmt.Println("File already exists")
         } 
     } else if len(message) >= 4 && message[:4] == "pull" {
+        fmt.Println("message to pull")
         dir := "./file-store"
         files, err := ioutil.ReadDir(dir)
         if err != nil {
@@ -145,6 +146,7 @@ func handleConnection(conn net.Conn) {
             }
         }
     } else if len(message) >= 5 && message[:5] == "split" {
+        fmt.Println("messaege to split")
         dir := "./file-store"
 
         files, err := ioutil.ReadDir(dir)

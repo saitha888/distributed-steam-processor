@@ -207,7 +207,7 @@ func FindNode(node_id string) int {
 
 func GetHash(data string) string {
 	hash := sha256.Sum256([]byte(data))
-	return fmt.Sprintf("%x", hash)  // Returns the hex string representation of the hash
+	return fmt.Sprintf("%x", hash) 
 }
 
 // Change the status of a machine in the list
@@ -461,6 +461,7 @@ func ProcessJoin(address string) {
 		}
 	}
     successor_port := successor[:36]
+    fmt.Println("successor found as: ", successor_port)
     if successor_port != os.Getenv("MACHINE_TCP_ADDRESS") {
         conn_successor, err := net.Dial("tcp", successor_port)
         if err != nil {
@@ -533,6 +534,7 @@ func ProcessJoin(address string) {
         }
     }
     predecessors := [2]string{prev1, prev2}
+    fmt.Println("predecessors found as: ", predecessors)
     // get files from predecessors
     for _,p :=  range predecessors {
         pred_port := p[:36]
@@ -670,6 +672,7 @@ func ProcessJoinMessage(message string) {
     
     for i,p :=  range predecessors {
         if p == joined_node && i == 0 { // if it's immediate predecessor
+            fmt.Println("immediate predecessor joined")
             for _, file := range files {
                 filename := file.Name()
                 file_hash := GetHash(filename[4:])
@@ -692,6 +695,7 @@ func ProcessJoinMessage(message string) {
                 }
             }
         } else if p == joined_node && i == 1{ // if it's second predecessor
+            fmt.Println("second predecessor joined")
             for _, file := range files {
                 filename := file.Name()
                 file_hash := GetHash(filename[4:])
