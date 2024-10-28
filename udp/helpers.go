@@ -593,7 +593,12 @@ func ProcessJoinMessage(message string) {
     send := "Node join detected for: " + joined_node + " at " + time.Now().Format("15:04:05") + "\n"
     appendToFile(send, logfile)
     // check if a predecessor got added
-    target_value := os.Getenv("MACHINE_TCP_ADDRESS")
+
+    bytes := []byte(node_id)
+	
+	bytes[32] = '8'
+	
+	self_id := string(bytes)
 
     var prev1, prev2, prev3 string
 	var prev_key1, prev_key2 string
@@ -603,7 +608,7 @@ func ProcessJoinMessage(message string) {
 
 	for it.Next() {
         fmt.Println("curr iter: ", it.Value().(string))
-		if it.Value().(string) == target_value {
+		if it.Value().(string) == self_id {
 			break
 		}
 		prev3 = prev2
@@ -655,14 +660,14 @@ func ProcessJoinMessage(message string) {
 	predecessors := [3]string{prev1, prev2, prev3}
     fmt.Println("predecessors for other process joining found as: ", predecessors)
 
-    bytes := []byte(joined_node)
+    bytes = []byte(joined_node)
 	
 	bytes[32] = '8'
 	
 	joined_node = string(bytes)
 
     dir := "./file-store" 
-    curr_prefix := target_value[13:15]
+    curr_prefix := os.Getenv("MACHINE_UDP_ADDRESS")[13:15]
     first_pred_prefix, second_pred_prefix, third_pred_prefix := "","",""
     if len(predecessors[0]) > 0 {
         first_pred_prefix = predecessors[0][13:15]
