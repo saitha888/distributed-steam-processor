@@ -169,107 +169,111 @@ func RemoveNode(id_to_remove string) {
     ring_map := GetRing()
     node_key := GetKeyByValue(ring_map, id_to_remove)
     iterator := IteratorAt(ring_map,node_key)
+    id := ""
     if (!iterator.Next()) {
-        iterator = iterator.First()
-    } else  {
-        if (iterator.Value().(string) == node_id) {
-            //if removed node is right before this node
-            //this node becomes new origin for failed node, rename files
-            RenameFilesWithPrefix(id_to_remove[13:15], node_id[13:15])
+        iterator.First()
+        id = iterator.Value().(string)
+    } else {
+        id = iterator.Value().(string)
+    }
+    if (id == node_id) {
+        //if removed node is right before this node
+        //this node becomes new origin for failed node, rename files
+        RenameFilesWithPrefix(id_to_remove[13:15], node_id[13:15])
 
-            //pull files of origin n-3
-            nod := IteratorAtNMinusSteps(ring_map, GetKeyByValue(ring_map, node_id), 3)
-            port := nod[:36]
-            // pull for files
-            conn, err := net.Dial("tcp", port )
+        //pull files of origin n-3
+        nod := IteratorAtNMinusSteps(ring_map, GetKeyByValue(ring_map, node_id), 3)
+        port := nod[:36]
+        // pull for files
+        conn, err := net.Dial("tcp", port )
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+        defer conn.Close()
+        message := fmt.Sprintf("pull")
+
+        conn.Write([]byte(message))
+
+        // // write the command to an output file
+        // buf := make([]byte, 1024)
+        // n, err := conn.Read(buf)
+        // if err != nil {
+        //     fmt.Println(err)
+        //     return
+        // }
+
+        // Read multiple responses from the server
+        scanner := bufio.NewScanner(conn)
+        for scanner.Scan() {
+            server_response := scanner.Text()
+            filename := strings.Split(server_response, " ")[0]
+            argument_length := 1 + len(filename)
+            contents := server_response[argument_length:]
+            new_filename := machine_address[13:15] + "-" + filename
+
+            file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
             if err != nil {
-                fmt.Println(err)
                 return
             }
-            defer conn.Close()
-            message := fmt.Sprintf("pull")
+            defer file.Close()
 
-            conn.Write([]byte(message))
-
-            // // write the command to an output file
-            // buf := make([]byte, 1024)
-            // n, err := conn.Read(buf)
-            // if err != nil {
-            //     fmt.Println(err)
-            //     return
-            // }
-
-            // Read multiple responses from the server
-            scanner := bufio.NewScanner(conn)
-            for scanner.Scan() {
-                server_response := scanner.Text()
-                filename := strings.Split(server_response, " ")[0]
-                argument_length := 1 + len(filename)
-                contents := server_response[argument_length:]
-                new_filename := machine_address[13:15] + "-" + filename
-
-                file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-                if err != nil {
-                    return
-                }
-                defer file.Close()
-
-                _, err = file.WriteString(contents)
-                if err != nil {
-                    return
-                }
+            _, err = file.WriteString(contents)
+            if err != nil {
+                return
             }
-            if err := scanner.Err(); err != nil {
-                fmt.Println("Error reading from server:", err)
-            }
+        }
+        if err := scanner.Err(); err != nil {
+            fmt.Println("Error reading from server:", err)
+        }
+    }
+    id2 := ""
+    if (!iterator.Next()) {
+        iterator.First()
+        id2 = iterator.Value().(string)
+    } else {
+        id2 = iterator.Value().(string)
+    }
+    if (id2 == node_id) {
+        //if removed node is 2 nodes before this node
+        //rename files of origin n-2 to n-1 
+        RenameFilesWithPrefix(IteratorAtNMinusSteps(ring_map, node_id, 2)[13:15], node_id[13:15])
 
-        } else {
-            if (!iterator.Next()) {
-                iterator = iterator.First()
-            } else {
-                if (iterator.Value().(string) == node_id) {
-                    //if removed node is 2 nodes before this node
-                    //rename files of origin n-2 to n-1 
-                    RenameFilesWithPrefix(IteratorAtNMinusSteps(ring_map, node_id, 2)[13:15], node_id[13:15])
-    
-                    //pull files of origin n-3
-                    nod := IteratorAtNMinusSteps(ring_map, GetKeyByValue(ring_map, node_id), 3)
-                    port := nod[:36]
-                    // pull for files
-                    conn, err := net.Dial("tcp", port )
-                    if err != nil {
-                        fmt.Println(err)
-                        return
-                    }
-                    defer conn.Close()
-                    message := fmt.Sprintf("pull")
-        
-                    conn.Write([]byte(message))
-                    // Read multiple responses from the server
-                    scanner := bufio.NewScanner(conn)
-                    for scanner.Scan() {
-                        server_response := scanner.Text()
-                        filename := strings.Split(server_response, " ")[0]
-                        argument_length := 1 + len(filename)
-                        contents := server_response[argument_length:]
-                        new_filename := machine_address[13:15] + "-" + filename
-        
-                        file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-                        if err != nil {
-                            return
-                        }
-                        defer file.Close()
-        
-                        _, err = file.WriteString(contents)
-                        if err != nil {
-                            return
-                        }
-                    }
-                    if err := scanner.Err(); err != nil {
-                        fmt.Println("Error reading from server:", err)
-                    }
-                }
+        //pull files of origin n-3
+        nod := IteratorAtNMinusSteps(ring_map, GetKeyByValue(ring_map, node_id), 3)
+        port := nod[:36]
+        // pull for files
+        conn, err := net.Dial("tcp", port )
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+        defer conn.Close()
+        message := fmt.Sprintf("pull")
+
+        conn.Write([]byte(message))
+        // Read multiple responses from the server
+        scanner := bufio.NewScanner(conn)
+        for scanner.Scan() {
+            server_response := scanner.Text()
+            filename := strings.Split(server_response, " ")[0]
+            argument_length := 1 + len(filename)
+            contents := server_response[argument_length:]
+            new_filename := machine_address[13:15] + "-" + filename
+
+            file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+            if err != nil {
+                return
             }
+            defer file.Close()
+
+            _, err = file.WriteString(contents)
+            if err != nil {
+                return
+            }
+        }
+        if err := scanner.Err(); err != nil {
+            fmt.Println("Error reading from server:", err)
         }
     }
     
