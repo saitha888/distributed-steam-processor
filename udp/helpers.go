@@ -161,7 +161,7 @@ func MembershiplistToString() string{
 }
 
 // Remove a machine from the membership list
-func RemoveNode(id_to_remove string) {
+func RemoveNode(id_to_rem string) {
     bytes := []byte(node_id)
 	bytes[32] = '8'
 	
@@ -169,10 +169,17 @@ func RemoveNode(id_to_remove string) {
 
 
     for index,node := range membership_list {
-        if id_to_remove == node.NodeID { // remove the node if it's found
+        if id_to_rem == node.NodeID { // remove the node if it's found
             membership_list = append(membership_list[:index], membership_list[index+1:]...)
         }
     }
+
+    bytes_remove := []byte(id_to_rem)
+	
+	bytes_remove[32] = '8'
+	
+	id_to_remove := string(bytes_remove)
+
     ring_map := GetRing()
     iterator := IteratorAt(ring_map, id_to_remove)
     fmt.Println("id to retrieve files:" + iterator.Value().(string))
@@ -316,15 +323,8 @@ func RemoveNode(id_to_remove string) {
             }
         }
     }
-    
-    bytes_remove := []byte(id_to_remove)
-	
-	bytes_remove[32] = '8'
-	
-	id_to_rem := string(bytes_remove)
 
-
-    ring_map.Remove(GetHash(id_to_rem))
+    ring_map.Remove(GetHash(id_to_remove))
 
     // say node that fails is n
     // files with n origin, n-1 origin, n-2 origin
