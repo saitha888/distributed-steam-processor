@@ -496,42 +496,33 @@ func ProcessJoin(address string) {
                 for i := 0; i < len(parts)-1; i++ {
                     if strings.TrimSpace(parts[i]) != "" { // Ignore empty messages
                         fmt.Println("Received message:", parts[i])
+                        filename := strings.Split(parts[i], " ")[1]
+                        filetype := strings.Split(parts[i], " ")[0]
+                        argument_length := 2 + len(filename) + len(filetype)
+                        contents := parts[i][argument_length:]
+                        new_filename := ""
+                        if filetype == "successor" {
+                            new_filename = "./file-store/" + filename
+                        } else {
+                            new_filename = "./file-store/" + machine_address[13:15] + "-" + filename
+                        }
+                        fmt.Println(new_filename)
+                        file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+                        if err != nil {
+                            fmt.Println(err)
+                        }
+                        defer file.Close()
+
+                        _, err = file.WriteString(contents)
+                        if err != nil {
+                            fmt.Println(err)
+                        }
                     }
                 }
-
                 // Retain the last part in the buffer (incomplete message)
                 buffer = parts[len(parts)-1]
             }
         }
-        // scanner := bufio.NewScanner(conn_successor)
-        // for scanner.Scan() {
-        //     server_response := scanner.Text()
-        //     fmt.Println("response from split: ", server_response)
-        //     filename := strings.Split(server_response, " ")[1]
-        //     filetype := strings.Split(server_response, " ")[0]
-        //     argument_length := 2 + len(filename) + len(filetype)
-        //     contents := server_response[argument_length:]
-        //     new_filename := ""
-        //     if filetype == "successor" {
-        //         new_filename = "./file-store/" + filename
-        //     } else {
-        //         new_filename = "./file-store/" + machine_address[13:15] + "-" + filename
-        //     }
-        //     fmt.Println(new_filename)
-        //     file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-        //     if err != nil {
-        //         fmt.Println(err)
-        //     }
-        //     defer file.Close()
-
-        //     _, err = file.WriteString(contents)
-        //     if err != nil {
-        //         fmt.Println(err)
-        //     }
-        // }
-        // if err := scanner.Err(); err != nil {
-        //     fmt.Println("Error reading from server:", err)
-        // }
     }
 
     // find the predecessors and get files
