@@ -162,6 +162,12 @@ func MembershiplistToString() string{
 
 // Remove a machine from the membership list
 func RemoveNode(id_to_remove string) {
+    bytes := []byte(node_id)
+	bytes[32] = '8'
+	
+	node_id = string(bytes)
+
+
     for index,node := range membership_list {
         if id_to_remove == node.NodeID { // remove the node if it's found
             membership_list = append(membership_list[:index], membership_list[index+1:]...)
@@ -311,14 +317,14 @@ func RemoveNode(id_to_remove string) {
         }
     }
     
-    bytes := []byte(id_to_remove)
+    bytes_remove := []byte(id_to_remove)
 	
-	bytes[32] = '8'
+	bytes_remove[32] = '8'
 	
-	id_to_remove = string(bytes)
+	id_to_rem := string(bytes_remove)
 
 
-    ring_map.Remove(GetHash(id_to_remove))
+    ring_map.Remove(GetHash(id_to_rem))
 
     // say node that fails is n
     // files with n origin, n-1 origin, n-2 origin
@@ -331,6 +337,7 @@ func RemoveNode(id_to_remove string) {
 func IteratorAt(ringMap *treemap.Map, start_val string) *treemap.Iterator {
 	iterator := ringMap.Iterator()
 	for iterator.Next() {
+        fmt.Println(iterator.Value().(string) + "checking with " + start_val)
 		if iterator.Value().(string) == start_val {
 			// Return the iterator at the position of startKey
 			return &iterator
