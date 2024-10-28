@@ -13,11 +13,9 @@ func GetFile(hydfs_file string, local_file string) {
 	ring_map := udp.GetRing()
 	file_server := ""
 	iterator := ring_map.Iterator()
-	server_num := ""
 	for iterator.Next() {
 		if utils.StringComparator(iterator.Key(), file_hash) == 1 {
 			file_server = iterator.Value().(string)[:36]
-			server_num = iterator.Value().(string)[13:15]
 			break
 		}
 	} 
@@ -33,7 +31,7 @@ func GetFile(hydfs_file string, local_file string) {
     }
     defer conn.Close()
 
-    message := fmt.Sprintf("get %s-%s", server_num, hydfs_file)
+    message := fmt.Sprintf("get %s", hydfs_file)
 
     conn.Write([]byte(message))
 
