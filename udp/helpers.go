@@ -170,9 +170,9 @@ func RemoveNode(node_id string) {
 	
 	bytes[32] = '8'
 	
-	node_id = string(bytes)
+	node_id_ring := string(bytes)
 
-    ring_map.Remove(GetHash(node_id))
+    ring_map.Remove(GetHash(node_id_ring))
 }
 
 //function to add node
@@ -189,9 +189,9 @@ func AddNode(node_id string, node_inc int, status string, i string){
 	
 	bytes[32] = '8'
 	
-	node_id = string(bytes)
+	node_id_ring := string(bytes)
 
-    ring_map.Put(GetHash(node_id), node_id)
+    ring_map.Put(GetHash(node_id), node_id_ring)
 }
 
 
@@ -410,6 +410,13 @@ func ProcessJoin(address string) {
     }
 
     target_value := os.Getenv("MACHINE_TCP_ADDRESS")
+
+    bytes := []byte(node_id)
+	
+	bytes[32] = '8'
+	
+	ring_id := string(bytes)
+
     successor := ""
     // find successor and get files
     it := ring_map.Iterator()
@@ -432,7 +439,7 @@ func ProcessJoin(address string) {
 	defer conn_successor.Close()
 
 	// Send a message to the server
-	fmt.Fprintln(conn_successor, "split")
+	fmt.Fprintln(conn_successor, "split " + ring_id)
 
 	// Read multiple responses from the server
 	scanner := bufio.NewScanner(conn_successor)
@@ -578,12 +585,126 @@ func ProcessJoinMessage(message string) {
     send := "Node join detected for: " + joined_node + " at " + time.Now().Format("15:04:05") + "\n"
     appendToFile(send, logfile)
     // check if a predecessor got added
+    target_value := os.Getenv("MACHINE_TCP_ADDRESS")
 
-    // if it's immediate predecessor
-    // change any needed files prefix
-    // remove any old second predecessor files
+    var prev1, prev2, prev3 string
+	var prev_key1, prev_key2 string
 
-    // if it's second predecessor
-    // remove any old second predecessor files
-    // split old first predecessor and second predecessor files
+	// Create an iterator to go through the TreeMap
+	it := ring_map.Iterator()
+
+	for it.Next() {
+		if it.Value().(string) == target_value {
+			break
+		}
+
+		prev3 = prev2
+		prev2 = prev1
+		prev_key2 = prev_key1
+		prev1 = it.Value().(string)
+		prev_key1 = it.Key().(string)
+	}
+
+	if prev1 == "" {
+		k1, v1 := ring_map.Max()
+		prev_key1 = k1.(string)
+		prev1 = v1.(string)
+	}
+	if prev2 == "" {
+		max_key, max_value := ring_map.Max()
+		if prev_key1 == max_key.(string) {
+			it = ring_map.Iterator()
+			for it.Next() {
+				if it.Key() == prev_key1 {
+					break
+				}
+				prev_key2, prev2 = it.Key().(string), it.Value().(string)
+			}
+		} else {
+			prev_key2, prev2 = max_key.(string), max_value.(string)
+		}
+	}
+	if prev3 == "" {
+		max_key, max_value := ring_map.Max()
+		if prev_key1 == max_key.(string) || prev_key2 == max_key.(string) {
+			it = ring_map.Iterator()
+			for it.Next() {
+				if it.Key() == prev_key1 || it.Key() == prev_key2 {
+					break
+				}
+				prev3 = it.Value().(string)
+			}
+		} else {
+			prev3 = max_value.(string)
+		}
+	}
+
+	// Collect all three predecessors in a slice
+	predecessors := [3]string{prev1, prev2, prev3}
+
+
+    bytes := []byte(joined_node)
+	
+	bytes[32] = '8'
+	
+	joined_node = string(bytes)
+
+    dir := "./file-store" 
+    curr_prefix := target_value[13:15]
+    first_pred_prefix := predecessors[0][13:15]
+    second_pred_prefix := predecessors[1][13:15]
+    third_pred_prefix := predecessors[2][13:15]
+
+    files, err := ioutil.ReadDir(dir)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    for i,p :=  range predecessors {
+        if p == joined_node && i == 0 { // if it's immediate predecessor
+            for _, file := range files {
+                filename := file.Name()
+                file_hash := GetHash(filename[4:])
+                // find files with prefix of current server
+                if !file.IsDir() && strings.HasPrefix(filename, curr_prefix) {
+                    // if the hash now routes to predecessor change the prefix
+                    pred_hash := GetHash(p)
+                    if pred_hash >= file_hash {
+                        old_filename := "file-store/" + filename
+                        new_filename := "file-store/" + p[13:15] + "-" + filename[4:]
+                        os.Rename(old_filename, new_filename)
+                    }
+                }
+                // find files with prefix of second predecessor and remove
+                if !file.IsDir() && strings.HasPrefix(filename, third_pred_prefix) {
+                    err := os.Remove(filename)
+                    if err != nil {
+                        fmt.Println("Error removing file:", err)
+                    }
+                }
+            }
+        } else if p == joined_node && i == 1{ // if it's second predecessor
+            for _, file := range files {
+                filename := file.Name()
+                file_hash := GetHash(filename[4:])
+                // find files with prefix of first predecessor
+                if !file.IsDir() && strings.HasPrefix(filename, first_pred_prefix) {
+                    // if the hash now routes to second predecessor change the prefix
+                    pred_hash := GetHash(predecessors[1])
+                    if pred_hash >= file_hash {
+                        old_filename := "file-store/" + filename
+                        new_filename := "file-store/" + second_pred_prefix + "-" + filename[4:]
+                        os.Rename(old_filename, new_filename)
+                    }
+                }
+                // find files with prefix of second predecessor and remove
+                if !file.IsDir() && strings.HasPrefix(filename, third_pred_prefix) {
+                    err := os.Remove(filename)
+                    if err != nil {
+                        fmt.Println("Error removing file:", err)
+                    }
+                }
+            }
+        }
+    }
 }

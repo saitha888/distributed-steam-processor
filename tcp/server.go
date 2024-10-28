@@ -10,6 +10,7 @@ import (
     "strconv"
     "github.com/joho/godotenv"
     "strings"
+    "distributed_system/udp"
 )
 
 var err = godotenv.Load(".env")
@@ -120,15 +121,75 @@ func handleConnection(conn net.Conn) {
             fmt.Println("File already exists")
         } 
     } else if message == "pull" {
-        // messages := []string{"Response 1", "Response 2", "Response 3"}
-		// for _, msg := range messages {
-		// 	fmt.Fprintf(conn, msg+"\n") // Send each message with a newline
-		// 	time.Sleep(1 * time.Second) // Simulate delay between messages
-		// }
-        fmt.Println("pull")
-    } else if message == "split" {
-        fmt.Println("split")
-    }else { 
+        dir := "./file-store"
+
+        files, err := ioutil.ReadDir(dir)
+        if err != nil {
+            fmt.Println("Error reading directory:", err)
+        }
+
+        // go through all the files
+        for _, file := range files {
+            if !file.IsDir() {
+                filename = file.Name()
+                // if file is from origin server send it back 
+                if filename[:2] == tcp_port[1:3] {
+                    file_path := dir + "/" + filename
+                    content, err := ioutil.ReadFile(file_path)
+                    if err != nil {
+                        fmt.Println("Error reading file:", filename, err)
+                    }
+
+                    // Send the file name and content to the client
+                    message := fmt.Sprintf("%s %s", filename, string(content))
+                    _, err = conn.Write([]byte(message))
+                    if err != nil {
+                        fmt.Println("Error sending file content:", err)
+                    }
+                }
+            }
+        }
+    } else if message[:5] == "split" {
+        dir := "./file-store"
+
+        files, err := ioutil.ReadDir(dir)
+        if err != nil {
+            fmt.Println("Error reading directory:", err)
+        }
+
+        pred_port := message[6:]
+
+        // go through all the files
+        for _, file := range files {
+            if !file.IsDir() {
+                filename := file.Name()
+                // if file is from origin server send it back 
+                if filename[:2] == tcp_port[1:3] {
+                    file_hash := udp.GetHash(filename[3:])
+                    pred_hash := udp.GetHash(pred_port)
+                    if pred_hash >= file_hash {
+                        file_path := dir + "/" + filename
+                        content, err := ioutil.ReadFile(file_path)
+                        if err != nil {
+                            fmt.Println("Error reading file:", filename, err)
+                        }
+
+                        // Send the file name and content to the client
+                        new_filename := pred_port[13:15] + filename[3:]
+                        message := fmt.Sprintf("%s %s", new_filename, string(content))
+                        _, err = conn.Write([]byte(message))
+                        if err != nil {
+                            fmt.Println("Error sending file content:", err)
+                        }
+                        err = os.Rename(dir+filename, new_filename)
+                        if err != nil {
+                            fmt.Println("Error renaming file:", err)
+                        }
+                    }
+                }
+            }
+        }
+    } else { 
         // Open the file to write the contents
         file, err := os.Create(filename)
         if err != nil {
