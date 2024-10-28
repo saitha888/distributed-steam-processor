@@ -272,7 +272,7 @@ func ListRing(treeMap *treemap.Map) {
     keys := treeMap.Keys()
     for _, hash := range keys {
         id, _ := treeMap.Get(hash)  // Get the value associated with the key
-		fmt.Printf("Hash: %s, Node: %s\n", hash, id)
+		fmt.Printf("Hash: %d, Node: %s\n", hash, id)
     }
 }
 

@@ -73,6 +73,7 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 
 	// find which machine to create the file on
 	file_hash := udp.GetHash(HyDFSfilename)
+	fmt.Println("file hash: ", file_hash)
 
 	// Find the smallest key that is greater than or equal to the hash
 	node_ids := []string{}
