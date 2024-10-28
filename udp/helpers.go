@@ -463,38 +463,40 @@ func ProcessJoin(address string) {
 		}
 	}
     successor_port := successor[:36]
-    conn_successor, err := net.Dial("tcp", successor_port)
-	if err != nil {
-		fmt.Println("Error connecting to server:", err)
-	}
-	defer conn_successor.Close()
-
-	// Send a message to the server
-	fmt.Fprintln(conn_successor, "split " + ring_id)
-
-	// Read multiple responses from the server
-	scanner := bufio.NewScanner(conn_successor)
-	for scanner.Scan() {
-		server_response := scanner.Text()
-		filename := strings.Split(server_response, " ")[0]
-        argument_length := 1 + len(filename)
-        contents := server_response[argument_length:]
-        new_filename := machine_address[13:15] + "-" + filename
-
-        file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    if successor_port != os.Getenv("MACHINE_TCP_ADDRESS") {
+        conn_successor, err := net.Dial("tcp", successor_port)
         if err != nil {
-            fmt.Println(err)
+            fmt.Println("Error connecting to server:", err)
         }
-        defer file.Close()
+        defer conn_successor.Close()
 
-        _, err = file.WriteString(contents)
-        if err != nil {
-            fmt.Println(err)
+        // Send a message to the server
+        fmt.Fprintln(conn_successor, "split " + ring_id)
+
+        // Read multiple responses from the server
+        scanner := bufio.NewScanner(conn_successor)
+        for scanner.Scan() {
+            server_response := scanner.Text()
+            filename := strings.Split(server_response, " ")[0]
+            argument_length := 1 + len(filename)
+            contents := server_response[argument_length:]
+            new_filename := machine_address[13:15] + "-" + filename
+
+            file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+            if err != nil {
+                fmt.Println(err)
+            }
+            defer file.Close()
+
+            _, err = file.WriteString(contents)
+            if err != nil {
+                fmt.Println(err)
+            }
         }
-	}
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Error reading from server:", err)
-	}
+        if err := scanner.Err(); err != nil {
+            fmt.Println("Error reading from server:", err)
+        }
+    }
 
     // find the predecessors and get files
 	var prev1, prev2 string
@@ -536,38 +538,42 @@ func ProcessJoin(address string) {
     // get files from predecessors
     for _,p :=  range predecessors {
         fmt.Println("predecessor: ",p)
-        conn_pred, err := net.Dial("tcp", p[:36])
-        if err != nil {
-            fmt.Println("Error connecting to server:", err)
-        }
-        defer conn_pred.Close()
-
-        // Send a message to the server
-        fmt.Fprintln(conn_pred, "pull")
-
-        // Read multiple responses from the server
-        scanner := bufio.NewScanner(conn_pred)
-        for scanner.Scan() {
-            server_response := scanner.Text()
-            filename := strings.Split(server_response, " ")[0]
-            argument_length := 1 + len(filename)
-            contents := server_response[argument_length:]
-            new_filename := machine_address[13:15] + "-" + filename
-
-            file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+        pred_port := p[:36]
+        if pred_port != os.Getenv("MACHINE_TCP_ADDRESS"){
+            conn_pred, err := net.Dial("tcp", pred_port)
             if err != nil {
-                fmt.Println(err)
+                fmt.Println("Error connecting to server:", err)
             }
-            defer file.Close()
+            defer conn_pred.Close()
 
-            _, err = file.WriteString(contents)
-            if err != nil {
-                fmt.Println(err)
+            // Send a message to the server
+            fmt.Fprintln(conn_pred, "pull")
+
+            // Read multiple responses from the server
+            scanner := bufio.NewScanner(conn_pred)
+            for scanner.Scan() {
+                server_response := scanner.Text()
+                filename := strings.Split(server_response, " ")[0]
+                argument_length := 1 + len(filename)
+                contents := server_response[argument_length:]
+                new_filename := machine_address[13:15] + "-" + filename
+
+                file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+                if err != nil {
+                    fmt.Println(err)
+                }
+                defer file.Close()
+
+                _, err = file.WriteString(contents)
+                if err != nil {
+                    fmt.Println(err)
+                }
+            }
+            if err := scanner.Err(); err != nil {
+                fmt.Println("Error reading from server:", err)
             }
         }
-        if err := scanner.Err(); err != nil {
-            fmt.Println("Error reading from server:", err)
-        }
+        
     }
 }
 

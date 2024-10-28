@@ -51,8 +51,10 @@ func handleConnection(conn net.Conn) {
     n, _ := conn.Read(buf)
     message := string(buf[:n])
 
+    fmt.Println("message: ", message)
+
     // Check if message is a grep command
-    if message[:4] == "grep" {
+    if len(message) >= 4 && message[:4] == "grep" {
         grep := message + " " + filename
 
         // run the grep command on machine
@@ -68,12 +70,12 @@ func handleConnection(conn net.Conn) {
         conn.Write(output)
 
     // Check if message is a client call (for testing)
-    } else if message[:6] == "client" {
+    } else if len(message) >= 6 && message[:6] == "client" {
         totalLines := TcpClient(message[7:])
         conn.Write([]byte(strconv.Itoa(totalLines)))
 
     //if not grep or command call, must be call to create a log file
-    } else if message[:3] == "get" {
+    } else if len(message) >= 3 && message[:3] == "get" {
         filename := message[4:]
         filepath := "file-store/" + filename
         if _, err := os.Stat(filepath); os.IsNotExist(err) {
@@ -91,7 +93,7 @@ func handleConnection(conn net.Conn) {
         conn.Write(file_content)
         fmt.Printf("Sent file contents of %s to client\n", filename)
 
-    } else if message[:6] == "create" {
+    } else if len(message) >= 6 && message[:6] == "create" {
         words := strings.Split(message, " ")
         HyDFSfilename := words[1]
         replica_num := words[2]
@@ -149,7 +151,7 @@ func handleConnection(conn net.Conn) {
                 }
             }
         }
-    } else if message[:5] == "split" {
+    } else if len(message) >= 5 && message[:5] == "split" {
         fmt.Println(message)
         dir := "./file-store"
 
