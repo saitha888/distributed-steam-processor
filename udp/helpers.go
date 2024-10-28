@@ -168,8 +168,8 @@ func RemoveNode(id_to_remove string) {
         }
     }
     ring_map := GetRing()
-    node_key := GetKeyByValue(ring_map, id_to_remove)
-    iterator := IteratorAt(ring_map,node_key)
+    // node_key := GetKeyByValue(ring_map, id_to_remove)
+    iterator := IteratorAt(ring_map, id_to_remove)
     id := ""
     if (!iterator.Next()) {
         iterator.First()
@@ -183,7 +183,7 @@ func RemoveNode(id_to_remove string) {
         RenameFilesWithPrefix(id_to_remove[13:15], node_id[13:15])
 
         //pull files of origin n-3
-        nod := IteratorAtNMinusSteps(ring_map, GetKeyByValue(ring_map, node_id), 3)
+        nod := IteratorAtNMinusSteps(ring_map, node_id, 3)
         port := nod[:36]
         // pull for files
         conn, err := net.Dial("tcp", port )
@@ -241,7 +241,7 @@ func RemoveNode(id_to_remove string) {
         RenameFilesWithPrefix(IteratorAtNMinusSteps(ring_map, node_id, 2)[13:15], node_id[13:15])
 
         //pull files of origin n-3
-        nod := IteratorAtNMinusSteps(ring_map, GetKeyByValue(ring_map, node_id), 3)
+        nod := IteratorAtNMinusSteps(ring_map, node_id, 3)
         port := nod[:36]
         // pull for files
         conn, err := net.Dial("tcp", port )
@@ -295,10 +295,10 @@ func RemoveNode(id_to_remove string) {
 }
 
 // iteratorAt finds the iterator positioned at the given key
-func IteratorAt(ringMap *treemap.Map, startKey interface{}) *treemap.Iterator {
+func IteratorAt(ringMap *treemap.Map, start_val string) *treemap.Iterator {
 	iterator := ringMap.Iterator()
 	for iterator.Next() {
-		if iterator.Key() == startKey {
+		if iterator.Value().(string) == start_val {
 			// Return the iterator at the position of startKey
 			return &iterator
 		}
@@ -308,27 +308,27 @@ func IteratorAt(ringMap *treemap.Map, startKey interface{}) *treemap.Iterator {
 	return &iterator
 }
 
-// Function to find the key by its value in a TreeMap
-func GetKeyByValue(ringMap *treemap.Map, value string) interface{} {
-	iterator := ringMap.Iterator()
-	for iterator.Next() {
-		if iterator.Value() == value {
-			return iterator.Key() // Return the corresponding key
-		}
-	}
-    iterator.First()
-	return iterator.Key()
-}
+// // Function to find the key by its value in a TreeMap
+// func GetKeyByValue(ringMap *treemap.Map, value string) interface{} {
+// 	iterator := ringMap.Iterator()
+// 	for iterator.Next() {
+// 		if iterator.Value() == value {
+// 			return iterator.Key() // Return the corresponding key
+// 		}
+// 	}
+//     iterator.First()
+// 	return iterator.Key()
+// }
 
 // Function to find the iterator positioned at the nth key and move backwards by steps
-func IteratorAtNMinusSteps(ringMap *treemap.Map, startKey interface{}, steps int) string {
+func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) string {
 	// Get an iterator at the beginning of the TreeMap
 	iterator := ringMap.Iterator()
 	found := false
 
 	// First, find the position of startKey (n)
 	for iterator.Next() {
-		if iterator.Key() == startKey {
+		if iterator.Value().(string) == start_val {
 			found = true
 			break
 		}
@@ -345,7 +345,7 @@ func IteratorAtNMinusSteps(ringMap *treemap.Map, startKey interface{}, steps int
 				return ""
 			}
 		}
-		return iterator.Key().(string)
+		return iterator.Value().(string)
 	}
 	return ""
 }
