@@ -694,7 +694,6 @@ func ProcessJoinMessage(message string) {
 
 func GetPredecessors(self_id string) [3]string{
     var prev1, prev2, prev3 string
-	var prev_key1, prev_key2 string
 
 	// Create an iterator to go through the TreeMap
 	it := ring_map.Iterator()
@@ -706,39 +705,36 @@ func GetPredecessors(self_id string) [3]string{
 		}
 		prev3 = prev2
 		prev2 = prev1
-		prev_key2 = prev_key1
 		prev1 = it.Value().(string)
-		prev_key1 = it.Key().(string)
         fmt.Println("curr precv: ", prev1, prev2, prev3)
 	}
 
 	if prev1 == "" {
-		k1, v1 := ring_map.Max()
-		prev_key1 = k1.(string)
+		_, v1 := ring_map.Max()
 		prev1 = v1.(string)
         fmt.Println("prev 1 edge: ", prev1)
 	}
 	if prev2 == "" {
-		max_key, max_value := ring_map.Max()
-		if prev_key1 == max_key.(string) {
+		_, max_value := ring_map.Max()
+		if prev1 == max_value.(string) {
 			it = ring_map.Iterator()
 			for it.Next() {
-				if it.Key() == prev_key1 {
+				if it.Value().(string) == prev1 {
 					break
 				}
-				prev_key2, prev2 = it.Key().(string), it.Value().(string)
+				prev2 = it.Value().(string)
 			}
 		} else {
-			prev_key2, prev2 = max_key.(string), max_value.(string)
+			prev2 = max_value.(string)
 		}
         fmt.Println("prev 2 edge: ", prev2)
 	}
 	if prev3 == "" {
-		max_key, max_value := ring_map.Max()
-		if prev_key1 == max_key.(string) || prev_key2 == max_key.(string) {
+		_, max_value := ring_map.Max()
+		if prev1 == max_value.(string) || prev2 == max_value.(string) {
 			it = ring_map.Iterator()
 			for it.Next() {
-				if it.Key() == prev_key1 || it.Key() == prev_key2 {
+				if it.Value().(string) == prev1 || it.Value().(string) == prev2 {
 					break
 				}
 				prev3 = it.Value().(string)
