@@ -501,22 +501,33 @@ func ProcessJoin(address string) {
 	var prev1, prev2 string
 	var prev_key1 string
 
+    bytes = []byte(node_id)
+	
+	bytes[32] = '8'
+	
+	self_id := string(bytes)
+
 	it = ring_map.Iterator()
 
 	for it.Next() {
-		if it.Value().(string) == node_id {
+        fmt.Println("curr_value, ", it.Value().(string))
+        fmt.Println("node id, ", target_value)
+		if it.Value().(string) == self_id {
+            fmt.Println("made it to the if")
 			break
 		}
 
 		prev2 = prev1
 		prev1 = it.Value().(string)
 		prev_key1 = it.Key().(string)
+        fmt.Println("curr preds: ", prev1, prev2)
 	}
 
     if prev1 == "" {
         k1, v1 := ring_map.Max()
         prev_key1 = k1.(string)
         prev1 = v1.(string)
+        fmt.Println("prev 1 edge case: ", prev1)
     }
     if prev2 == "" { 
         max_key, max_value := ring_map.Max()
@@ -532,6 +543,7 @@ func ProcessJoin(address string) {
         } else {
             prev2 = max_value.(string)
         }
+        fmt.Println("prev 2 edge case: ", prev2)
     }
     predecessors := [2]string{prev1, prev2}
     fmt.Println("predecessor found as: ", predecessors)
