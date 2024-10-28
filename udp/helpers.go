@@ -461,7 +461,6 @@ func ProcessJoin(address string) {
 		}
 	}
     successor_port := successor[:36]
-    fmt.Println("successor found as: ", successor_port)
     if successor_port != os.Getenv("MACHINE_TCP_ADDRESS") {
         conn_successor, err := net.Dial("tcp", successor_port)
         if err != nil {
@@ -510,24 +509,19 @@ func ProcessJoin(address string) {
 	it = ring_map.Iterator()
 
 	for it.Next() {
-        fmt.Println("curr_value, ", it.Value().(string))
-        fmt.Println("node id, ", target_value)
 		if it.Value().(string) == self_id {
-            fmt.Println("made it to the if")
 			break
 		}
 
 		prev2 = prev1
 		prev1 = it.Value().(string)
 		prev_key1 = it.Key().(string)
-        fmt.Println("curr preds: ", prev1, prev2)
 	}
 
     if prev1 == "" {
         k1, v1 := ring_map.Max()
         prev_key1 = k1.(string)
         prev1 = v1.(string)
-        fmt.Println("prev 1 edge case: ", prev1)
     }
     if prev2 == "" { 
         max_key, max_value := ring_map.Max()
@@ -543,10 +537,8 @@ func ProcessJoin(address string) {
         } else {
             prev2 = max_value.(string)
         }
-        fmt.Println("prev 2 edge case: ", prev2)
     }
     predecessors := [2]string{prev1, prev2}
-    fmt.Println("predecessor found as: ", predecessors)
     // get files from predecessors
     for _,p :=  range predecessors {
         pred_port := p[:36]
@@ -610,21 +602,23 @@ func ProcessJoinMessage(message string) {
 	it := ring_map.Iterator()
 
 	for it.Next() {
+        fmt.Println("curr iter: ", it.Value().(string))
 		if it.Value().(string) == target_value {
 			break
 		}
-
 		prev3 = prev2
 		prev2 = prev1
 		prev_key2 = prev_key1
 		prev1 = it.Value().(string)
 		prev_key1 = it.Key().(string)
+        fmt.Println("curr precv: ", prev1, prev2, prev3)
 	}
 
 	if prev1 == "" {
 		k1, v1 := ring_map.Max()
 		prev_key1 = k1.(string)
 		prev1 = v1.(string)
+        fmt.Println("prev 1 edge: ", prev1)
 	}
 	if prev2 == "" {
 		max_key, max_value := ring_map.Max()
@@ -639,6 +633,7 @@ func ProcessJoinMessage(message string) {
 		} else {
 			prev_key2, prev2 = max_key.(string), max_value.(string)
 		}
+        fmt.Println("prev 2 edge: ", prev2)
 	}
 	if prev3 == "" {
 		max_key, max_value := ring_map.Max()
@@ -653,10 +648,12 @@ func ProcessJoinMessage(message string) {
 		} else {
 			prev3 = max_value.(string)
 		}
+        fmt.Println("prev 3 edge: ", prev3)
 	}
 
 	// Collect all three predecessors in a slice
 	predecessors := [3]string{prev1, prev2, prev3}
+    fmt.Println("predecessors for other process joining found as: ", predecessors)
 
     bytes := []byte(joined_node)
 	
