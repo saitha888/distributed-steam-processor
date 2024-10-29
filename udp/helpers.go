@@ -629,10 +629,10 @@ func ProcessJoinMessage(message string) {
         first_pred_prefix = predecessors[0][13:15]
     }
     if len(predecessors[1]) > 0 {
-        second_pred_prefix = predecessors[0][13:15]
+        second_pred_prefix = predecessors[1][13:15]
     }
     if len(predecessors[2]) > 0 {
-        third_pred_prefix = predecessors[0][13:15]
+        third_pred_prefix = predecessors[2][13:15]
     }
 
     files, err := ioutil.ReadDir(dir)
@@ -649,6 +649,7 @@ func ProcessJoinMessage(message string) {
                 // find files with prefix of current server
                 if !file.IsDir() && strings.HasPrefix(filename, curr_prefix) {
                     // if the hash now routes to predecessor change the prefix
+                    fmt.Println("thing being hashed: ", p)
                     pred_hash := GetHash(p)
                     fmt.Println("pred_hash: ", pred_hash)
                     fmt.Println("file_hash: ", file_hash)
