@@ -157,6 +157,7 @@ func handleConnection(conn net.Conn) {
         fmt.Println(len(files))
 
         pred_port := message[6:]
+        
         // go through all the files
         for _, file := range files {
             if !file.IsDir() {
@@ -173,7 +174,7 @@ func handleConnection(conn net.Conn) {
                     if err != nil {
                         fmt.Println("Error reading file:", filename, err)
                     }
-                    if pred_hash >= file_hash {
+                    if pred_hash >= file_hash && file_hash > udp.GetHash(udp.GetTCPVersion(udp.GetNodeID())) {
                         // Send the file name and content to the client
                         new_filename := filename[3:]
                         fmt.Println("sending back file as new file: ", new_filename)

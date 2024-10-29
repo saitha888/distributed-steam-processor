@@ -459,6 +459,10 @@ func ProcessJoinMessage(message string) {
 
 func SelfJoin(ring_id string) {
     successor := GetSuccessor(ring_id)
+    fmt.Println("successor: ", successor)
+    if len(successor) == 0 {
+        return
+    }
     successor_port := successor[:36]
 
     if successor_port != os.Getenv("MACHINE_TCP_ADDRESS") {
@@ -524,7 +528,7 @@ func SelfJoin(ring_id string) {
     fmt.Println("predcessors: ", predecessors)
     // get files from predecessors
     for i,p :=  range predecessors {
-        if i == 2 {
+        if i == 2 || len(p) == 0 {
             continue
         }
         pred_port := p[:36]
@@ -628,7 +632,7 @@ func NewJoin(joined_node string) {
                     pred_hash := GetHash(p)
                     fmt.Println("pred_hash: ", pred_hash)
                     fmt.Println("file_hash: ", file_hash)
-                    if pred_hash >= file_hash {
+                    if pred_hash >= file_hash && file_hash > GetHash(self_id) {
                         old_filename := "file-store/" + filename
                         new_filename := "file-store/" + p[13:15] + "-" + filename[3:]
                         fmt.Println("checking hash and sending: ", new_filename)
@@ -657,7 +661,7 @@ func NewJoin(joined_node string) {
                     fmt.Println("thing being hashed: ", p)
                     fmt.Println("pred_hash: ", pred_hash)
                     fmt.Println("file_hash: ", file_hash)
-                    if pred_hash >= file_hash {
+                    if pred_hash >= file_hash && file_hash > GetHash(predecessors[0]) {
                         old_filename := "file-store/" + filename
                         new_filename := "file-store/" + second_pred_prefix + "-" + filename[3:]
                         os.Rename(old_filename, new_filename)
@@ -683,7 +687,7 @@ func NewJoin(joined_node string) {
                     fmt.Println("thing being hashed: ", p)
                     fmt.Println("pred_hash: ", pred_hash)
                     fmt.Println("file_hash: ", file_hash)
-                    if pred_hash >= file_hash {
+                    if pred_hash >= file_hash && file_hash > GetHash(predecessors[1]) {
                         err := os.Remove(dir + "/" + filename)
                         if err != nil {
                             fmt.Println("Error removing file:", err)
@@ -776,4 +780,8 @@ func GetTCPVersion(id string) string {
 	id = string(bytes)
     
     return id
+}
+
+func GetNodeID() string {
+    return node_id
 }
