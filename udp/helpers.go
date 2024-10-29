@@ -599,7 +599,11 @@ func ProcessJoinMessage(message string) {
     send := "Node join detected for: " + joined_node + " at " + time.Now().Format("15:04:05") + "\n"
     appendToFile(send, logfile)
     // check if a predecessor got added
+    NewJoin(joined_node)
+}
 
+
+func NewJoin(joined_node string) {
     bytes := []byte(node_id)
 	
 	bytes[32] = '8'
@@ -713,7 +717,6 @@ func ProcessJoinMessage(message string) {
         }
     }
 }
-
 
 func GetPredecessors(self_id string) [3]string{
     var prev1, prev2, prev3 string

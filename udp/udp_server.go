@@ -87,6 +87,7 @@ func UdpServer() {
                         }
                     }
                 }
+                NewJoin(recieved_node)
             } else {
                 if recieved_node[:36] != os.Getenv("MACHINE_UDP_ADDRESS") {
                     ProcessJoinMessage(message)

@@ -157,39 +157,41 @@ func handleConnection(conn net.Conn) {
         fmt.Println(len(files))
 
         pred_port := message[6:]
-
         // go through all the files
         for _, file := range files {
             if !file.IsDir() {
                 filename := file.Name()
-                // if file is from origin server send it back 
-                file_hash := udp.GetHash(filename[3:])
-                pred_hash := udp.GetHash(pred_port)
-                fmt.Println("file_hash: ", file_hash)
-                fmt.Println("pred_hash: ", pred_hash)
-                file_path := dir + "/" + filename
-                content, err := ioutil.ReadFile(file_path)
-                if err != nil {
-                    fmt.Println("Error reading file:", filename, err)
-                }
-                if pred_hash >= file_hash {
-                    // Send the file name and content to the client
-                    new_filename := filename[3:]
-                    fmt.Println("sending back file as new file: ", new_filename)
-                    fmt.Println("file content: ", string(content))
-                    message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", new_filename, string(content))
-                    _, err = conn.Write([]byte(message))
+                if strings.HasPrefix(filename, os.Getenv("MACHINE_UDP_ADDRESS")[13:15]) || strings.HasPrefix(filename, pred_port[13:15]) {
+                    // if file is from origin server send it back 
+                    file_hash := udp.GetHash(filename[3:])
+                    pred_hash := udp.GetHash(pred_port)
+                    fmt.Println("file_hash: ", file_hash)
+                    fmt.Println("pred_hash: ", pred_hash)
+                    fmt.Println("thing getting hased: ", pred_port)
+                    file_path := dir + "/" + filename
+                    content, err := ioutil.ReadFile(file_path)
                     if err != nil {
-                        fmt.Println("Error sending file content:", err)
+                        fmt.Println("Error reading file:", filename, err)
                     }
-                    renamed := dir+"/"+pred_port[13:15]+"-"+new_filename
-                    fmt.Println("renamed name: ", renamed)
-                    err = os.Rename(dir+"/"+filename, renamed)
-                    if err != nil {
-                        fmt.Println("Error renaming file:", err)
+                    if pred_hash >= file_hash {
+                        // Send the file name and content to the client
+                        new_filename := filename[3:]
+                        fmt.Println("sending back file as new file: ", new_filename)
+                        fmt.Println("file content: ", string(content))
+                        message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", new_filename, string(content))
+                        _, err = conn.Write([]byte(message))
+                        if err != nil {
+                            fmt.Println("Error sending file content:", err)
+                        }
+                        renamed := dir+"/"+pred_port[13:15]+"-"+new_filename
+                        fmt.Println("renamed name: ", renamed)
+                        err = os.Rename(dir+"/"+filename, renamed)
+                        if err != nil {
+                            fmt.Println("Error renaming file:", err)
+                        }
                     }
                 }
-            }
+            }   
         }
     } else { 
         // Open the file to write the contents
