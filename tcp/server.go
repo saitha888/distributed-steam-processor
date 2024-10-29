@@ -156,7 +156,8 @@ func handleConnection(conn net.Conn) {
         }
         fmt.Println(len(files))
 
-        pred_port := message[6:]
+        pred_port := strings.TrimRight(message[6:], " \t\n")
+        fmt.Println(len(pred_port))
         
         // go through all the files
         for _, file := range files {
