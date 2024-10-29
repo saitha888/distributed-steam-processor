@@ -162,6 +162,7 @@ func MembershiplistToString() string{
 
 // Remove a machine from the membership list
 func RemoveNode(id_to_rem string) {
+
     bytes := []byte(node_id)
 	bytes[32] = '8'
 	
@@ -179,17 +180,15 @@ func RemoveNode(id_to_rem string) {
 	bytes_remove[32] = '8'
 	
 	id_to_remove := string(bytes_remove)
+    fmt.Println("REMOVAL OF NODE " + id_to_remove + "\n\n\n")
 
     ring_map := GetRing()
     iterator := IteratorAt(ring_map, id_to_remove)
-    fmt.Println("id to retrieve files:" + iterator.Value().(string))
     id := ""
     if (!iterator.Next()) {
         iterator.First()
-        id = iterator.Value().(string)
-    } else {
-        id = iterator.Value().(string)
     }
+    id = iterator.Value().(string)
     fmt.Println("Next id: " + id)
     if (id == node_id) {
         fmt.Println("immediate predecessor failed")
@@ -254,75 +253,73 @@ func RemoveNode(id_to_rem string) {
             }
         }
     }
-    id2 := ""
-    if (!iterator.Next()) {
-        iterator.First()
-        id2 = iterator.Value().(string)
-    } else {
-        id2 = iterator.Value().(string)
-    }
-    if (id2 == node_id) {
-        //if removed node is 2 nodes before this node
-        //rename files of origin n-2 to n-1 
-        RenameFilesWithPrefix(IteratorAtNMinusSteps(ring_map, node_id, 2)[13:15], IteratorAtNMinusSteps(ring_map, node_id, 1)[13:15])
+    // id2 := ""
+    // if (!iterator.Next()) {
+    //     iterator.First()
+    // }
+    // id2 = iterator.Value().(string)
+    // if (id2 == node_id) {
+    //     //if removed node is 2 nodes before this node
+    //     //rename files of origin n-2 to n-1 
+    //     RenameFilesWithPrefix(IteratorAtNMinusSteps(ring_map, node_id, 2)[13:15], IteratorAtNMinusSteps(ring_map, node_id, 1)[13:15])
 
-        //pull files of origin n-3
-        nod := IteratorAtNMinusSteps(ring_map, node_id, 3)
-        fmt.Println(nod)
-        port := nod[:36]
-        // pull for files
-        conn_pred, err := net.Dial("tcp", port )
-        if err != nil {
-            fmt.Println(err)
-            return
-        }
-        defer conn_pred.Close()
-        message := fmt.Sprintf("pull")
-        conn_pred.Write([]byte(message))
-        reader := bufio.NewReader(conn_pred)
-        buffer := ""
+    //     //pull files of origin n-3
+    //     nod := IteratorAtNMinusSteps(ring_map, node_id, 3)
+    //     fmt.Println(nod)
+    //     port := nod[:36]
+    //     // pull for files
+    //     conn_pred, err := net.Dial("tcp", port )
+    //     if err != nil {
+    //         fmt.Println(err)
+    //         return
+    //     }
+    //     defer conn_pred.Close()
+    //     message := fmt.Sprintf("pull")
+    //     conn_pred.Write([]byte(message))
+    //     reader := bufio.NewReader(conn_pred)
+    //     buffer := ""
 
-        for {
-            // Read up to the next newline in chunks
-            part, err := reader.ReadString('\n')
-            if err != nil {
-                fmt.Println("Error reading from server:", err)
-                break
-            }
+    //     for {
+    //         // Read up to the next newline in chunks
+    //         part, err := reader.ReadString('\n')
+    //         if err != nil {
+    //             fmt.Println("Error reading from server:", err)
+    //             break
+    //         }
 
-            // Append the read part to the buffer
-            buffer += part
+    //         // Append the read part to the buffer
+    //         buffer += part
 
-            // Check if buffer contains the custom delimiter
-            if strings.Contains(buffer, "\n---END_OF_MESSAGE---\n") {
-                // Split buffer by the custom delimiter
-                parts := strings.Split(buffer, "\n---END_OF_MESSAGE---\n")
+    //         // Check if buffer contains the custom delimiter
+    //         if strings.Contains(buffer, "\n---END_OF_MESSAGE---\n") {
+    //             // Split buffer by the custom delimiter
+    //             parts := strings.Split(buffer, "\n---END_OF_MESSAGE---\n")
 
-                // Process all complete messages in parts
-                for i := 0; i < len(parts)-1; i++ {
-                    if strings.TrimSpace(parts[i]) != "" { // Ignore empty messages
-                        fmt.Println("Received message:", parts[i])
-                        filename := strings.Split(parts[i], " ")[0]
-                        argument_length := 1 + len(filename)
-                        contents := parts[i][argument_length:]
-                        new_filename := "./file-store/" + filename
+    //             // Process all complete messages in parts
+    //             for i := 0; i < len(parts)-1; i++ {
+    //                 if strings.TrimSpace(parts[i]) != "" { // Ignore empty messages
+    //                     fmt.Println("Received message:", parts[i])
+    //                     filename := strings.Split(parts[i], " ")[0]
+    //                     argument_length := 1 + len(filename)
+    //                     contents := parts[i][argument_length:]
+    //                     new_filename := "./file-store/" + filename
         
-                        file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-                        if err != nil {
-                            fmt.Println(err)
-                        }
-                        defer file.Close()
+    //                     file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    //                     if err != nil {
+    //                         fmt.Println(err)
+    //                     }
+    //                     defer file.Close()
         
-                        _, err = file.WriteString(contents)
-                        if err != nil {
-                            fmt.Println(err)
-                        }
-                    }
-                }
-                // Retain the last part in the buffer (incomplete message)
-                buffer = parts[len(parts)-1]
-            }
-        }
+    //                     _, err = file.WriteString(contents)
+    //                     if err != nil {
+    //                         fmt.Println(err)
+    //                     }
+    //                 }
+    //             }
+    //             // Retain the last part in the buffer (incomplete message)
+    //             buffer = parts[len(parts)-1]
+    //         }
+    //     }
     }
 
     ring_map.Remove(GetHash(id_to_remove))
@@ -338,7 +335,6 @@ func RemoveNode(id_to_rem string) {
 func IteratorAt(ringMap *treemap.Map, start_val string) *treemap.Iterator {
 	iterator := ringMap.Iterator()
 	for iterator.Next() {
-        fmt.Println(iterator.Value().(string) + "checking with " + start_val)
 		if iterator.Value().(string) == start_val {
 			// Return the iterator at the position of startKey
 			return &iterator
@@ -375,12 +371,14 @@ func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) st
 			break
 		}
 	}
-
+//1, 2, 3, 5, 4
 	// If startKey is found, move backwards by the specified steps
 	if found {
 		// Move backwards by `steps`
+        last_value := ""
 		for i := 0; i < steps; i++ {
 			if iterator.Prev() {
+                last_value = iterator.Value().(string)
                 fmt.Println(iterator.Value().(string))
 				// Move backwards
 			} else {
