@@ -18,7 +18,7 @@ var ring_map = treemap.NewWithIntComparator()
 var logfile string = os.Getenv("LOG_FILENAME")
 var inc_num int = 0
 var introducer_address string = os.Getenv("INTRODUCER_ADDRESS")
-var machine_address string = os.Getenv("MACHINE_ADDRESS")
+var machine_address string = os.Getenv("MACHINE_UDP_ADDRESS")
 var machine_number string = os.Getenv("MACHINE_NUMBER")
 
 
@@ -58,9 +58,9 @@ func UdpServer() {
             message := "Node failure message recieved for: " + failed_node + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
         } else if message[:4] == "join" { // new machine joined
+            recieved_node := message[5:]
             if machine_address == introducer_address {
                 // get the node id and timestamp
-                recieved_node := message[5:]
                 message := "Node join detected for: " + recieved_node + " at " + time.Now().Format("15:04:05") + "\n"
                 appendToFile(message, logfile)
                 index := FindNode(recieved_node)
@@ -78,7 +78,7 @@ func UdpServer() {
                 for _,node := range membership_list {
                     if node.Status == "alive" {
                         node_address := node.NodeID[:36]
-                        if node_address != os.Getenv("MACHINE_ADDRESS") { // check that it's not self
+                        if node_address != os.Getenv("MACHINE_UDP_ADDRESS") { // check that it's not self
                             conn, _ := DialUDPClient(node_address)
 
                             result := "join " + recieved_node
@@ -87,8 +87,11 @@ func UdpServer() {
                         }
                     }
                 }
+                NewJoin(recieved_node)
             } else {
-                ProcessJoinMessage(message)
+                if recieved_node[:36] != os.Getenv("MACHINE_UDP_ADDRESS") {
+                    ProcessJoinMessage(message)
+                }
             }
         } else if message[:5] == "leave" { // machine left
             left_node := message[6:]

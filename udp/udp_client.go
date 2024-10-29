@@ -11,11 +11,11 @@ var node_id string = ""
 var enabled_sus = false
 
 var ports = []string{
-    "fa24-cs425-1201.cs.illinois.edu:9081", 
-    "fa24-cs425-1202.cs.illinois.edu:9082", 
-    "fa24-cs425-1203.cs.illinois.edu:9083", 
-    "fa24-cs425-1204.cs.illinois.edu:9084", 
-    "fa24-cs425-1205.cs.illinois.edu:9085", 
+    // "fa24-cs425-1201.cs.illinois.edu:9081", 
+    // "fa24-cs425-1202.cs.illinois.edu:9082", 
+    // "fa24-cs425-1203.cs.illinois.edu:9083", 
+    // "fa24-cs425-1204.cs.illinois.edu:9084", 
+    // "fa24-cs425-1205.cs.illinois.edu:9085", 
     "fa24-cs425-1206.cs.illinois.edu:9086", 
     "fa24-cs425-1207.cs.illinois.edu:9087", 
     "fa24-cs425-1208.cs.illinois.edu:9088", 
