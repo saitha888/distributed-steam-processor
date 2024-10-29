@@ -163,32 +163,30 @@ func handleConnection(conn net.Conn) {
             if !file.IsDir() {
                 filename := file.Name()
                 // if file is from origin server send it back 
-                if filename[:2] == os.Getenv("MACHINE_UDP_ADDRESS")[13:15] {
-                    file_hash := udp.GetHash(filename[3:])
-                    pred_hash := udp.GetHash(pred_port)
-                    fmt.Println("file_hash: ", file_hash)
-                    fmt.Println("pred_hash: ", pred_hash)
-                    file_path := dir + "/" + filename
-                    content, err := ioutil.ReadFile(file_path)
+                file_hash := udp.GetHash(filename[3:])
+                pred_hash := udp.GetHash(pred_port)
+                fmt.Println("file_hash: ", file_hash)
+                fmt.Println("pred_hash: ", pred_hash)
+                file_path := dir + "/" + filename
+                content, err := ioutil.ReadFile(file_path)
+                if err != nil {
+                    fmt.Println("Error reading file:", filename, err)
+                }
+                if pred_hash >= file_hash {
+                    // Send the file name and content to the client
+                    new_filename := filename[3:]
+                    fmt.Println("sending back file as new file: ", new_filename)
+                    fmt.Println("file content: ", string(content))
+                    message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", new_filename, string(content))
+                    _, err = conn.Write([]byte(message))
                     if err != nil {
-                        fmt.Println("Error reading file:", filename, err)
+                        fmt.Println("Error sending file content:", err)
                     }
-                    if pred_hash >= file_hash {
-                        // Send the file name and content to the client
-                        new_filename := filename[3:]
-                        fmt.Println("sending back file as new file: ", new_filename)
-                        fmt.Println("file content: ", string(content))
-                        message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", new_filename, string(content))
-                        _, err = conn.Write([]byte(message))
-                        if err != nil {
-                            fmt.Println("Error sending file content:", err)
-                        }
-                        renamed := dir+"/"+pred_port[13:15]+"-"+new_filename
-                        fmt.Println("renamed name: ", renamed)
-                        err = os.Rename(dir+"/"+filename, renamed)
-                        if err != nil {
-                            fmt.Println("Error renaming file:", err)
-                        }
+                    renamed := dir+"/"+pred_port[13:15]+"-"+new_filename
+                    fmt.Println("renamed name: ", renamed)
+                    err = os.Rename(dir+"/"+filename, renamed)
+                    if err != nil {
+                        fmt.Println("Error renaming file:", err)
                     }
                 }
             }
