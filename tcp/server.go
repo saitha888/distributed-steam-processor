@@ -117,14 +117,13 @@ func handleConnection(conn net.Conn) {
             fmt.Println("File already exists")
         } 
     } else if len(message) >= 4 && message[:4] == "pull" {
-        fmt.Println("message to pull")
         dir := "./file-store"
         files, err := ioutil.ReadDir(dir)
         if err != nil {
             fmt.Println("Error reading directory:", err)
         }
-        fmt.Println(len(files))
-        // go through all the files
+
+        // go through all the files in the directory
         for _, file := range files {
             if !file.IsDir() {
                 filename = file.Name()
@@ -136,8 +135,7 @@ func handleConnection(conn net.Conn) {
                         fmt.Println("Error reading file:", filename, err)
                     }
 
-                    // Send the file name and content to the client
-                    fmt.Println("sending back own file: ", filename)
+                    // Send the file name and content to the client with the delimiter
                     message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", filename, string(content))
                     _, err = conn.Write([]byte(message))
                     if err != nil {
@@ -147,46 +145,39 @@ func handleConnection(conn net.Conn) {
             }
         }
     } else if len(message) >= 5 && message[:5] == "split" {
-        fmt.Println("messaege to split")
         dir := "./file-store"
 
         files, err := ioutil.ReadDir(dir)
         if err != nil {
             fmt.Println("Error reading directory:", err)
         }
-        fmt.Println(len(files))
 
         pred_port := strings.TrimRight(message[6:], " \t\n")
-        fmt.Println(len(pred_port))
-        
+        pred_hash := udp.GetHash(pred_port)
+        self_hash := udp.GetHash(udp.GetTCPVersion(udp.GetNodeID()))
+
         // go through all the files
         for _, file := range files {
             if !file.IsDir() {
                 filename := file.Name()
+                // if the file is from the origin server
                 if strings.HasPrefix(filename, os.Getenv("MACHINE_UDP_ADDRESS")[13:15]) || strings.HasPrefix(filename, pred_port[13:15]) {
-                    // if file is from origin server send it back 
                     file_hash := udp.GetHash(filename[3:])
-                    pred_hash := udp.GetHash(pred_port)
-                    fmt.Println("file_hash: ", file_hash)
-                    fmt.Println("pred_hash: ", pred_hash)
-                    fmt.Println("thing getting hased: ", pred_port)
+
                     file_path := dir + "/" + filename
                     content, err := ioutil.ReadFile(file_path)
                     if err != nil {
                         fmt.Println("Error reading file:", filename, err)
                     }
-                    if pred_hash >= file_hash && file_hash < udp.GetHash(udp.GetTCPVersion(udp.GetNodeID())) {
-                        // Send the file name and content to the client
-                        new_filename := filename[3:]
-                        fmt.Println("sending back file as new file: ", new_filename)
-                        fmt.Println("file content: ", string(content))
+                    if pred_hash >= file_hash && file_hash < self_hash { // if the hash now maps to the new server 
+                        new_filename := filename[3:] // rename the file and send it back
                         message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", new_filename, string(content))
                         _, err = conn.Write([]byte(message))
                         if err != nil {
                             fmt.Println("Error sending file content:", err)
                         }
+                        // rename file in own directory
                         renamed := dir+"/"+pred_port[13:15]+"-"+new_filename
-                        fmt.Println("renamed name: ", renamed)
                         err = os.Rename(dir+"/"+filename, renamed)
                         if err != nil {
                             fmt.Println("Error renaming file:", err)

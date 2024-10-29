@@ -458,8 +458,8 @@ func ProcessJoinMessage(message string) {
 }
 
 func SelfJoin(ring_id string) {
+    // find successor and connect
     successor := GetSuccessor(ring_id)
-    fmt.Println("successor: ", successor)
     if len(successor) == 0 {
         return
     }
@@ -472,16 +472,14 @@ func SelfJoin(ring_id string) {
         }
         defer conn_successor.Close()
 
-        // Send a message to the server
-        fmt.Println("pulling from successor: ", successor_port)
+        // Send a split message to the successor
         fmt.Fprintln(conn_successor, "split " + ring_id)
 
-        // Read multiple responses from the server
         reader := bufio.NewReader(conn_successor)
         buffer := ""
 
         for {
-            // Read up to the next newline in chunks
+            // Keep reading till the next new line until we reach the delimiter
             part, err := reader.ReadString('\n')
             if err != nil {
                 fmt.Println("Error reading from server:", err)
@@ -491,21 +489,17 @@ func SelfJoin(ring_id string) {
             // Append the read part to the buffer
             buffer += part
 
-            // Check if buffer contains the custom delimiter
+            // Check if buffer contains the  delimiter
             if strings.Contains(buffer, "\n---END_OF_MESSAGE---\n") {
-                // Split buffer by the custom delimiter
                 parts := strings.Split(buffer, "\n---END_OF_MESSAGE---\n")
 
-                // Process all complete messages in parts
                 for i := 0; i < len(parts)-1; i++ {
-                    if strings.TrimSpace(parts[i]) != "" { // Ignore empty messages
-                        fmt.Println("Received message:", parts[i])
-                        filename := strings.Split(parts[i], " ")[0]
+                    if strings.TrimSpace(parts[i]) != "" {
+                        filename := strings.Split(parts[i], " ")[0] // get the filename
                         argument_length := 1 + len(filename)
-                        contents := parts[i][argument_length:]
-                        new_filename := "./file-store/" + machine_address[13:15] + "-" + filename
-                        fmt.Println(new_filename)
-                        file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+                        contents := parts[i][argument_length:] // get the contents
+                        new_filename := "./file-store/" + machine_address[13:15] + "-" + filename // rename the file
+                        file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644) // write to file
                         if err != nil {
                             fmt.Println(err)
                         }
@@ -517,20 +511,19 @@ func SelfJoin(ring_id string) {
                         }
                     }
                 }
-                // Retain the last part in the buffer (incomplete message)
-                buffer = parts[len(parts)-1]
+                buffer = parts[len(parts)-1] // reset the buffer
             }
         }
     }
 
-    // find the predecessors and get file
+    // find the predecessors
     predecessors := GetPredecessors(ring_id)
-    fmt.Println("predcessors: ", predecessors)
-    // get files from predecessors
+    // go through each predecessor
     for i,p :=  range predecessors {
-        if i == 2 || len(p) == 0 {
+        if i == 2 || len(p) == 0 { // if it's the third predecessor or empty continue
             continue
         }
+        // connect to the predecesorr
         pred_port := p[:36]
         if pred_port != os.Getenv("MACHINE_TCP_ADDRESS"){
             conn_pred, err := net.Dial("tcp", pred_port)
@@ -542,12 +535,11 @@ func SelfJoin(ring_id string) {
             // Send a message to the server
             fmt.Fprintln(conn_pred, "pull")
 
-            // Read multiple responses from the server
             reader := bufio.NewReader(conn_pred)
             buffer := ""
 
             for {
-                // Read up to the next newline in chunks
+                // Keep reading till the next new line until we reach the delimiter
                 part, err := reader.ReadString('\n')
                 if err != nil {
                     fmt.Println("Error reading from server:", err)
@@ -557,21 +549,18 @@ func SelfJoin(ring_id string) {
                 // Append the read part to the buffer
                 buffer += part
 
-                // Check if buffer contains the custom delimiter
+                // Check if buffer contains the delimiter
                 if strings.Contains(buffer, "\n---END_OF_MESSAGE---\n") {
-                    // Split buffer by the custom delimiter
                     parts := strings.Split(buffer, "\n---END_OF_MESSAGE---\n")
 
-                    // Process all complete messages in parts
                     for i := 0; i < len(parts)-1; i++ {
-                        if strings.TrimSpace(parts[i]) != "" { // Ignore empty messages
-                            fmt.Println("Received message:", parts[i])
-                            filename := strings.Split(parts[i], " ")[0]
+                        if strings.TrimSpace(parts[i]) != "" { 
+                            filename := strings.Split(parts[i], " ")[0] // get filename
                             argument_length := 1 + len(filename)
-                            contents := parts[i][argument_length:]
-                            new_filename := "./file-store/" + filename
+                            contents := parts[i][argument_length:] // get contents
+                            new_filename := "./file-store/" + filename // add directory to file
             
-                            file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+                            file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644) // write to file
                             if err != nil {
                                 fmt.Println(err)
                             }
@@ -583,8 +572,7 @@ func SelfJoin(ring_id string) {
                             }
                         }
                     }
-                    // Retain the last part in the buffer (incomplete message)
-                    buffer = parts[len(parts)-1]
+                    buffer = parts[len(parts)-1] // reset the buffer
                 }
             }
         }
@@ -592,16 +580,16 @@ func SelfJoin(ring_id string) {
 }
 
 func NewJoin(joined_node string) {
+    // get ring ids for both nodes
     self_id := GetTCPVersion(node_id)
+    joined_node = GetTCPVersion(joined_node)
 
+    // get predecessors
     predecessors := GetPredecessors(self_id)
 
-    fmt.Println("predecessors for other process joining found as: ", predecessors)
-	
-	joined_node = GetTCPVersion(joined_node)
-    
-
     dir := "./file-store" 
+
+    // find all the prefixes for what files may need to be removed
     curr_prefix := os.Getenv("MACHINE_UDP_ADDRESS")[13:15]
     first_pred_prefix, second_pred_prefix, third_pred_prefix := "","",""
     if len(predecessors[0]) > 0 {
@@ -614,6 +602,7 @@ func NewJoin(joined_node string) {
         third_pred_prefix = predecessors[2][13:15]
     }
 
+    // get all the files in the directory
     files, err := ioutil.ReadDir(dir)
     if err != nil {
         log.Fatal(err)
@@ -621,28 +610,21 @@ func NewJoin(joined_node string) {
     
     for i,p :=  range predecessors {
         if p == joined_node && i == 0 { // if it's immediate predecessor
-            fmt.Println("immediate predecessor joined")
+            pred_hash := GetHash(p) // get the hash of the predecessor
             for _, file := range files {
                 filename := file.Name()
                 file_hash := GetHash(filename[3:])
                 // find files with prefix of current server
                 if !file.IsDir() && strings.HasPrefix(filename, curr_prefix) {
                     // if the hash now routes to predecessor change the prefix
-                    fmt.Println("thing being hashed: ", p)
-                    pred_hash := GetHash(p)
-                    fmt.Println("pred_hash: ", pred_hash)
-                    fmt.Println("file_hash: ", file_hash)
                     if pred_hash >= file_hash && file_hash < GetHash(self_id) {
                         old_filename := "file-store/" + filename
                         new_filename := "file-store/" + p[13:15] + "-" + filename[3:]
-                        fmt.Println("checking hash and sending: ", new_filename)
                         os.Rename(old_filename, new_filename)
                     }
                 }
-                // find files with prefix of second predecessor and remove
-                fmt.Println("prefix of removed: ", third_pred_prefix)
+                // find files with prefix of third predecessor and remove them
                 if !file.IsDir() && strings.HasPrefix(filename, third_pred_prefix) {
-                    fmt.Println("need to remove: ", dir + "/" + filename)
                     err := os.Remove(dir + "/" + filename)
                     if err != nil {
                         fmt.Println("Error removing file:", err)
@@ -650,24 +632,21 @@ func NewJoin(joined_node string) {
                 }
             }
         } else if p == joined_node && i == 1{ // if it's second predecessor
-            fmt.Println("second predecessor joined")
+            second_pred_hash := GetHash(p)
+            pred_hash := GetHash(predecessors[0])
             for _, file := range files {
                 filename := file.Name()
                 file_hash := GetHash(filename[3:])
                 // find files with prefix of first predecessor
                 if !file.IsDir() && strings.HasPrefix(filename, first_pred_prefix) {
                     // if the hash now routes to second predecessor change the prefix
-                    pred_hash := GetHash(predecessors[1])
-                    fmt.Println("thing being hashed: ", p)
-                    fmt.Println("pred_hash: ", pred_hash)
-                    fmt.Println("file_hash: ", file_hash)
-                    if pred_hash >= file_hash && file_hash < GetHash(predecessors[0]) {
+                    if second_pred_hash >= file_hash && file_hash < pred_hash {
                         old_filename := "file-store/" + filename
                         new_filename := "file-store/" + second_pred_prefix + "-" + filename[3:]
                         os.Rename(old_filename, new_filename)
                     }
                 }
-                // find files with prefix of second predecessor and remove
+                // find files with prefix of third predecessor and remove
                 if !file.IsDir() && strings.HasPrefix(filename, third_pred_prefix) {
                     err := os.Remove(dir + "/" + filename)
                     if err != nil {
@@ -676,18 +655,15 @@ func NewJoin(joined_node string) {
                 }
             }
         } else if p == joined_node && i == 2 { // if it's third predecessor
-            fmt.Println("third predecessor joined")
+            third_pred_hash := GetHash(p)
+            second_pred_hash := GetHash(predecessors[1])
             for _, file := range files {
                 filename := file.Name()
                 file_hash := GetHash(filename[3:])
                 // find files with prefix of second predecessor
                 if !file.IsDir() && strings.HasPrefix(filename, second_pred_prefix) {
                     // if the hash now routes to third predecessor remove
-                    pred_hash := GetHash(predecessors[2])
-                    fmt.Println("thing being hashed: ", p)
-                    fmt.Println("pred_hash: ", pred_hash)
-                    fmt.Println("file_hash: ", file_hash)
-                    if pred_hash >= file_hash && file_hash < GetHash(predecessors[1]) {
+                    if third_pred_hash >= file_hash && file_hash < second_pred_hash {
                         err := os.Remove(dir + "/" + filename)
                         if err != nil {
                             fmt.Println("Error removing file:", err)
@@ -702,70 +678,65 @@ func NewJoin(joined_node string) {
 func GetPredecessors(self_id string) [3]string{
     var prev1, prev2, prev3 string
 
-	// Create an iterator to go through the TreeMap
+	// Create an iterator to go through the ring map
 	it := ring_map.Iterator()
 
-	for it.Next() {
-        fmt.Println("curr iter: ", it.Value().(string))
+	for it.Next() { // get the three predecessors
 		if it.Value().(string) == self_id {
 			break
 		}
 		prev3 = prev2
 		prev2 = prev1
 		prev1 = it.Value().(string)
-        fmt.Println("curr precv: ", prev1, prev2, prev3)
 	}
 
-	if prev1 == "" {
+	if prev1 == "" { // if the first predecessor wasn't set (current node is at the start of map)
 		_, v1 := ring_map.Max()
 		prev1 = v1.(string)
-        fmt.Println("prev 1 edge: ", prev1)
 	}
-	if prev2 == "" {
+	if prev2 == "" { // if the second predecessor wasn't set
 		_, max_value := ring_map.Max()
-		if prev1 == max_value.(string) {
+		if prev1 == max_value.(string) { // if the first predecessor is already the last map value
 			it = ring_map.Iterator()
 			for it.Next() {
-				if it.Value().(string) == prev1 {
+				if it.Value().(string) == prev1 { // find the value before the first predecessor
 					break
 				}
 				prev2 = it.Value().(string)
 			}
-		} else {
+		} else { // set to last value in map
 			prev2 = max_value.(string)
 		}
-        fmt.Println("prev 2 edge: ", prev2)
 	}
-	if prev3 == "" {
+	if prev3 == "" { // if the third predecessor wasn't set
 		_, max_value := ring_map.Max()
-		if prev1 == max_value.(string) || prev2 == max_value.(string) {
+		if prev1 == max_value.(string) || prev2 == max_value.(string) { // if the first or second predecessor is already the last map value
 			it = ring_map.Iterator()
 			for it.Next() {
-				if it.Value().(string) == prev2 {
+				if it.Value().(string) == prev2 { // find the value before the second predecessor
 					break
 				}
 				prev3 = it.Value().(string)
 			}
-		} else {
+		} else { // set to last value in map
 			prev3 = max_value.(string)
 		}
-        fmt.Println("prev 3 edge: ", prev3)
 	}
 
-	// Collect all three predecessors in a slice
 	predecessors := [3]string{prev1, prev2, prev3}
     return predecessors
 }
 
 func GetSuccessor(ring_id string) string{
     successor := ""
-    // find successor and get files
+
+    //iterate through the ring map
     it := ring_map.Iterator()
     for it.Next() {
-		if it.Value().(string) == ring_id {
-            if it.Next() {
+		if it.Value().(string) == ring_id { // if we found the current value
+            if it.Next() { // set the succesor to the next value if it's valid
 				successor = it.Value().(string)
-			} else {
+			} else { // set to first value in map (wrap around)
 				_, successor_val := ring_map.Min()
                 successor = successor_val.(string)
 			}
@@ -774,6 +745,7 @@ func GetSuccessor(ring_id string) string{
     return successor
 }
 
+// get the tcp version of the node_id (value in the ring map)
 func GetTCPVersion(id string) string {
     bytes := []byte(id)
 	bytes[32] = '8'
