@@ -741,7 +741,7 @@ func GetPredecessors(self_id string) [3]string{
 		if prev1 == max_value.(string) || prev2 == max_value.(string) {
 			it = ring_map.Iterator()
 			for it.Next() {
-				if it.Value().(string) == prev1 || it.Value().(string) == prev2 {
+				if it.Value().(string) == prev2 {
 					break
 				}
 				prev3 = it.Value().(string)
