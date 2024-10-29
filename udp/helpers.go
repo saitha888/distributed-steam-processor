@@ -198,11 +198,10 @@ func FindNode(node_id string) int {
     return -1
 }
 
-
 func GetHash(data string) int {
 	hash := sha256.Sum256([]byte(data))
     truncated_hash := binary.BigEndian.Uint64(hash[:8])
-    ring_hash := truncated_hash % 512
+    ring_hash := truncated_hash % 2048
 	return (int)(ring_hash)
 }
 
