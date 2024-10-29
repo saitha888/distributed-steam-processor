@@ -192,7 +192,7 @@ func AddNode(node_id string, node_inc int, status string, i string){
 	
 	node_id_ring := string(bytes)
 
-    ring_map.Put(GetHash(node_id), node_id_ring)
+    ring_map.Put(GetHash(node_id_ring), node_id_ring)
 }
 
 
