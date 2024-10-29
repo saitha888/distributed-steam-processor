@@ -382,7 +382,9 @@ func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) st
 				// Move backwards
 			} else {
 				// If there's no previous element (we hit the beginning of the map), return nil
-				return ""
+				for iterator.Next() {
+                    // Keep iterating until `iterator.Next()` returns false
+                }
 			}
 		}
 		return iterator.Value().(string)
