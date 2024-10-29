@@ -673,6 +673,9 @@ func ProcessJoinMessage(message string) {
                 if !file.IsDir() && strings.HasPrefix(filename, first_pred_prefix) {
                     // if the hash now routes to second predecessor change the prefix
                     pred_hash := GetHash(predecessors[1])
+                    fmt.Println("thing being hashed: ", p)
+                    fmt.Println("pred_hash: ", pred_hash)
+                    fmt.Println("file_hash: ", file_hash)
                     if pred_hash >= file_hash {
                         old_filename := "file-store/" + filename
                         new_filename := "file-store/" + second_pred_prefix + "-" + filename[3:]
@@ -696,6 +699,9 @@ func ProcessJoinMessage(message string) {
                 if !file.IsDir() && strings.HasPrefix(filename, second_pred_prefix) {
                     // if the hash now routes to third predecessor remove
                     pred_hash := GetHash(predecessors[2])
+                    fmt.Println("thing being hashed: ", p)
+                    fmt.Println("pred_hash: ", pred_hash)
+                    fmt.Println("file_hash: ", file_hash)
                     if pred_hash >= file_hash {
                         err := os.Remove(dir + "/" + filename)
                         if err != nil {
