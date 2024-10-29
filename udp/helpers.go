@@ -632,7 +632,7 @@ func NewJoin(joined_node string) {
                     pred_hash := GetHash(p)
                     fmt.Println("pred_hash: ", pred_hash)
                     fmt.Println("file_hash: ", file_hash)
-                    if pred_hash >= file_hash && file_hash > GetHash(self_id) {
+                    if pred_hash >= file_hash && file_hash < GetHash(self_id) {
                         old_filename := "file-store/" + filename
                         new_filename := "file-store/" + p[13:15] + "-" + filename[3:]
                         fmt.Println("checking hash and sending: ", new_filename)
@@ -661,7 +661,7 @@ func NewJoin(joined_node string) {
                     fmt.Println("thing being hashed: ", p)
                     fmt.Println("pred_hash: ", pred_hash)
                     fmt.Println("file_hash: ", file_hash)
-                    if pred_hash >= file_hash && file_hash > GetHash(predecessors[0]) {
+                    if pred_hash >= file_hash && file_hash < GetHash(predecessors[0]) {
                         old_filename := "file-store/" + filename
                         new_filename := "file-store/" + second_pred_prefix + "-" + filename[3:]
                         os.Rename(old_filename, new_filename)
@@ -687,7 +687,7 @@ func NewJoin(joined_node string) {
                     fmt.Println("thing being hashed: ", p)
                     fmt.Println("pred_hash: ", pred_hash)
                     fmt.Println("file_hash: ", file_hash)
-                    if pred_hash >= file_hash && file_hash > GetHash(predecessors[1]) {
+                    if pred_hash >= file_hash && file_hash < GetHash(predecessors[1]) {
                         err := os.Remove(dir + "/" + filename)
                         if err != nil {
                             fmt.Println("Error removing file:", err)
