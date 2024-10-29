@@ -264,10 +264,11 @@ func RemoveNode(id_to_rem string) {
     if (id2 == node_id) {
         //if removed node is 2 nodes before this node
         //rename files of origin n-2 to n-1 
-        RenameFilesWithPrefix(IteratorAtNMinusSteps(ring_map, node_id, 2)[13:15], node_id[13:15])
+        RenameFilesWithPrefix(IteratorAtNMinusSteps(ring_map, node_id, 2)[13:15], IteratorAtNMinusSteps(ring_map, node_id, 1)[13:15])
 
         //pull files of origin n-3
         nod := IteratorAtNMinusSteps(ring_map, node_id, 3)
+        fmt.Println(nod)
         port := nod[:36]
         // pull for files
         conn_pred, err := net.Dial("tcp", port )
