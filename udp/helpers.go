@@ -209,7 +209,6 @@ func FindNode(node_id string) int {
 
 func GetHash(data string) int {
 	hash := sha256.Sum256([]byte(data))
-    fmt.Println("hash: ", hash)
     truncated_hash := binary.BigEndian.Uint64(hash[:8])
     ring_hash := truncated_hash % 1024
 	return (int)(ring_hash)
@@ -661,7 +660,9 @@ func ProcessJoinMessage(message string) {
                     }
                 }
                 // find files with prefix of second predecessor and remove
+                fmt.Println("prefix of removed: ", third_pred_prefix)
                 if !file.IsDir() && strings.HasPrefix(filename, third_pred_prefix) {
+                    fmt.Println("need to remove: ", dir + "/" + filename)
                     err := os.Remove(dir + "/" + filename)
                     if err != nil {
                         fmt.Println("Error removing file:", err)
@@ -672,14 +673,14 @@ func ProcessJoinMessage(message string) {
             fmt.Println("second predecessor joined")
             for _, file := range files {
                 filename := file.Name()
-                file_hash := GetHash(filename[4:])
+                file_hash := GetHash(filename[3:])
                 // find files with prefix of first predecessor
                 if !file.IsDir() && strings.HasPrefix(filename, first_pred_prefix) {
                     // if the hash now routes to second predecessor change the prefix
                     pred_hash := GetHash(predecessors[1])
                     if pred_hash >= file_hash {
                         old_filename := "file-store/" + filename
-                        new_filename := "file-store/" + second_pred_prefix + "-" + filename[4:]
+                        new_filename := "file-store/" + second_pred_prefix + "-" + filename[3:]
                         os.Rename(old_filename, new_filename)
                     }
                 }
