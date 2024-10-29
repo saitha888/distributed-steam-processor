@@ -167,11 +167,7 @@ func RemoveNode(node_id string) {
         }
     }
     
-    bytes := []byte(node_id)
-	
-	bytes[32] = '8'
-	
-	node_id_ring := string(bytes)
+    node_id_ring := GetTCPVersion(node_id)
 
     ring_map.Remove(GetHash(node_id_ring))
 }
@@ -186,11 +182,7 @@ func AddNode(node_id string, node_inc int, status string, i string){
     }
     membership_list = append(membership_list, new_node)
 
-    bytes := []byte(node_id)
-	
-	bytes[32] = '8'
-	
-	node_id_ring := string(bytes)
+    node_id_ring := GetTCPVersion(node_id)
 
     ring_map.Put(GetHash(node_id_ring), node_id_ring)
 }
@@ -397,6 +389,8 @@ func IntroducerJoin() {
             }
         }
     }
+    ring_id := GetTCPVersion(node_id)
+    SelfJoin(ring_id)
 }
 
 
@@ -411,13 +405,7 @@ func ProcessJoin(address string) {
     if node_id == "" {
         node_id = machine_address + "_" + time.Now().Format("2006-01-02_15:04:05")
     }
-    target_value := os.Getenv("MACHINE_TCP_ADDRESS")
-
-    bytes := []byte(node_id)
-	
-	bytes[32] = '8'
-	
-	ring_id := string(bytes)
+    ring_id := GetTCPVersion(node_id)
 
     // Send join message to introducer
     message := fmt.Sprintf("join %s", node_id)
@@ -450,8 +438,27 @@ func ProcessJoin(address string) {
 
     // Print the response from the introducer (e.g., acknowledgment or membership list)
     fmt.Printf("Received mem_list from introducer\n")
+    SelfJoin(ring_id)
+}
 
-    successor := GetSuccessor(target_value)
+
+func ProcessJoinMessage(message string) {
+    joined_node := message[5:]
+    index := FindNode(joined_node)
+    if index >= 0 { // machine was found
+        changeStatus(index, "alive")
+    } else { // machine was not found
+        i := joined_node[13:15]
+        AddNode(joined_node, 1, "alive", i)
+    }
+    send := "Node join detected for: " + joined_node + " at " + time.Now().Format("15:04:05") + "\n"
+    appendToFile(send, logfile)
+    // check if a predecessor got added
+    NewJoin(joined_node)
+}
+
+func SelfJoin(ring_id string) {
+    successor := GetSuccessor(ring_id)
     successor_port := successor[:36]
 
     if successor_port != os.Getenv("MACHINE_TCP_ADDRESS") {
@@ -512,14 +519,8 @@ func ProcessJoin(address string) {
         }
     }
 
-    // find the predecessors and get files
-    bytes = []byte(node_id)
-	
-	bytes[32] = '8'
-	
-	self_id := string(bytes)
-
-    predecessors := GetPredecessors(self_id)
+    // find the predecessors and get file
+    predecessors := GetPredecessors(ring_id)
     fmt.Println("predcessors: ", predecessors)
     // get files from predecessors
     for i,p :=  range predecessors {
@@ -586,39 +587,15 @@ func ProcessJoin(address string) {
     }
 }
 
-
-func ProcessJoinMessage(message string) {
-    joined_node := message[5:]
-    index := FindNode(joined_node)
-    if index >= 0 { // machine was found
-        changeStatus(index, "alive")
-    } else { // machine was not found
-        i := joined_node[13:15]
-        AddNode(joined_node, 1, "alive", i)
-    }
-    send := "Node join detected for: " + joined_node + " at " + time.Now().Format("15:04:05") + "\n"
-    appendToFile(send, logfile)
-    // check if a predecessor got added
-    NewJoin(joined_node)
-}
-
-
 func NewJoin(joined_node string) {
-    bytes := []byte(node_id)
-	
-	bytes[32] = '8'
-	
-	self_id := string(bytes)
+    self_id := GetTCPVersion(node_id)
 
     predecessors := GetPredecessors(self_id)
 
     fmt.Println("predecessors for other process joining found as: ", predecessors)
-
-    bytes = []byte(joined_node)
 	
-	bytes[32] = '8'
-	
-	joined_node = string(bytes)
+	joined_node = GetTCPVersion(joined_node)
+    
 
     dir := "./file-store" 
     curr_prefix := os.Getenv("MACHINE_UDP_ADDRESS")[13:15]
@@ -776,12 +753,12 @@ func GetPredecessors(self_id string) [3]string{
     return predecessors
 }
 
-func GetSuccessor(target_value string) string{
+func GetSuccessor(ring_id string) string{
     successor := ""
     // find successor and get files
     it := ring_map.Iterator()
     for it.Next() {
-		if it.Value().(string)[:36] == target_value {
+		if it.Value().(string) == ring_id {
             if it.Next() {
 				successor = it.Value().(string)
 			} else {
@@ -791,4 +768,12 @@ func GetSuccessor(target_value string) string{
 		}
 	}
     return successor
+}
+
+func GetTCPVersion(id string) string {
+    bytes := []byte(id)
+	bytes[32] = '8'
+	id = string(bytes)
+    
+    return id
 }
