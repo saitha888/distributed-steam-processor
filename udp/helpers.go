@@ -687,6 +687,23 @@ func ProcessJoinMessage(message string) {
                     }
                 }
             }
+        } else if p == joined_node && i == 2 { // if it's third predecessor
+            fmt.Println("third predecessor joined")
+            for _, file := range files {
+                filename := file.Name()
+                file_hash := GetHash(filename[3:])
+                // find files with prefix of second predecessor
+                if !file.IsDir() && strings.HasPrefix(filename, second_pred_prefix) {
+                    // if the hash now routes to third predecessor remove
+                    pred_hash := GetHash(predecessors[2])
+                    if pred_hash >= file_hash {
+                        err := os.Remove(dir + "/" + filename)
+                        if err != nil {
+                            fmt.Println("Error removing file:", err)
+                        }
+                    }
+                }
+            }
         }
     }
 }
