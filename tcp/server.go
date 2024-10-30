@@ -10,6 +10,8 @@ import (
     "strconv"
     "github.com/joho/godotenv"
     "strings"
+    "distributed_system/udp"
+
 )
 
 var err = godotenv.Load(".env")
@@ -134,6 +136,38 @@ func handleConnection(conn net.Conn) {
                 filename = file.Name()
                 // if file is from origin server send it back 
                 if filename[:2] == os.Getenv("MACHINE_UDP_ADDRESS")[13:15] {
+                    file_path := dir + "/" + filename
+                    content, err := ioutil.ReadFile(file_path)
+                    if err != nil {
+                        fmt.Println("Error reading file:", filename, err)
+                    }
+                    // Send the file name and content to the client
+                    fmt.Println("sending back own file: ", filename)
+                    message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", filename, string(content))
+                    _, err = conn.Write([]byte(message))
+                    if err != nil {
+                        fmt.Println("Error sending file content:", err)
+                    }
+                }
+            }
+        }
+    }  else if len(message) >= 6 && message[:6] == "pull-3" {
+        fmt.Println("message to pull-3")
+        dir := "./file-store"
+        files, err := ioutil.ReadDir(dir)
+        if err != nil {
+            fmt.Println("Error reading directory:", err)
+        }
+        ring_map := udp.GetRing()
+        iterator := udp.IteratorAt(ring_map, os.Getenv("MACHINE_UDP_ADDRESS"))
+        iterator.Prev()
+        filenum := iterator.Value().(string)[13:15]
+        // go through all the files
+        for _, file := range files {
+            if !file.IsDir() {
+                filename = file.Name()
+                // if file is from origin server send it back 
+                if filename[:2] == filenum[13:15] || filename[:2] == os.Getenv("MACHINE_UDP_ADDRESS"){
                     file_path := dir + "/" + filename
                     content, err := ioutil.ReadFile(file_path)
                     if err != nil {

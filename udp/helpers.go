@@ -329,7 +329,7 @@ func RemoveNode(id_to_rem string) {
     id3 = iterator.Value().(string)
     if (id3 == node_id) {
         fmt.Println("node 3 elemetns behind failed")
-        nod := IteratorAtNMinusSteps(ring_map, node_id, 3)
+        nod := IteratorAtNMinusSteps(ring_map, node_id, 2)
         fmt.Println(nod)
         port := nod[:36]
         // pull for files
@@ -339,7 +339,7 @@ func RemoveNode(id_to_rem string) {
             return
         }
         defer conn_pred.Close()
-        message := fmt.Sprintf("pull")
+        message := fmt.Sprintf("pull-3")
         conn_pred.Write([]byte(message))
         reader := bufio.NewReader(conn_pred)
         buffer := ""
@@ -423,41 +423,52 @@ func IteratorAt(ringMap *treemap.Map, start_val string) *treemap.Iterator {
 // 	return iterator.Key()
 // }
 
-// Function to find the iterator positioned at the nth key and move backwards by steps
+// IteratorAtNMinusSteps moves forward or backward by `steps` from the position of `start_val`.
 func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) string {
-	// Get an iterator at the beginning of the TreeMap
 	iterator := ringMap.Iterator()
 	found := false
 
-	// First, find the position of startKey (n)
+	// First, locate the position of start_val
 	for iterator.Next() {
 		if iterator.Value().(string) == start_val {
 			found = true
 			break
 		}
 	}
-//1, 2, 3, 5, 4
-	// If startKey is found, move backwards by the specified steps
-	if found {
-		// Move backwards by `steps`
-        last_value := ""
-		for i := 0; i < steps; i++ {
-			if iterator.Prev() {
-                last_value = iterator.Value().(string)
 
-				// Move backwards
-			} else {
-				// If there's no previous element (we hit the beginning of the map), return nil
-				for iterator.Next() {
-                   last_value = iterator.Value().(string)
-                    // Keep iterating until `iterator.Next()` returns false
-                }
-                
+	// If start_val is found, proceed with steps
+	if found {
+		last_value := ""
+
+		if steps > 0 {
+			// Move backward by `steps`
+			for i := 0; i < steps; i++ {
+				if iterator.Prev() {
+					last_value = iterator.Value().(string)
+				} else {
+					// Wrap around to the end if reaching the beginning
+					for iterator.Next() { // Move to the last element
+						last_value = iterator.Value().(string)
+					}
+				}
+			}
+		} else if steps < 0 {
+			// Move forward by `-steps`
+			for i := 0; i < -steps; i++ {
+				if iterator.Next() {
+					last_value = iterator.Value().(string)
+				} else {
+					// Wrap around to the beginning if reaching the end
+					iterator.First()
+					last_value = iterator.Value().(string)
+				}
 			}
 		}
-        fmt.Printf(last_value + " is found at n-%d")
+
+		fmt.Printf("%s is found at n-%d\n", last_value, steps)
 		return last_value
 	}
+
 	return ""
 }
 

@@ -5,7 +5,7 @@ import (
     "time"
     "strconv"
 )
-//1, 2, 3, 5, 4
+//3, 5, 4, 1, 2
 
 // Global variable to save unique node ID
 var node_id string = ""

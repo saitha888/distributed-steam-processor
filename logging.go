@@ -84,7 +84,6 @@ func startPinging() {
 				fmt.Println("Stopping PingClient...")
 				return
 			default:
-				// Sleep and then ping a random node
 				time.Sleep(1 * time.Second)
 				udp.PingClient(suspicionEnabled)
 			}
