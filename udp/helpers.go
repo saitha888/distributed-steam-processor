@@ -180,7 +180,7 @@ func RemoveNode(id_to_rem string) {
 	bytes_remove[32] = '8'
 	
 	id_to_remove := string(bytes_remove)
-    fmt.Println("REMOVAL OF NODE " + id_to_remove + "\n\n\n")
+    fmt.Println("\nREMOVAL OF NODE " + id_to_remove + "\n")
 
     ring_map := GetRing()
     iterator := IteratorAt(ring_map, id_to_remove)
@@ -189,7 +189,6 @@ func RemoveNode(id_to_rem string) {
         iterator.First()
     }
     id = iterator.Value().(string)
-    fmt.Println("Next id: " + id)
     if (id == node_id) {
         fmt.Println("immediate predecessor failed")
         //if removed node is right before this node
@@ -433,7 +432,6 @@ func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) st
 	// First, find the position of startKey (n)
 	for iterator.Next() {
 		if iterator.Value().(string) == start_val {
-            fmt.Printf("n-%d + found", steps)
 			found = true
 			break
 		}
@@ -446,7 +444,7 @@ func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) st
 		for i := 0; i < steps; i++ {
 			if iterator.Prev() {
                 last_value = iterator.Value().(string)
-                fmt.Println(iterator.Value().(string))
+
 				// Move backwards
 			} else {
 				// If there's no previous element (we hit the beginning of the map), return nil
@@ -457,6 +455,7 @@ func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) st
                 
 			}
 		}
+        fmt.Printf(last_value + " is found at n-%d")
 		return last_value
 	}
 	return ""
