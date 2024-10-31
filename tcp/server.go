@@ -121,13 +121,6 @@ func handleConnection(conn net.Conn) {
             fmt.Println("File already exists")
         } 
         fmt.Println("File created: ", HyDFSfilename)
-    } else if len(message) >= 4 && message[:4] == "pull" {
-        dir := "./file-store"
-        files, err := ioutil.ReadDir(dir)
-        if err != nil {
-            fmt.Println("Error reading directory:", err)
-        }
-
     } else if len(message) >= 6 && message[:6] == "pull-3" {
         parts := strings.Split(message, " ")
         prefix := parts[1][13:15]
@@ -194,18 +187,7 @@ func handleConnection(conn net.Conn) {
                 }
             }
         }
-    }  else { 
-
-                    // Send the file name and content to the client with the delimiter
-                    message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", filename, string(content))
-                    _, err = conn.Write([]byte(message))
-                    if err != nil {
-                        fmt.Println("Error sending file content:", err)
-                    }
-                }
-            }
-        }
-    } else if len(message) >= 5 && message[:5] == "split" {
+    }  else if len(message) >= 5 && message[:5] == "split" {
         dir := "./file-store"
 
         files, err := ioutil.ReadDir(dir)
