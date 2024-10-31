@@ -11,6 +11,9 @@ import (
 //2, 3, 5, 1, 4
 //2 did not get from 
 
+//1, 4, 2, 3, 5
+//
+
 // Global variable to save unique node ID
 var node_id string = ""
 var enabled_sus = false

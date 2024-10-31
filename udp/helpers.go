@@ -447,6 +447,7 @@ func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) st
 			// If at the beginning, wrap around to the last element
 			for iterator.Next() {} // Move to the last element
 		}
+        fmt.Printf("%s is at n-%d\n", iterator.Value().(string), n+1)
 	}
 
 	// Return the value at the final position
