@@ -147,7 +147,12 @@ func handleConnection(conn net.Conn) {
             if !file.IsDir() {
                 filename = file.Name()
                 // if file is from origin server send it back 
-                if filename[:2] == filenum[13:15] || filename[:2] == os.Getenv("MACHINE_UDP_ADDRESS"){
+                if filename[:2] == filenum || filename[:2] == os.Getenv("MACHINE_UDP_ADDRESS")[13:15] {
+                    machinePrefix := os.Getenv("MACHINE_UDP_ADDRESS")[13:15]
+                    // Check conditions and update filename if needed
+                    if filename[:2] == filenum {
+                        filename = machinePrefix + filename[2:]
+                    }
                     file_path := dir + "/" + filename
                     content, err := ioutil.ReadFile(file_path)
                     if err != nil {
