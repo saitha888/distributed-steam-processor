@@ -10,7 +10,6 @@ import (
     "strconv"
     "github.com/joho/godotenv"
     "strings"
-    "distributed_system/udp"
 
 )
 
@@ -123,34 +122,24 @@ func handleConnection(conn net.Conn) {
         }
 
     } else if len(message) >= 6 && message[:6] == "pull-3" {
+        parts := strings.Split(message, " ")
+        prefix := parts[1][13:15]
         fmt.Println("message to pull-3")
         dir := "./file-store"
         files, err := ioutil.ReadDir(dir)
         if err != nil {
             fmt.Println("Error reading directory:", err)
         }
-        ring_map := udp.GetRing()
-        tcp_id := udp.GetTcpID()
-        iterator := udp.IteratorAt(ring_map, tcp_id)
-        last_val := iterator
-        filenum := ""
-        if !iterator.Prev() {
-            for iterator.Next() {
-                last_val = iterator
-            }
-            filenum = last_val.Value().(string)[13:15]
-        }
-        filenum = iterator.Value().(string)[13:15]
-        fmt.Println("Gathering files from failed node: "+ filenum)
+        fmt.Println("Gathering files from failed node: "+ prefix)
         // go through all the files
         for _, file := range files {
             if !file.IsDir() {
                 filename = file.Name()
                 // if file is from origin server send it back 
-                if filename[:2] == filenum || filename[:2] == os.Getenv("MACHINE_UDP_ADDRESS")[13:15] {
+                if filename[:2] == prefix || filename[:2] == os.Getenv("MACHINE_UDP_ADDRESS")[13:15] {
                     machinePrefix := os.Getenv("MACHINE_UDP_ADDRESS")[13:15]
                     // Check conditions and update filename if needed
-                    if filename[:2] == filenum {
+                    if filename[:2] == prefix {
                         filename = machinePrefix + filename[2:]
                     }
                     file_path := dir + "/" + filename

@@ -350,7 +350,7 @@ func RemoveNode(id_to_rem string) {
             return
         }
         defer conn_pred.Close()
-        message := fmt.Sprintf("pull-3")
+        message := fmt.Sprintf("pull-3 %d", id_to_remove)
         conn_pred.Write([]byte(message))
         reader := bufio.NewReader(conn_pred)
         buffer := ""

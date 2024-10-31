@@ -8,7 +8,8 @@ import (
 //5, 3, 1, 4, 2
 //5 failed, 3 did not get 4s files, n-3 mapped to 2
 
-//5, 2, 3, 1, 4
+//2, 5, 3, 1, 4
+//2, 5, 3, 4
 
 // Global variable to save unique node ID
 var node_id string = ""
