@@ -325,7 +325,7 @@ func RemoveNode(id_to_rem string) {
     if (!iterator.Next()) {
         iterator.First()
     }
-    //1, 2, 3, 4, 5
+    //3, 1, 2, 4, 5
     id3 = iterator.Value().(string)
     if (id3 == node_id) {
         fmt.Println("node 3 elemetns behind failed")
@@ -433,8 +433,11 @@ func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) st
 			for i := 0; i < steps; i++ {
                 if !iterator.Prev() {
                     // Wrap around to the end if at the beginning
-                    for iterator.Next() {}
-                    last_value = iterator.Value().(string)
+                    temp := ""
+                    for iterator.Next() {
+                        temp = iterator.Value().(string)
+                    }
+                    last_value = temp
                 } else {
                     last_value = iterator.Value().(string)
                 }
