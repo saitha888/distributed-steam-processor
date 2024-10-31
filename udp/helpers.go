@@ -241,16 +241,16 @@ func ListMem(list_to_print []Node) {
         return
     }
 
-    nodeIDWidth := 54
+    nodeIDWidth := 56
     ringIDWidth := 4
     statusWidth := 4
 
     fmt.Printf("%-*s | %-*s | %-*s | %s | \n", ringIDWidth, "RingID", nodeIDWidth, "NodeID", statusWidth, "Status", "Incarnation #")
-    fmt.Println(strings.Repeat("-", nodeIDWidth+statusWidth+ringIDWidth+25))
+    fmt.Println(strings.Repeat("-", nodeIDWidth+statusWidth+ringIDWidth+30))
 
     // Go through membership list and print each entry
     for _, node := range list_to_print {
-        fmt.Printf("%s | %s | %s  | %s\n",strconv.Itoa(node.RingID),node.NodeID, node.Status, strconv.Itoa(node.Inc))
+        fmt.Printf("%-*s | %s | %s  | %s\n",8,strconv.Itoa(node.RingID),node.NodeID, node.Status, strconv.Itoa(node.Inc))
     }
     fmt.Println()
     fmt.Print("> ")
@@ -317,9 +317,8 @@ func IntroducerJoin() {
     } 
 
     // go through ports, get first alive membership list
-    for i,port := range ports {
-        machine, _ := strconv.Atoi(machine_number)
-        if i == machine - 1 {
+    for _,port := range ports {
+        if port[13:15] == machine_address[13:15] {
             continue
         }
         // connect to the port
@@ -346,7 +345,6 @@ func IntroducerJoin() {
         }
         memb_list_string := string(buf[:n])
         memb_list := strings.Split(memb_list_string,", ")
-
         // if none keep membership list empty
         if memb_list_string == "" {
             continue
