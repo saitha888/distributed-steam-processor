@@ -159,10 +159,14 @@ func MembershiplistToString() string{
     result := strings.Join(nodes, ", ")
     return result
 }
+var removed = false
 
 // Remove a machine from the membership list
 func RemoveNode(id_to_rem string) {
-
+    if removed {
+        return
+    }
+    removed = true
     bytes := []byte(node_id)
 	bytes[32] = '8'
 	
@@ -330,7 +334,6 @@ func RemoveNode(id_to_rem string) {
     if (id3 == node_id) {
         fmt.Println("node 3 elemetns behind failed")
         nod := IteratorAtNMinusSteps(ring_map, node_id, 2)
-        fmt.Println(nod)
         port := nod[:36]
         // pull for files
         conn_pred, err := net.Dial("tcp", port )
