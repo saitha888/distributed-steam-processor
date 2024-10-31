@@ -273,21 +273,6 @@ func ListRing(treeMap *treemap.Map) {
     }
 }
 
-func PrintFiles(dirName string) {
-	if _, err := os.Stat(dirName); os.IsNotExist(err) {
-		log.Fatalf("Directory %s does not exist\n", dirName)
-	}
-
-	files, err := ioutil.ReadDir(dirName)
-	if err != nil {
-		log.Fatalf("Failed to read directory: %v", err)
-	}
-
-	for _, file := range files {
-		fmt.Println(file.Name())
-	}
-}
-
 func FindSusMachines() []Node {
 	var susList []Node
 	for _, node := range membership_list {
@@ -798,4 +783,35 @@ func GetFileServers(file_hash int) []string {
 	}
 
     return node_ids
+}
+
+func ListStore() {
+    dir := "./file-store"
+    own_files := []string{}
+    replica_files := []string{}
+
+    files, err := ioutil.ReadDir(dir)
+    if err != nil {
+        fmt.Println("Error reading directory:", err)
+    }
+
+    for _, file := range files {
+        if !file.IsDir() {
+            filename := file.Name()
+            if strings.HasPrefix(filename, os.Getenv("MACHINE_UDP_ADDRESS")[13:15]) {
+                own_files = append(own_files, filename)
+            } else {
+                replica_files = append(replica_files, filename)
+            }
+        }
+    }
+
+    fmt.Println("Origin Server Files:")
+    for _,filename := range own_files {
+        fmt.Println(filename[3:])
+    }
+    fmt.Println("Replicated Files:")
+    for _,filename := range own_files {
+        fmt.Println(filename[3:])
+    }
 }

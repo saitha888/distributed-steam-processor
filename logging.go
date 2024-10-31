@@ -127,9 +127,6 @@ func commandLoop() {
             case "list_mem":
                 membership_list := udp.GetMembershipList()
                 go udp.ListMem(membership_list)
-            
-            case "store":
-                go udp.PrintFiles("file-store")
         
             case "leave":
                 // Send a signal to stop the ping loop
@@ -165,6 +162,9 @@ func commandLoop() {
             case "ls":
                 HyDFSfilename := args[1]
                 udp.ListServers(HyDFSfilename)
+            
+            case "store":
+                udp.ListStore()
 
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")
