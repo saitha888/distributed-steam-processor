@@ -20,7 +20,7 @@ var inc_num int = 0
 var introducer_address string = os.Getenv("INTRODUCER_ADDRESS")
 var machine_address string = os.Getenv("MACHINE_UDP_ADDRESS")
 var machine_number string = os.Getenv("MACHINE_NUMBER")
-
+var vector_clock []int
 
 // struct for each process
 type Node struct {
@@ -28,6 +28,7 @@ type Node struct {
     Status    string    
     Inc int 
     Index string
+    RingID int
 }
 
 //starts udp server that listens for pings
