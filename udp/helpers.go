@@ -422,12 +422,12 @@ func IteratorAt(ringMap *treemap.Map, start_val string) *treemap.Iterator {
 	return &iterator
 }
 
-// IteratorAtNMinusSteps moves forward or backward by `steps` from the position of `start_val`.
+// IteratorAtNMinusSteps moves backward by `steps` from the position of `start_val`, wrapping around if necessary.
 func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) string {
 	iterator := ringMap.Iterator()
 	found := false
 
-	// First, locate the position of start_val
+	// Locate the starting position of `start_val`
 	for iterator.Next() {
 		if iterator.Value().(string) == start_val {
 			found = true
@@ -435,43 +435,22 @@ func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) st
 		}
 	}
 
-	// If start_val is found, proceed with steps
-	if found {
-		last_value := ""
-        //1, 2, 5, 3, 4
-		if steps > 0 {
-			// Move backward by `steps`
-			for i := 0; i < steps; i++ {
-                if !iterator.Prev() {
-                    // Wrap around to the end if at the beginning
-                    temp := ""
-                    for iterator.Next() {
-                        temp = iterator.Value().(string)
-                    }
-                    last_value = temp
-                } else {
-                    last_value = iterator.Value().(string)
-                }
-                fmt.Printf("\nn-%d: %s", i, last_value)
-			}
-		} else if steps < 0 {
-			// Move forward by `-steps`
-			for i := 0; i < -steps; i++ {
-				if iterator.Next() {
-					last_value = iterator.Value().(string)
-				} else {
-					// Wrap around to the beginning if reaching the end
-					iterator.First()
-					last_value = iterator.Value().(string)
-				}
-			}
-		}
-
-		fmt.Printf("%s is found at n-%d\n", last_value, steps)
-		return last_value
+	// If `start_val` is not found, return an empty string
+	if !found {
+		return ""
 	}
 
-	return ""
+	// Move backward by `steps`, wrapping around as necessary
+	for i := 0; i < steps; i++ {
+		// Attempt to move backward
+		if !iterator.Prev() {
+			// If at the beginning, wrap around to the last element
+			for iterator.Next() {} // Move to the last element
+		}
+	}
+
+	// Return the value at the final position
+	return iterator.Value().(string)
 }
 
 // Function to write content to a local file
