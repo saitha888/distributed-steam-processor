@@ -14,6 +14,7 @@ import (
     "io/ioutil"
     "bufio"
     "encoding/binary"
+    "sort"
 )
 
 func SendMessage(target_node string, to_send string, node_to_send string) {
@@ -244,6 +245,10 @@ func ListMem(list_to_print []Node) {
     nodeIDWidth := 56
     ringIDWidth := 4
     statusWidth := 4
+
+    sort.Slice(list_to_print, func(i, j int) bool {
+        return list_to_print[i].RingID < list_to_print[j].RingID
+    })
 
     fmt.Printf("%-*s | %-*s | %-*s | %s | \n", ringIDWidth, "RingID", nodeIDWidth, "NodeID", statusWidth, "Status", "Incarnation #")
     fmt.Println(strings.Repeat("-", nodeIDWidth+statusWidth+ringIDWidth+30))
