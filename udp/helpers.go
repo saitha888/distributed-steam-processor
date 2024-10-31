@@ -760,3 +760,42 @@ func GetTCPVersion(id string) string {
 func GetNodeID() string {
     return node_id
 }
+
+func ListServers(HyDFSfilename string) {
+    file_hash := GetHash(HyDFSfilename)
+    fmt.Println("File ID: ", strconv.Itoa(file_hash))
+
+    node_ids := GetFileServers(file_hash)
+    for _,node := range node_ids {
+        fmt.Println(node)
+    }
+}
+
+
+func GetFileServers(file_hash int) []string {
+    node_ids := []string{}
+	iterator := ring_map.Iterator()
+	for iterator.Next() {
+		if iterator.Key().(int)> file_hash {
+			node_ids = append(node_ids, iterator.Value().(string))
+			for i := 0; i < 2; i++ {
+				if (iterator.Next()) {
+					node_ids = append(node_ids, iterator.Value().(string))
+				} else {
+					iterator.First()
+					node_ids = append(node_ids, iterator.Value().(string))
+				}
+			}
+			break
+		}
+	} 
+	if len(node_ids) == 0 {
+		iterator.First()
+		for i := 0; i < 3; i++ {
+			node_ids = append(node_ids, iterator.Value().(string))
+			iterator.Next()
+		}
+	}
+
+    return node_ids
+}

@@ -68,38 +68,9 @@ func WriteToFile(filename string, content string) error {
 }
 
 func CreateFile(localfilename string, HyDFSfilename string) {
-	// get the current ring map
-	ring_map := udp.GetRing()
-
 	// find which machine to create the file on
 	file_hash := udp.GetHash(HyDFSfilename)
-	fmt.Println("file hash: ", file_hash)
-
-	// Find the smallest key that is greater than or equal to the hash
-	node_ids := []string{}
-	iterator := ring_map.Iterator()
-	for iterator.Next() {
-		if iterator.Key().(int)> file_hash {
-			node_ids = append(node_ids, iterator.Value().(string))
-			for i := 0; i < 2; i++ {
-				if (iterator.Next()) {
-					node_ids = append(node_ids, iterator.Value().(string))
-				} else {
-					iterator.First()
-					node_ids = append(node_ids, iterator.Value().(string))
-				}
-			}
-			break
-		}
-	} 
-	if len(node_ids) == 0 {
-		iterator.First()
-		for i := 0; i < 3; i++ {
-			node_ids = append(node_ids, iterator.Value().(string))
-			iterator.Next()
-		}
-	}
-
+	node_ids := udp.GetFileServers(file_hash)
 
 	// get the contents of the local filename
 	file_contents, err := os.ReadFile(localfilename)

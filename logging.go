@@ -161,6 +161,10 @@ func commandLoop() {
                 localfilename := args[1]
                 HyDFSfilename := args[2]
                 tcp.CreateFile(localfilename, HyDFSfilename)
+            
+            case "ls":
+                HyDFSfilename := args[1]
+                udp.ListServers(HyDFSfilename)
 
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")
