@@ -149,6 +149,14 @@ func ConnectToMachine(port string) (*net.UDPConn, error){
     return conn, nil
 }
 
+func GetTcpID() string {
+    bytes := []byte(node_id)
+	bytes[32] = '8'
+	
+	node_id = string(bytes)
+    return node_id
+}
+
 // Turn the membership list global variable into a string
 func MembershiplistToString() string{
     nodes := make([]string, 0)

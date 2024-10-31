@@ -130,9 +130,17 @@ func handleConnection(conn net.Conn) {
             fmt.Println("Error reading directory:", err)
         }
         ring_map := udp.GetRing()
-        iterator := udp.IteratorAt(ring_map, os.Getenv("MACHINE_UDP_ADDRESS"))
-        iterator.Prev()
-        filenum := iterator.Value().(string)[13:15]
+        tcp_id := udp.GetTcpID()
+        iterator := udp.IteratorAt(ring_map, tcp_id)
+        last_val := iterator
+        filenum := ""
+        if !iterator.Prev() {
+            for iterator.Next() {
+                last_val = iterator
+            }
+            filenum = last_val.Value().(string)[13:15]
+        }
+        filenum = iterator.Value().(string)[13:15]
         fmt.Println("Gathering files from failed node: "+ filenum)
         // go through all the files
         for _, file := range files {
