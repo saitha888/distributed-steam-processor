@@ -443,14 +443,14 @@ func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) st
 		if steps > 0 {
 			// Move backward by `steps`
 			for i := 0; i < steps; i++ {
-				if iterator.Prev() {
-					last_value = iterator.Value().(string)
-				} else {
-					// Wrap around to the end if reaching the beginning
-					for iterator.Next() { // Move to the last element
-						last_value = iterator.Value().(string)
-					}
-				}
+                if !iterator.Prev() {
+                    // Wrap around to the end if at the beginning
+                    for iterator.Next() {
+                        last_value = iterator.Value().(string)
+                    }
+                } else {
+                    last_value = iterator.Value().(string)
+                }
 			}
 		} else if steps < 0 {
 			// Move forward by `-steps`
