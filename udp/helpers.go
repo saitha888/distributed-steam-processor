@@ -164,27 +164,27 @@ func RemoveNode(node_id string) {
     for index,node := range membership_list {
         if node_id == node.NodeID { // remove the node if it's found
             membership_list = append(membership_list[:index], membership_list[index+1:]...)
+            ring_map.Remove(node.RingID)
+            break
         }
     }
-    
-    node_id_ring := GetTCPVersion(node_id)
-
-    ring_map.Remove(GetHash(node_id_ring))
 }
 
 //function to add node
 func AddNode(node_id string, node_inc int, status string, i string){
+    ring_id := GetTCPVersion(node_id)
+    ring_hash := GetHash(ring_id)
+
     new_node := Node{
         NodeID:    node_id,  
         Status:    status,           
         Inc: node_inc,
         Index: i,
+        RingID: ring_hash,
     }
     membership_list = append(membership_list, new_node)
 
-    node_id_ring := GetTCPVersion(node_id)
-
-    ring_map.Put(GetHash(node_id_ring), node_id_ring)
+    ring_map.Put(ring_hash, ring_id)
 }
 
 
@@ -242,14 +242,15 @@ func ListMem(list_to_print []Node) {
     }
 
     nodeIDWidth := 54
+    ringIDWidth := 4
     statusWidth := 4
 
-    fmt.Printf("%-*s | %-*s | %s\n", nodeIDWidth, "NodeID", statusWidth, "Status", "Incarnation #")
-    fmt.Println(strings.Repeat("-", nodeIDWidth+statusWidth+25))
+    fmt.Printf("%-*s | %-*s | %-*s | %s | \n", ringIDWidth, "RingID", nodeIDWidth, "NodeID", statusWidth, "Status", "Incarnation #")
+    fmt.Println(strings.Repeat("-", nodeIDWidth+statusWidth+ringIDWidth+25))
 
     // Go through membership list and print each entry
     for _, node := range list_to_print {
-        fmt.Printf("%s | %s  | %s\n",node.NodeID, node.Status, strconv.Itoa(node.Inc))
+        fmt.Printf("%s | %s | %s  | %s\n",strconv.Itoa(node.RingID),node.NodeID, node.Status, strconv.Itoa(node.Inc))
     }
     fmt.Println()
     fmt.Print("> ")
