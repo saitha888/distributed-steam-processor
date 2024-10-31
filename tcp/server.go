@@ -74,6 +74,7 @@ func handleConnection(conn net.Conn) {
     //if not grep or command call, must be call to create a log file
     } else if len(message) >= 3 && message[:3] == "get" {
         filename := message[4:]
+        fmt.Println("Message received to retrieve filename: ", filename)
         filepath := "file-store/" + os.Getenv("MACHINE_UDP_ADDRESS")[13:15] + "-" + filename
         if _, err := os.Stat(filepath); os.IsNotExist(err) {
             // If the file does not exist, send an error message
@@ -88,11 +89,12 @@ func handleConnection(conn net.Conn) {
     
         // Send the file contents to the client
         conn.Write(file_content)
-        fmt.Printf("Sent file contents of %s to client\n", filename)
+        fmt.Println("File sent back: ", filename)
     } else if len(message) >= 6 && message[:6] == "create" {
         words := strings.Split(message, " ")
         HyDFSfilename := words[1]
         replica_num := words[2]
+        fmt.Println("Message received to create filename: ", HyDFSfilename)
 
         // check if the file already exists
         _, err := os.Stat("file-store/" + replica_num + "-" + HyDFSfilename)
@@ -113,9 +115,12 @@ func handleConnection(conn net.Conn) {
             if err != nil {
                 fmt.Println("Error writing to the file:", err)
             }
+            output := fmt.Sprintf("file %s wrote to server %s", HyDFSfilename, os.Getenv("MACHINE_UDP_ADDRESS"))
+            conn.Write([]byte(output))
         } else {
             fmt.Println("File already exists")
         } 
+        fmt.Println("File created: ", HyDFSfilename)
     } else if len(message) >= 4 && message[:4] == "pull" {
         dir := "./file-store"
         files, err := ioutil.ReadDir(dir)

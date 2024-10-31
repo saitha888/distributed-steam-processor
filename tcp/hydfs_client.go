@@ -86,7 +86,6 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 		fmt.Println(node_id)
 		if i == 0 {
 			replica_num = node_id[13:15]
-			fmt.Println(replica_num)
 		}
 		node_port := node_id[:36]
 
@@ -100,5 +99,14 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 		// send the file message to the machine
 		message := "create " + HyDFSfilename + " " + replica_num + " " + content
 		conn.Write([]byte(message))
+		
+		buf := make([]byte, 1024)
+		n, err := conn.Read(buf)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		response := string(buf[:n])
+		fmt.Println(response)
 	}
 }
