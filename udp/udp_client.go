@@ -5,22 +5,39 @@ import (
     "time"
     "strconv"
 )
+//5, 3, 1, 4, 2
+//5 failed, 3 did not get 4s files, n-3 mapped to 2
+
+//2, 4, 1, 3, 5
 
 // Global variable to save unique node ID
 var node_id string = ""
 var enabled_sus = false
 
 var ports = []string{
-    // "fa24-cs425-1201.cs.illinois.edu:9081", 
-    // "fa24-cs425-1202.cs.illinois.edu:9082", 
-    // "fa24-cs425-1203.cs.illinois.edu:9083", 
-    // "fa24-cs425-1204.cs.illinois.edu:9084", 
-    // "fa24-cs425-1205.cs.illinois.edu:9085", 
+<<<<<<< udp/udp_client.go
+    "fa24-cs425-1201.cs.illinois.edu:9081", 
+    "fa24-cs425-1202.cs.illinois.edu:9082", 
+    "fa24-cs425-1203.cs.illinois.edu:9083", 
+    "fa24-cs425-1204.cs.illinois.edu:9084", 
+    "fa24-cs425-1205.cs.illinois.edu:9085", 
     "fa24-cs425-1206.cs.illinois.edu:9086", 
     "fa24-cs425-1207.cs.illinois.edu:9087", 
     "fa24-cs425-1208.cs.illinois.edu:9088", 
     "fa24-cs425-1209.cs.illinois.edu:9089",
     "fa24-cs425-1210.cs.illinois.edu:9080",
+=======
+    "fa24-cs425-1201.cs.illinois.edu:9081", 
+    "fa24-cs425-1202.cs.illinois.edu:9082", 
+    "fa24-cs425-1203.cs.illinois.edu:9083", 
+    "fa24-cs425-1204.cs.illinois.edu:9084", 
+    "fa24-cs425-1205.cs.illinois.edu:9085", 
+    "fa24-cs425-1206.cs.illinois.edu:9086", 
+    "fa24-cs425-1207.cs.illinois.edu:9087", 
+    "fa24-cs425-1208.cs.illinois.edu:9088", 
+    "fa24-cs425-1209.cs.illinois.edu:9089",
+    "fa24-cs425-1210.cs.illinois.edu:9080",
+>>>>>>> udp/udp_client.go
 }
 
 // Function to join system

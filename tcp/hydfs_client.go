@@ -17,6 +17,7 @@ func GetFile(hydfs_file string, local_file string) {
 		if iterator.Key().(int) > file_hash {
 			file_server = iterator.Value().(string)[:36]
 			server_num = iterator.Value().(string)[13:15]
+			break
 		}
 		break
 	} 
