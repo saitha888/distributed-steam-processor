@@ -124,6 +124,7 @@ func handleConnection(conn net.Conn) {
     } else if len(message) >= 6 && message[:6] == "pull-3" {
         parts := strings.Split(message, " ")
         prefix := parts[1][13:15]
+        fmt.Println(parts[1])
         fmt.Println("message to pull-3")
         dir := "./file-store"
         files, err := ioutil.ReadDir(dir)

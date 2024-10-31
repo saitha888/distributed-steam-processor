@@ -350,7 +350,8 @@ func RemoveNode(id_to_rem string) {
             return
         }
         defer conn_pred.Close()
-        message := fmt.Sprintf("pull-3 %d", id_to_remove)
+        fmt.Println("sending pull-3 to get files from "+ id_to_remove)
+        message := fmt.Sprintf("pull-3 %s", id_to_remove)
         conn_pred.Write([]byte(message))
         reader := bufio.NewReader(conn_pred)
         buffer := ""
@@ -445,9 +446,14 @@ func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) st
 		// Attempt to move backward
 		if !iterator.Prev() {
 			// If at the beginning, wrap around to the last element
-			for iterator.Next() {} // Move to the last element
+            iterator.First()
+            temp := iterator
+			for iterator.Next() {
+                temp = iterator
+            } // Move to the last element
+            iterator = temp
 		}
-        fmt.Printf("%s is at n-%d\n", iterator.Value().(string), n+1)
+        fmt.Printf("%s is at n-%d\n", iterator.Value().(string), i+1)
 	}
 
 	// Return the value at the final position
