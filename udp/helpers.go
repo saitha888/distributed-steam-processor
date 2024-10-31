@@ -411,18 +411,6 @@ func IteratorAt(ringMap *treemap.Map, start_val string) *treemap.Iterator {
 	return &iterator
 }
 
-// // Function to find the key by its value in a TreeMap
-// func GetKeyByValue(ringMap *treemap.Map, value string) interface{} {
-// 	iterator := ringMap.Iterator()
-// 	for iterator.Next() {
-// 		if iterator.Value() == value {
-// 			return iterator.Key() // Return the corresponding key
-// 		}
-// 	}
-//     iterator.First()
-// 	return iterator.Key()
-// }
-
 // IteratorAtNMinusSteps moves forward or backward by `steps` from the position of `start_val`.
 func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) string {
 	iterator := ringMap.Iterator()
@@ -439,18 +427,18 @@ func IteratorAtNMinusSteps(ringMap *treemap.Map, start_val string, steps int) st
 	// If start_val is found, proceed with steps
 	if found {
 		last_value := ""
-
+        //1, 2, 5, 3, 4
 		if steps > 0 {
 			// Move backward by `steps`
 			for i := 0; i < steps; i++ {
                 if !iterator.Prev() {
                     // Wrap around to the end if at the beginning
-                    for iterator.Next() {
-                        last_value = iterator.Value().(string)
-                    }
+                    for iterator.Next() {}
+                    last_value = iterator.Value().(string)
                 } else {
                     last_value = iterator.Value().(string)
                 }
+                fmt.Printf("\nn-%d: %s", i, last_value)
 			}
 		} else if steps < 0 {
 			// Move forward by `-steps`

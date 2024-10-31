@@ -162,6 +162,7 @@ func handleConnection(conn net.Conn) {
         iterator := udp.IteratorAt(ring_map, os.Getenv("MACHINE_UDP_ADDRESS"))
         iterator.Prev()
         filenum := iterator.Value().(string)[13:15]
+        fmt.Println("Gathering files from failed node: "+ filenum)
         // go through all the files
         for _, file := range files {
             if !file.IsDir() {
