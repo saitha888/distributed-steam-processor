@@ -168,7 +168,7 @@ func commandLoop() {
                 tcp.AppendFile(local_file, hydfs_file)
 
             default:
-                fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")
+                fmt.Println("Unknown command. Available commands: list_mem, list_self, join,  leave")
             }
     }
 }
