@@ -5,6 +5,8 @@ import (
 	"fmt"
     "net"
     "os"
+	"strconv"
+	"time"
 )
 
 func GetFile(hydfs_file string, local_file string) {
@@ -110,4 +112,49 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 		response := string(buf[:n])
 		fmt.Println(response)
 	}
+}
+
+func AppendFile(local_file string, hydfs_file string) {
+
+	replicas := udp.GetFileServers(udp.GetHash(hydfs_file))
+	machine_num, err := strconv.Atoi(os.Getenv("MACHINE_NUMBER"))
+	if err != nil {
+		return
+	}
+	replica := replicas[machine_num % 3]
+	replica_num := replicas[0][13:15]
+
+
+	// get the contents of the local filename
+	file_contents, err := os.ReadFile(local_file)
+	if err != nil {  // local filename is invalid
+		fmt.Println("File doesn't exist locally:", err)
+		return
+	}
+
+	content := string(file_contents)
+
+	// connect to port to write file contents into replica
+
+	port := replica[:36]
+	timestamp := time.Now().Format("15:04:05.000")
+	conn, err := net.Dial("tcp", port)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	filename := hydfs_file + "-" + timestamp
+
+	message := "create" + " " + filename + " " + replica_num + " " + content
+	conn.Write([]byte(message))
+		
+	buf := make([]byte, 1024)
+	n, err := conn.Read(buf)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	response := string(buf[:n])
+	fmt.Println(response)
+
 }
