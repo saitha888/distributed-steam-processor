@@ -1165,3 +1165,31 @@ func ListStore() {
         fmt.Println(filename[3:])
     }
 }
+
+func GetFileContents(filename string) string {
+    dir := "./file-store"
+
+    files, err := ioutil.ReadDir(dir)
+    if err != nil {
+        fmt.Println("Error reading directory:", err)
+    }
+
+    var combined strings.Builder 
+
+    for _, file := range files {
+        if !file.IsDir() {
+            curr_file := file.Name()
+            if strings.HasPrefix(curr_file, filename) {
+                content, err := ioutil.ReadFile(dir + curr_file)
+                if err != nil {
+                    fmt.Println("Error reading file:", curr_file, err)
+                    continue
+                }
+                combined.WriteString(string(content))
+            } 
+        }
+    }
+
+    result := combined.String()
+    return result
+}

@@ -75,19 +75,7 @@ func handleConnection(conn net.Conn) {
     } else if len(message) >= 3 && message[:3] == "get" {
         filename := message[4:]
         fmt.Println("Message received to retrieve filename: ", filename)
-        filepath := "file-store/" + os.Getenv("MACHINE_UDP_ADDRESS")[13:15] + "-" + filename
-        if _, err := os.Stat(filepath); os.IsNotExist(err) {
-            // If the file does not exist, send an error message
-            conn.Write([]byte("Error: File not found\n"))
-        }
-
-        file_content, err := ioutil.ReadFile(filepath)
-        if err != nil {
-            fmt.Println(err)
-            return
-        }
-    
-        // Send the file contents to the client
+        file_content := []byte(udp.GetFileContents(filename))
         conn.Write(file_content)
         fmt.Println("File sent back: ", filename)
     } else if len(message) >= 6 && message[:6] == "create" {

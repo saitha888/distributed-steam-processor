@@ -5,26 +5,19 @@ import (
 	"fmt"
     "net"
     "os"
+	"strconv"
 )
 
 func GetFile(hydfs_file string, local_file string) {
 	file_hash := udp.GetHash(hydfs_file)
-	ring_map := udp.GetRing()
-	file_server := ""
-	iterator := ring_map.Iterator()
-	server_num := ""
-	for iterator.Next() {
-		if iterator.Key().(int) > file_hash {
-			file_server = iterator.Value().(string)[:36]
-			server_num = iterator.Value().(string)[13:15]
-			break
-		}
-		break
-	} 
-	if file_server == "" {
-		iterator.First()
-		file_server = iterator.Value().(string)[:36]
-	}
+	node_ids := udp.GetFileServers(file_hash)
+
+	machine_num, _ := strconv.Atoi(machine_number)
+	replica_num := machine_num % 3
+
+	file_server := node_ids[replica_num]
+
+	server_num := node_ids[0][13:15]
 
 	conn, err := net.Dial("tcp", file_server)
     if err != nil {
