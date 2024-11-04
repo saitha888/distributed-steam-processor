@@ -25,7 +25,7 @@ func GetFile(hydfs_file string, local_file string) {
         fmt.Println(err)
         return
     }
-    defer conn.Close()
+    defer conn.Close() 
 
     message := fmt.Sprintf("get %s-%s", server_num, hydfs_file)
 
