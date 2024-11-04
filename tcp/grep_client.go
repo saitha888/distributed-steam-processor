@@ -27,7 +27,7 @@ var ports = []string{
 }
 
 var err2 = godotenv.Load(".env")
-var machineNumber string = os.Getenv("MACHINE_NUMBER")
+var machine_number string = os.Getenv("MACHINE_NUMBER")
 var filename string = os.Getenv("LOG_FILENAME")
 
 
@@ -45,15 +45,15 @@ func TcpClient(pattern string) int {
     // loop through all other machines
     for i := 0; i < len(ports); i++ {
 
-        machineNumber, err := strconv.Atoi(machineNumber)
+        machine_number, err := strconv.Atoi(machine_number)
         if err != nil {
             fmt.Println("Error converting APP_PORT:", err)
         } else {
-            fmt.Printf("App Port: %d\n", machineNumber)
+            fmt.Printf("App Port: %d\n", machine_number)
         }
 
         // check if we're on initial machine
-        if i == machineNumber - 1 {
+        if i == machine_number - 1 {
             
             //if on initial machine, run grep commands on its log files
             //first grep command for printing matching lines

@@ -12,7 +12,7 @@ import (
     "log"
 )
 
-var addr string = os.Getenv("MACHINE_ADDRESS")
+var addr string = os.Getenv("MACHINE_UDP_ADDRESS")
 var stopPing chan bool
 var suspicionEnabled bool = true
 
@@ -84,7 +84,6 @@ func startPinging() {
 				fmt.Println("Stopping PingClient...")
 				return
 			default:
-				// Sleep and then ping a random node
 				time.Sleep(1 * time.Second)
 				udp.PingClient(suspicionEnabled)
 			}
@@ -127,9 +126,6 @@ func commandLoop() {
             case "list_mem":
                 membership_list := udp.GetMembershipList()
                 go udp.ListMem(membership_list)
-            
-            case "store":
-                go udp.PrintFiles("file-store")
         
             case "leave":
                 // Send a signal to stop the ping loop
@@ -161,6 +157,13 @@ func commandLoop() {
                 localfilename := args[1]
                 HyDFSfilename := args[2]
                 tcp.CreateFile(localfilename, HyDFSfilename)
+            
+            case "ls":
+                HyDFSfilename := args[1]
+                udp.ListServers(HyDFSfilename)
+            
+            case "store":
+                udp.ListStore()
 
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")

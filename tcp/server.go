@@ -10,6 +10,7 @@ import (
     "strconv"
     "github.com/joho/godotenv"
     "strings"
+    "distributed_system/udp"
 )
 
 var err = godotenv.Load(".env")
@@ -50,8 +51,9 @@ func handleConnection(conn net.Conn) {
     n, _ := conn.Read(buf)
     message := string(buf[:n])
 
+
     // Check if message is a grep command
-    if message[:4] == "grep" {
+    if len(message) >= 4 && message[:4] == "grep" {
         grep := message + " " + filename
 
         // run the grep command on machine
@@ -65,66 +67,161 @@ func handleConnection(conn net.Conn) {
         
         // send the result back to the initial machine
         conn.Write(output)
-
     // Check if message is a client call (for testing)
-    } else if message[:6] == "client" {
+    } else if len(message) >= 6 && message[:6] == "client" {
         totalLines := TcpClient(message[7:])
         conn.Write([]byte(strconv.Itoa(totalLines)))
-
     //if not grep or command call, must be call to create a log file
-    } else if message[:3] == "get" {
+    } else if len(message) >= 3 && message[:3] == "get" {
         filename := message[4:]
-        filepath := "file-store/" + filename
-        if _, err := os.Stat(filepath); os.IsNotExist(err) {
-            // If the file does not exist, send an error message
-            conn.Write([]byte("Error: File not found\n"))
-        }
-
-        file_content, err := ioutil.ReadFile(filepath)
-        if err != nil {
-            fmt.Println(err)
-            return
-        }
-    
-        // Send the file contents to the client
+        fmt.Println("Message received to retrieve filename: ", filename)
+        file_content := []byte(udp.GetFileContents(filename))
         conn.Write(file_content)
-        fmt.Printf("Sent file contents of %s to client\n", filename)
-
-    } else if message[:6] == "create" {
+        fmt.Println("File sent back: ", filename)
+    } else if len(message) >= 6 && message[:6] == "create" {
         words := strings.Split(message, " ")
         HyDFSfilename := words[1]
+        replica_num := words[2]
+        fmt.Println("Message received to create filename: ", HyDFSfilename)
 
         // check if the file already exists
-        _, err := os.Stat(filename)
+        _, err := os.Stat("file-store/" + replica_num + "-" + HyDFSfilename)
 	
         if os.IsNotExist(err) {
-            return
-        }
+            argument_length := 11 + len(HyDFSfilename)
+            file_contents := message[argument_length:]
 
-        argument_length := 8 + len(HyDFSfilename)
-        file_contents := message[argument_length:]
+            file, err := os.Create("file-store/" + replica_num + "-" + HyDFSfilename)
+            if err != nil {
+                fmt.Println("Error creating the file:", err)
+                return
+            }
 
-        file, err := os.Create("file-store/" + HyDFSfilename)
+            defer file.Close()
+
+            _, err = file.WriteString(file_contents)
+            if err != nil {
+                fmt.Println("Error writing to the file:", err)
+            }
+            output := fmt.Sprintf("file %s wrote to server %s", HyDFSfilename, os.Getenv("MACHINE_UDP_ADDRESS"))
+            conn.Write([]byte(output))
+        } else {
+            fmt.Println("File already exists")
+        } 
+        fmt.Println("File created: ", HyDFSfilename)
+    } else if len(message) >= 6 && message[:6] == "pull-3" {
+        parts := strings.Split(message, " ")
+        prefix := parts[1][13:15]
+        fmt.Println(parts[1])
+        fmt.Println("message to pull-3")
+        dir := "./file-store"
+        files, err := ioutil.ReadDir(dir)
         if err != nil {
-            fmt.Println("Error creating the file:", err)
-            return
+            fmt.Println("Error reading directory:", err)
         }
-
-        defer file.Close()
-
-        _, err = file.WriteString(file_contents)
+        fmt.Println("Gathering files from failed node: "+ prefix)
+        // go through all the files
+        for _, file := range files {
+            if !file.IsDir() {
+                filename = file.Name()
+                // if file is from origin server send it back 
+                if filename[:2] == prefix || filename[:2] == os.Getenv("MACHINE_UDP_ADDRESS")[13:15] {
+                    machinePrefix := os.Getenv("MACHINE_UDP_ADDRESS")[13:15]
+                    // Check conditions and update filename if needed
+                    if filename[:2] == prefix {
+                        filename = machinePrefix + filename[2:]
+                    }
+                    file_path := dir + "/" + filename
+                    content, err := ioutil.ReadFile(file_path)
+                    if err != nil {
+                        fmt.Println("Error reading file:", filename, err)
+                    }
+                    // Send the file name and content to the client
+                    fmt.Println("sending back own file: ", filename)
+                    message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", filename, string(content))
+                    _, err = conn.Write([]byte(message))
+                    if err != nil {
+                        fmt.Println("Error sending file content:", err)
+                    }
+                }
+            }
+        }
+    } else if len(message) >= 4 && message[:4] == "pull" {
+        fmt.Println("message to pull")
+        dir := "./file-store"
+        files, err := ioutil.ReadDir(dir)
         if err != nil {
-            fmt.Println("Error writing to the file:", err)
-            return
+            fmt.Println("Error reading directory:", err)
         }
-        
+        fmt.Println(len(files))
+        // go through all the files
+        for _, file := range files {
+            if !file.IsDir() {
+                filename = file.Name()
+                // if file is from origin server send it back 
+                if filename[:2] == os.Getenv("MACHINE_UDP_ADDRESS")[13:15] {
+                    file_path := dir + "/" + filename
+                    content, err := ioutil.ReadFile(file_path)
+                    if err != nil {
+                        fmt.Println("Error reading file:", filename, err)
+                    }
+                    // Send the file name and content to the client
+                    fmt.Println("sending back own file: ", filename)
+                    message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", filename, string(content))
+                    _, err = conn.Write([]byte(message))
+                    if err != nil {
+                        fmt.Println("Error sending file content:", err)
+                    }
+                }
+            }
+        }
+    }  else if len(message) >= 5 && message[:5] == "split" {
+        dir := "./file-store"
+
+        files, err := ioutil.ReadDir(dir)
+        if err != nil {
+            fmt.Println("Error reading directory:", err)
+        }
+
+        pred_port := strings.TrimRight(message[6:], " \t\n")
+        pred_hash := udp.GetHash(pred_port)
+        self_hash := udp.GetHash(udp.GetTCPVersion(udp.GetNodeID()))
+
+        // go through all the files
+        for _, file := range files {
+            if !file.IsDir() {
+                filename := file.Name()
+                // if the file is from the origin server
+                if strings.HasPrefix(filename, os.Getenv("MACHINE_UDP_ADDRESS")[13:15]) || strings.HasPrefix(filename, pred_port[13:15]) {
+                    file_hash := udp.GetHash(filename[3:])
+
+                    file_path := dir + "/" + filename
+                    content, err := ioutil.ReadFile(file_path)
+                    if err != nil {
+                        fmt.Println("Error reading file:", filename, err)
+                    }
+                    if pred_hash >= file_hash && file_hash < self_hash { // if the hash now maps to the new server 
+                        new_filename := filename[3:] // rename the file and send it back
+                        message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", new_filename, string(content))
+                        _, err = conn.Write([]byte(message))
+                        if err != nil {
+                            fmt.Println("Error sending file content:", err)
+                        }
+                        // rename file in own directory
+                        renamed := dir+"/"+pred_port[13:15]+"-"+new_filename
+                        err = os.Rename(dir+"/"+filename, renamed)
+                        if err != nil {
+                            fmt.Println("Error renaming file:", err)
+                        }
+                    }
+                }
+            }   
+        }
     } else { 
-
         // Open the file to write the contents
         file, err := os.Create(filename)
         if err != nil {
             fmt.Println(err)
-            return
         }
         defer file.Close()
 
@@ -132,7 +229,6 @@ func handleConnection(conn net.Conn) {
         _, err = file.Write(buf[:n])
         if err != nil {
             fmt.Println(err)
-            return
         }
 
         // Read from the connection in chunks and write to the file
@@ -146,14 +242,12 @@ func handleConnection(conn net.Conn) {
                     break
                 }
                 fmt.Println(err)
-                return 
             }
 
             // Write the chunk to the file
             _, err = file.Write(buf[:n])
             if err != nil {
                 fmt.Println(err)
-                return
             }
         }
     }

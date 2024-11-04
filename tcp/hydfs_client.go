@@ -2,26 +2,23 @@ package tcp
 
 import (
 	"distributed_system/udp"
-	"github.com/emirpasic/gods/utils"
 	"fmt"
     "net"
     "os"
+	"strconv"
 )
 
 func GetFile(hydfs_file string, local_file string) {
 	file_hash := udp.GetHash(hydfs_file)
-	ring_map := udp.GetRing()
-	file_server := ""
-	iterator := ring_map.Iterator()
-	for iterator.Next() {
-		if utils.StringComparator(iterator.Key(), file_hash) == 1 {
-			file_server = iterator.Value().(string)[:36]
-		}
-	} 
-	if file_server == "" {
-		iterator.First()
-		file_server = iterator.Value().(string)[:36]
-	}
+	node_ids := udp.GetFileServers(file_hash)
+
+	machine_num, _ := strconv.Atoi(machine_number)
+	replica_num := machine_num % 3
+
+	file_server := node_ids[replica_num][:36]
+	fmt.Println(file_server)
+
+	server_num := node_ids[0][13:15]
 
 	conn, err := net.Dial("tcp", file_server)
     if err != nil {
@@ -30,7 +27,7 @@ func GetFile(hydfs_file string, local_file string) {
     }
     defer conn.Close()
 
-    message := fmt.Sprintf("get %s", hydfs_file)
+    message := fmt.Sprintf("get %s-%s", server_num, hydfs_file)
 
     conn.Write([]byte(message))
 
@@ -66,25 +63,9 @@ func WriteToFile(filename string, content string) error {
 }
 
 func CreateFile(localfilename string, HyDFSfilename string) {
-	// get the current ring map
-	ring_map := udp.GetRing()
-
 	// find which machine to create the file on
 	file_hash := udp.GetHash(HyDFSfilename)
-
-	// Find the smallest key that is greater than or equal to the hash
-	node_id := ""
-	iterator := ring_map.Iterator()
-	for iterator.Next() {
-		if utils.StringComparator(iterator.Key(), file_hash) == 1 {
-			node_id = iterator.Value().(string)
-		}
-	} 
-	if node_id == "" {
-		iterator.First()
-		node_id = iterator.Value().(string)
-	}
-
+	node_ids := udp.GetFileServers(file_hash)
 
 	// get the contents of the local filename
 	file_contents, err := os.ReadFile(localfilename)
@@ -94,18 +75,33 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 	}
 
 	content := string(file_contents)
-
+	replica_num := "0"
 	// connect to the machine 
-	node_port := node_id[:36]
+	for i,node_id := range node_ids {
+		fmt.Println(node_id)
+		if i == 0 {
+			replica_num = node_id[13:15]
+		}
+		node_port := node_id[:36]
 
-    conn, err := net.Dial("tcp", node_port)
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-    defer conn.Close()
-
-    // send the file message to the machine
-	message := "create " + HyDFSfilename + " " + content
-    conn.Write([]byte(message))
+		conn, err := net.Dial("tcp", node_port)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer conn.Close()
+	
+		// send the file message to the machine
+		message := "create " + HyDFSfilename + " " + replica_num + " " + content
+		conn.Write([]byte(message))
+		
+		buf := make([]byte, 1024)
+		n, err := conn.Read(buf)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		response := string(buf[:n])
+		fmt.Println(response)
+	}
 }

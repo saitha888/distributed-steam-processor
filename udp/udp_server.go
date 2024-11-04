@@ -14,18 +14,21 @@ import (
 var err = godotenv.Load(".env")
 var udp_port string = os.Getenv("UDP_PORT")
 var membership_list []Node
-var ring_map = treemap.NewWithStringComparator()
-
+var ring_map = treemap.NewWithIntComparator()
 var logfile string = os.Getenv("LOG_FILENAME")
 var inc_num int = 0
 var introducer_address string = os.Getenv("INTRODUCER_ADDRESS")
-
+var machine_address string = os.Getenv("MACHINE_UDP_ADDRESS")
+var machine_number string = os.Getenv("MACHINE_NUMBER")
+var vector_clock []int
 
 // struct for each process
 type Node struct {
     NodeID    string  
     Status    string    
     Inc int 
+    Index string
+    RingID int
 }
 
 //starts udp server that listens for pings
@@ -56,15 +59,41 @@ func UdpServer() {
             message := "Node failure message recieved for: " + failed_node + " at " + time.Now().Format("15:04:05") + "\n"
             appendToFile(message, logfile)
         } else if message[:4] == "join" { // new machine joined
-            joined_node := message[5:]
-            index := FindNode(joined_node)
-            if index >= 0 { // machine was found
-                changeStatus(index, "alive")
-            } else { // machine was not found
-                AddNode(joined_node, 1, "alive")
+            recieved_node := message[5:]
+            if machine_address == introducer_address {
+                // get the node id and timestamp
+                message := "Node join detected for: " + recieved_node + " at " + time.Now().Format("15:04:05") + "\n"
+                appendToFile(message, logfile)
+                index := FindNode(recieved_node)
+                if index >= 0 { // node is already in membership list
+                    changeStatus(index, "alive")
+                } else { // need to add new node
+                    AddNode(recieved_node, 1, "alive", machine_number)
+                }
+
+                // send membership list back 
+                result := MembershiplistToString()
+                conn.WriteToUDP([]byte(result), addr)
+                
+                // send to all other members that new node joined
+                for _,node := range membership_list {
+                    if node.Status == "alive" {
+                        node_address := node.NodeID[:36]
+                        if node_address != os.Getenv("MACHINE_UDP_ADDRESS") { // check that it's not self
+                            conn, _ := DialUDPClient(node_address)
+
+                            result := "join " + recieved_node
+                            // send join message
+                            conn.Write([]byte(result))
+                        }
+                    }
+                }
+                NewJoin(recieved_node)
+            } else {
+                if recieved_node[:36] != os.Getenv("MACHINE_UDP_ADDRESS") {
+                    ProcessJoinMessage(message)
+                }
             }
-            message := "Node join detected for: " + joined_node + " at " + time.Now().Format("15:04:05") + "\n"
-            appendToFile(message, logfile)
         } else if message[:5] == "leave" { // machine left
             left_node := message[6:]
             index := FindNode(left_node)
