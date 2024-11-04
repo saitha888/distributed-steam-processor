@@ -7,6 +7,7 @@ import (
     "os"
 	"strconv"
 	"time"
+	"io"
 )
 
 func GetFile(hydfs_file string, local_file string) {
@@ -33,13 +34,21 @@ func GetFile(hydfs_file string, local_file string) {
     conn.Write([]byte(message))
 
     // write the command to an output file
-	buf := make([]byte, 1024)
-    n, err := conn.Read(buf)
-	if err != nil {
-        fmt.Println(err)
-        return
-    }
-	response := string(buf[:n])
+	buf := make([]byte, 1024) // Buffer to hold chunks of data
+	var response string        // Variable to hold the full response
+
+	for {
+		n, err := conn.Read(buf)
+		if err != nil {
+			// If we've reached the end of the data, break out of the loop
+			if err == io.EOF {
+				break
+			}
+			fmt.Println("Error reading from connection:", err)
+			return
+		}
+		response += string(buf[:n])
+	}
 	err = WriteToFile(local_file, response)
 	if err != nil {
 		return
