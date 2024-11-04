@@ -12,6 +12,7 @@ import (
     "log"
 )
 
+
 var addr string = os.Getenv("MACHINE_UDP_ADDRESS")
 var stopPing chan bool
 var suspicionEnabled bool = true
@@ -52,10 +53,6 @@ func main() {
 			log.Fatalf("Failed to recreate directory: %v", err)
 		}
 	}
-
-
-
-
     // check whether it's a server (receiver) or client (sender)
     if len(os.Args) > 1 && os.Args[1] == "client" { // run client
         grep := os.Args[2]
@@ -165,8 +162,13 @@ func commandLoop() {
             case "store":
                 udp.ListStore()
 
+            case "append":
+                local_file := args[1]
+                hydfs_file := args[2]
+                tcp.AppendFile(local_file, hydfs_file)
+
             default:
-                fmt.Println("Unknown command. Available commands: list_mem, list_self, join, leave")
+                fmt.Println("Unknown command. Available commands: list_mem, list_self, join,  leave")
             }
     }
 }
