@@ -1180,7 +1180,7 @@ func GetFileContents(filename string) string {
         if !file.IsDir() {
             curr_file := file.Name()
             if strings.HasPrefix(curr_file, filename) {
-                content, err := ioutil.ReadFile(dir + curr_file)
+                content, err := ioutil.ReadFile(dir + "/" + curr_file)
                 if err != nil {
                     fmt.Println("Error reading file:", curr_file, err)
                     continue

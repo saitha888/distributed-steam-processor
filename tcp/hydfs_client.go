@@ -15,7 +15,8 @@ func GetFile(hydfs_file string, local_file string) {
 	machine_num, _ := strconv.Atoi(machine_number)
 	replica_num := machine_num % 3
 
-	file_server := node_ids[replica_num]
+	file_server := node_ids[replica_num][:36]
+	fmt.Println(file_server)
 
 	server_num := node_ids[0][13:15]
 
