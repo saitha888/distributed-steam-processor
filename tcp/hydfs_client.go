@@ -18,7 +18,6 @@ func GetFile(hydfs_file string, local_file string) {
 	replica_num := machine_num % 3
 
 	file_server := node_ids[replica_num][:36]
-	fmt.Println(file_server)
 
 	server_num := node_ids[0][13:15]
 
@@ -53,8 +52,6 @@ func GetFile(hydfs_file string, local_file string) {
 	if err != nil {
 		return
 	}
-	output := fmt.Sprintf("file %s retrieved from server %s, wrote to %s", hydfs_file, file_server, local_file)
-	fmt.Println(output)
 }
 
 // Function to write content to a local file
@@ -158,5 +155,42 @@ func AppendFile(local_file string, hydfs_file string) {
 	}
 	response := string(buf[:n])
 	fmt.Println(response)
+}
 
+func GetFromReplica(VMaddress string, HyDFSfilename string, localfilename string){
+    file_hash := udp.GetHash(HyDFSfilename)
+	node_ids := udp.GetFileServers(file_hash)
+
+	server_num := node_ids[0][13:15]
+
+	conn, err := net.Dial("tcp", VMaddress)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    defer conn.Close() 
+
+    message := fmt.Sprintf("get %s-%s", server_num, HyDFSfilename)
+
+    conn.Write([]byte(message))
+
+    // write the command to an output file
+	buf := make([]byte, 1000000) // Buffer to hold chunks of data
+	var response string        // Variable to hold the full response
+
+	for {
+		n, err := conn.Read(buf)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			fmt.Println("Error reading from connection:", err)
+			return
+		}
+		response += string(buf[:n])
+	}
+	err = WriteToFile(localfilename, response)
+	if err != nil {
+		return
+	}
 }

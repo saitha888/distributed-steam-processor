@@ -166,6 +166,12 @@ func commandLoop() {
                 local_file := args[1]
                 hydfs_file := args[2]
                 tcp.AppendFile(local_file, hydfs_file)
+            
+            case "getfromreplica":
+                VMaddress := args[1]
+                HyDFSfilename := args[2]
+                localfilename := args[3]
+                tcp.GetFromReplica(VMaddress, HyDFSfilename, localfilename)
 
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join,  leave")
