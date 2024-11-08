@@ -160,3 +160,36 @@ func AppendFile(local_file string, hydfs_file string) {
 	fmt.Println(response)
 
 }
+
+//get every chunk of file from each replica "chunks"
+//order chunks to create one merged file
+//send merged file to each replica "merge"
+
+func Merge(hydfs_file string) {
+	replicas := udp.GetFileServers(udp.GetHash(hydfs_file))
+	for _, replica := range replicas {
+		port := replica[:36]
+		conn, err := net.Dial("tcp", port)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		//request chunks of file from replica
+		message := "chunks" + " " + hydfs_file
+		conn.Write([]byte(message))
+			
+		buf := make([]byte, 1024)
+		n, err := conn.Read(buf)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		//get back each chunk
+		response := string(buf[:n])
+		fmt.Println(response)
+
+		//sort all chunks to create one file
+	}
+}

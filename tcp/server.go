@@ -218,7 +218,33 @@ func handleConnection(conn net.Conn) {
                 }
             }   
         }
-    } else { 
+    } else if len(message) >= 6 && message[:6] == "chunks" {
+        dir := "./file-store"
+        files, err := ioutil.ReadDir(dir)
+        if err != nil {
+            fmt.Println("Error reading directory:", err)
+        }
+        words := strings.Split(message, " ")
+        name := words[1]
+        msg := ""
+        for _, file := range files {
+            if !file.IsDir() && strings.Contains(file.Name(), name) {
+                filePath := dir + "/" + file.Name()       
+                content, err := ioutil.ReadFile(filePath)
+                if err != nil {
+                    fmt.Println("Error reading file:", err)
+                    continue
+                }
+                msg += fmt.Sprintf("%s %s\n", file.Name(), string(content))
+            }
+        }
+        _, err = conn.Write([]byte(msg))
+        if err != nil {
+            fmt.Println("Error sending file content:", err)
+        }
+
+
+    }else { 
         // Open the file to write the contents
         file, err := os.Create(filename)
         if err != nil {

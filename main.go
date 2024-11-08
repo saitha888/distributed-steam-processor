@@ -166,7 +166,10 @@ func commandLoop() {
                 local_file := args[1]
                 hydfs_file := args[2]
                 tcp.AppendFile(local_file, hydfs_file)
-
+            
+            case "merge":
+                hydfs_file := args[1]
+                tcp.Merge(hydfs_file)
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join,  leave")
             }
