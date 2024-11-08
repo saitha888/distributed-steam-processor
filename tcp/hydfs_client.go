@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 	"io"
-	"strings"
+	// "strings"
 )
 
 func GetFile(hydfs_file string, local_file string) {
@@ -190,16 +190,16 @@ func Merge(hydfs_file string) {
 		//get back each chunk
 		response := string(buf[:n])
 		fmt.Println(response)
-		chunks := strings.Split(response, "---BREAK---")
-		dict := make(map[string]string)
-		for _,chunk := range chunks {
-			filename := strings.Split(chunk, " ")[0]
-			content := chunk[len(filename):]
-			timestamp := strings.Split(filename, "-")[2]
-			dict[timestamp] = content
-		}
-		for key,val := range dict {
-			fmt.Println(key + ": " + val)
-		}
+		// chunks := strings.Split(response, "---BREAK---")
+		// dict := make(map[string]string)
+		// for _,chunk := range chunks {
+		// 	filename := strings.Split(chunk, " ")[0]
+		// 	content := chunk[len(filename):]
+		// 	timestamp := strings.Split(filename, "-")[2]
+		// 	dict[timestamp] = content
+		// }
+		// for key,val := range dict {
+		// 	fmt.Println(key + ": " + val)
+		// }
 	}
 }

@@ -232,7 +232,7 @@ func handleConnection(conn net.Conn) {
         for _, file := range files {
             if !file.IsDir() && strings.Contains(file.Name(), name)  {
                 parts := strings.Split(file.Name(), "-")
-                if len(parts) == 3 && timestampPattern.MatchString(parts[2]) {
+                if len(parts) == 3 {
                     filePath := dir + "/" + file.Name()       
                     content, err := ioutil.ReadFile(filePath)
                     if err != nil {
