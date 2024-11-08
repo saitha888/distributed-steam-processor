@@ -1,4 +1,4 @@
-package membership
+package udp
 
 import (
     "os"
