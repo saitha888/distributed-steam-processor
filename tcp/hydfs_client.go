@@ -34,7 +34,7 @@ func GetFile(hydfs_file string, local_file string) {
     conn.Write([]byte(message))
 
     // write the command to an output file
-	buf := make([]byte, 1024) // Buffer to hold chunks of data
+	buf := make([]byte, 1000000) // Buffer to hold chunks of data
 	var response string        // Variable to hold the full response
 
 	for {
