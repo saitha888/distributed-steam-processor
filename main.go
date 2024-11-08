@@ -120,6 +120,10 @@ func commandLoop() {
                 ring_map := udp.GetRing()
                 go udp.ListRing(ring_map)
 
+            case "list_mem_ids":
+                membership_list := udp.GetMembershipList()
+                go udp.ListMemRing(membership_list)
+            
             case "list_mem":
                 membership_list := udp.GetMembershipList()
                 go udp.ListMem(membership_list)
