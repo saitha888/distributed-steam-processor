@@ -228,14 +228,17 @@ func handleConnection(conn net.Conn) {
         name := words[1]
         msg := ""
         for _, file := range files {
-            if !file.IsDir() && strings.Contains(file.Name(), name) {
-                filePath := dir + "/" + file.Name()       
-                content, err := ioutil.ReadFile(filePath)
-                if err != nil {
-                    fmt.Println("Error reading file:", err)
-                    continue
+            if !file.IsDir() && strings.Contains(file.Name(), name)  {
+                parts := strings.split(file.Name(), "-")
+                if len(parts) == 3 {
+                    filePath := dir + "/" + file.Name()       
+                    content, err := ioutil.ReadFile(filePath)
+                    if err != nil {
+                        fmt.Println("Error reading file:", err)
+                        continue
+                    }
+                    msg += fmt.Sprintf("%s %s\n", file.Name(), string(content))
                 }
-                msg += fmt.Sprintf("%s %s\n", file.Name(), string(content))
             }
         }
         _, err = conn.Write([]byte(msg))
