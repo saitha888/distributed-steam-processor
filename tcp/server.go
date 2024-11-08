@@ -11,6 +11,7 @@ import (
     "github.com/joho/godotenv"
     "strings"
     "distributed_system/udp"
+    "regexp"
     
 )
 
@@ -227,17 +228,18 @@ func handleConnection(conn net.Conn) {
         words := strings.Split(message, " ")
         name := words[1]
         msg := ""
+        timestampPattern := regexp.MustCompile(`\b\d{2}:\d{2}:\d{2}\.\d{3}\b`)
         for _, file := range files {
             if !file.IsDir() && strings.Contains(file.Name(), name)  {
-                parts := strings.split(file.Name(), "-")
-                if len(parts) == 3 {
+                parts := strings.Split(file.Name(), "-")
+                if len(parts) == 3 && timestampPattern.MatchString(parts[2]) {
                     filePath := dir + "/" + file.Name()       
                     content, err := ioutil.ReadFile(filePath)
                     if err != nil {
                         fmt.Println("Error reading file:", err)
                         continue
                     }
-                    msg += fmt.Sprintf("%s %s\n", file.Name(), string(content))
+                    msg += fmt.Sprintf("%s %s\n---BREAK---\n", file.Name(), string(content))
                 }
             }
         }
