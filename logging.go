@@ -4,7 +4,7 @@ import (
     "fmt"
     "os"
     "distributed_system/tcp"
-    "distributed_system/udp"
+    "distributed_system/membership"
     "github.com/joho/godotenv"
     "bufio"
     "strings"
@@ -61,7 +61,7 @@ func main() {
 
         //run server
         go tcp.TcpServer()
-        go udp.UdpServer()
+        go membership.UdpServer()
         commandLoop()
 
         select {}
@@ -82,7 +82,7 @@ func startPinging() {
 				return
 			default:
 				time.Sleep(1 * time.Second)
-				udp.PingClient(suspicionEnabled)
+				membership.PingClient(suspicionEnabled)
 			}
 		}
 	}()
@@ -112,24 +112,24 @@ func commandLoop() {
                 tcp.GetFile(hydfs_file, local_file)
 
             case "join":
-                udp.JoinSystem(addr)
+                membership.JoinSystem(addr)
         
                 // Start pinging if joining the system
                 startPinging()
             case "list_ring":
-                ring_map := udp.GetRing()
-                go udp.ListRing(ring_map)
+                ring_map := membership.GetRing()
+                go membership.ListRing(ring_map)
 
             case "list_mem":
-                membership_list := udp.GetMembershipList()
-                go udp.ListMem(membership_list)
+                membership_list := membership.GetMembershipList()
+                go membership.ListMem(membership_list)
         
             case "leave":
                 // Send a signal to stop the ping loop
                 if stopPing != nil {
                     close(stopPing) // Close the stopPing channel to stop the ping loop
                 }
-                go udp.LeaveList()
+                go membership.LeaveList()
             case "enable_sus":
                 // Toggle suspicion flag
                 suspicionEnabled = true
@@ -147,8 +147,8 @@ func commandLoop() {
                 }
             
             case "list_sus":
-                sus_list := udp.FindSusMachines()
-                go udp.ListMem(sus_list)
+                sus_list := membership.FindSusMachines()
+                go membership.ListMem(sus_list)
             
             case "create":
                 localfilename := args[1]
@@ -157,10 +157,10 @@ func commandLoop() {
             
             case "ls":
                 HyDFSfilename := args[1]
-                udp.ListServers(HyDFSfilename)
+                membership.ListServers(HyDFSfilename)
             
             case "store":
-                udp.ListStore()
+                membership.ListStore()
 
             case "append":
                 local_file := args[1]

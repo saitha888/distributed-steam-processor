@@ -1,7 +1,7 @@
 package tcp 
 
 import (
-	"distributed_system/udp"
+	"distributed_system/membership"
 	"fmt"
     "net"
     "os"
@@ -11,8 +11,8 @@ import (
 )
 
 func GetFile(hydfs_file string, local_file string) {
-	file_hash := udp.GetHash(hydfs_file)
-	node_ids := udp.GetFileServers(file_hash)
+	file_hash := membership.GetHash(hydfs_file)
+	node_ids := membership.GetFileServers(file_hash)
 
 	machine_num, _ := strconv.Atoi(machine_number)
 	replica_num := machine_num % 3
@@ -74,8 +74,8 @@ func WriteToFile(filename string, content string) error {
 
 func CreateFile(localfilename string, HyDFSfilename string) {
 	// find which machine to create the file on
-	file_hash := udp.GetHash(HyDFSfilename)
-	node_ids := udp.GetFileServers(file_hash)
+	file_hash := membership.GetHash(HyDFSfilename)
+	node_ids := membership.GetFileServers(file_hash)
 
 	// get the contents of the local filename
 	file_contents, err := os.ReadFile(localfilename)
@@ -118,7 +118,7 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 
 func AppendFile(local_file string, hydfs_file string) {
 
-	replicas := udp.GetFileServers(udp.GetHash(hydfs_file))
+	replicas := membership.GetFileServers(membership.GetHash(hydfs_file))
 	machine_num, err := strconv.Atoi(os.Getenv("MACHINE_NUMBER"))
 	if err != nil {
 		return

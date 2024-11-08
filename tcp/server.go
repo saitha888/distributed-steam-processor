@@ -10,7 +10,7 @@ import (
     "strconv"
     "github.com/joho/godotenv"
     "strings"
-    "distributed_system/udp"
+    "distributed_system/membership"
     
 )
 
@@ -76,7 +76,7 @@ func handleConnection(conn net.Conn) {
     } else if len(message) >= 3 && message[:3] == "get" {
         filename := message[4:]
         fmt.Println("Message received to retrieve filename: ", filename)
-        file_content := []byte(udp.GetFileContents(filename))
+        file_content := []byte(membership.GetFileContents(filename))
         conn.Write(file_content)
         fmt.Println("File sent back: ", filename)
     } else if len(message) >= 6 && message[:6] == "create" {
@@ -185,8 +185,8 @@ func handleConnection(conn net.Conn) {
         }
 
         pred_port := strings.TrimRight(message[6:], " \t\n")
-        pred_hash := udp.GetHash(pred_port)
-        self_hash := udp.GetHash(udp.GetTCPVersion(udp.GetNodeID()))
+        pred_hash := membership.GetHash(pred_port)
+        self_hash := membership.GetHash(membership.GetTCPVersion(membership.GetNodeID()))
 
         // go through all the files
         for _, file := range files {
@@ -194,7 +194,7 @@ func handleConnection(conn net.Conn) {
                 filename := file.Name()
                 // if the file is from the origin server
                 if strings.HasPrefix(filename, os.Getenv("MACHINE_UDP_ADDRESS")[13:15]) || strings.HasPrefix(filename, pred_port[13:15]) {
-                    file_hash := udp.GetHash(filename[3:])
+                    file_hash := membership.GetHash(filename[3:])
 
                     file_path := dir + "/" + filename
                     content, err := ioutil.ReadFile(file_path)
