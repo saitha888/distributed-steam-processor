@@ -8,7 +8,7 @@ import (
 
 //starts udp server that listens for pings
 func UdpServer() {
-    conn, _ :=  DialUDPClient(udp_port)
+    conn, _ :=  ConnectToMachine(udp_port)
     defer conn.Close()
 
     buf := make([]byte, 1024)

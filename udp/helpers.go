@@ -14,6 +14,27 @@ import (
 	"github.com/emirpasic/gods/maps/treemap"
 )
 
+func ConnectToMachine(port string) (*net.UDPConn, error){
+    addr, err := net.ResolveUDPAddr("udp", ":" + port)
+    if err != nil {
+        fmt.Println("Error resolving address:", err)
+    }
+
+    conn, err := net.ListenUDP("udp", addr)
+    if err != nil {
+        fmt.Println("Error starting UDP server:", err)
+    }
+    return conn, nil
+}
+
+func GetTcpID() string {
+    bytes := []byte(node_id)
+	bytes[32] = '8'
+	
+	node_id = string(bytes)
+    return node_id
+}
+
 // Function to randomly select an alive node in the system
 func SelectRandomNode() Node {
     rand.Seed(time.Now().UnixNano())

@@ -128,11 +128,13 @@ func ProcessJoin(address string) {
 
     // Send join message to introducer
     message := fmt.Sprintf("join %s", node_id)
+    fmt.Println(message)
     _, err = conn_introducer.Write([]byte(message))
     if err != nil {
         fmt.Println("Error sending message to introducer when initially joining: ", err)
         return
     }
+    fmt.Println("message sent")
 
     // Read the response from the introducer (membership list to copy)
     buf := make([]byte, 1024)
