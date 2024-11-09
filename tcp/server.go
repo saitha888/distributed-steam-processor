@@ -11,8 +11,7 @@ import (
     "github.com/joho/godotenv"
     "strings"
     "distributed_system/udp"
-    "regexp"
-    
+    "time"
 )
 
 var err = godotenv.Load(".env")
@@ -24,7 +23,7 @@ func TcpServer() {
     // listen for connection from other machine 
     ln, err := net.Listen("tcp", ":" + tcp_port)
     if err != nil {
-        fmt.Println(err)
+        fmt.Println(err) 
         return
     }
 
@@ -76,14 +75,20 @@ func handleConnection(conn net.Conn) {
     //if not grep or command call, must be call to create a log file
     } else if len(message) >= 3 && message[:3] == "get" {
         filename := message[4:]
-        fmt.Println("Message received to retrieve file " + filename)
+        log := "Message received to retrieve file " + filename + " at " + time.Now().Format("15:04:05.000")
+        fmt.Println(log)
+        udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
         file_content := []byte(udp.GetFileContents(filename))
         conn.Write(file_content)
-        fmt.Println("File " + filename + " sent back to client.")
+        log = "File " + filename + " sent back to client at " + time.Now().Format("15:04:05.000")
+        fmt.Println(log)
+        udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
     } else if len(message) >= 6 && message[:6] == "create" {
         words := strings.Split(message, " ")
         HyDFSfilename := words[1]
-        fmt.Println("Message received to create file " + HyDFSfilename)
+        log := "Message received to create file " + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
+        fmt.Println(log)
+        udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
         replica_num := words[2]
 
         file_path := "file-store/" + replica_num + "-" + HyDFSfilename
@@ -97,7 +102,9 @@ func handleConnection(conn net.Conn) {
 
             WriteToFile(file_path, file_contents)
             conn.Write([]byte(HyDFSfilename + " created on machine " + udp.GetNodeID()))
-            fmt.Println("File " + HyDFSfilename + " created.")
+            log = HyDFSfilename + " created at " + time.Now().Format("15:04:05.000")
+            fmt.Println(log)
+            udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
         } else {
             fmt.Println("File already exists")
         } 

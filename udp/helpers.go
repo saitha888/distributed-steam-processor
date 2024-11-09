@@ -65,7 +65,7 @@ func susTimeout(duration time.Duration, sus_id string, inc_num int) {
             index := FindNode(sus_id)
             if index >= 0 && membership_list[index].Inc > inc_num {
                 message := "Node suspect removed for: " + sus_id + "\n"
-                appendToFile(message, logfile)
+                AppendToFile(message, logfile)
                 return
             }
 		}
@@ -133,7 +133,7 @@ func RenameFilesWithPrefix(oldPrefix string, newPrefix string) {
 }
 
 // Function to append a string to a file
-func appendToFile(content string, filename string) error {
+func AppendToFile(content string, filename string) error {
 	// Open the file or create it 
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -142,7 +142,7 @@ func appendToFile(content string, filename string) error {
 	defer file.Close()
 
 	// Write the content to the file
-	_, err = file.WriteString(content)
+	_, err = file.WriteString(content + "\n")
 	if err != nil {
 		return err
 	}
@@ -209,33 +209,35 @@ func GetFileServers(file_hash int) []string {
 }
 
 func ListStore() {
+    timestamp_pattern := `^[\d]{2}:[\d]{2}:[\d]{2}\.[\d]{3}$`
+    fmt.Println("STORE FOR: " + node_id[:31] + " - " + "HASH: " + strconv.Itoa(GetHash(ring_id)))
     dir := "./file-store"
-    own_files := []string{}
-    replica_files := []string{}
 
     files, err := ioutil.ReadDir(dir)
     if err != nil {
         fmt.Println("Error reading directory:", err)
     }
 
+    file_set := make(map[string]bool)
+
     for _, file := range files {
-        if !file.IsDir() {
-            filename := file.Name()
-            if strings.HasPrefix(filename, udp_address[13:15]) {
-                own_files = append(own_files, filename)
-            } else {
-                replica_files = append(replica_files, filename)
+        filename := file.Name()
+        last_dash := strings.LastIndex(filename, "-")
+        if last_dash != -1 {
+            prefix := filename[:last_dash]
+	        timestamp := filename[last_dash+1:]
+            matched, _ := regexp.MatchString(timestamp_pattern, timestamp)
+            if matched {
+                filename = prefix
             }
         }
-    }
-
-    fmt.Println("Origin Server Files:")
-    for _,filename := range own_files {
-        fmt.Println(filename[3:])
-    }
-    fmt.Println("Replicated Files:")
-    for _,filename := range own_files {
-        fmt.Println(filename[3:])
+        if file_set[filename] {
+            continue
+        }
+        file_set[filename] = true
+        if !file.IsDir() {
+            fmt.Println("File: " + filename[3:] + " \tFile Hash: " + strconv.Itoa(GetHash(filename[3:])))
+        }
     }
 }
 

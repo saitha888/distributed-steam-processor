@@ -1,5 +1,6 @@
 .env
-machine.*
 output.txt
 file-store
-
+machine.*
+membership.log
+hydfs.log

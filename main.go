@@ -30,8 +30,16 @@ func main() {
     }
     defer file.Close()
 
-    // clear the logging file 
-    file, err = os.OpenFile(os.Getenv("LOG_FILENAME"), os.O_WRONLY|os.O_TRUNC, 0644)
+    // clear the membership logging file 
+    file, err = os.OpenFile(os.Getenv("MEMBERSHIP_FILENAME"), os.O_WRONLY|os.O_TRUNC, 0644)
+    if err != nil {
+        fmt.Println("Error opening file: ", err)
+        return
+    }
+    defer file.Close()
+
+    // clear the hydfs logging file 
+    file, err = os.OpenFile(os.Getenv("HDYFS_FILENAME"), os.O_WRONLY|os.O_TRUNC, 0644)
     if err != nil {
         fmt.Println("Error opening file: ", err)
         return

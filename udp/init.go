@@ -16,6 +16,7 @@ type Node struct {
 
 // node_id (includes timestamp) that is set when a process joins the system
 var node_id string = ""
+var ring_id string = ""
 
 // variable that enables suspicion mechanism. set based on logging.go
 var enabled_sus = false
@@ -34,11 +35,11 @@ var err = godotenv.Load(".env")
 
 // list of udp ports in process
 var ports = []string{
-    "fa24-cs425-1201.cs.illinois.edu:9081", 
-    "fa24-cs425-1202.cs.illinois.edu:9082", 
-    "fa24-cs425-1203.cs.illinois.edu:9083", 
-    "fa24-cs425-1204.cs.illinois.edu:9084", 
-    "fa24-cs425-1205.cs.illinois.edu:9085", 
+    // "fa24-cs425-1201.cs.illinois.edu:9081", 
+    // "fa24-cs425-1202.cs.illinois.edu:9082", 
+    // "fa24-cs425-1203.cs.illinois.edu:9083", 
+    // "fa24-cs425-1204.cs.illinois.edu:9084", 
+    // "fa24-cs425-1205.cs.illinois.edu:9085", 
     "fa24-cs425-1206.cs.illinois.edu:9086", 
     "fa24-cs425-1207.cs.illinois.edu:9087", 
     "fa24-cs425-1208.cs.illinois.edu:9088", 
@@ -47,7 +48,7 @@ var ports = []string{
 }
 
 // env file variables
-var logfile string = os.Getenv("LOG_FILENAME")
+var logfile string = os.Getenv("MEMBERSHIP_FILENAME")
 var introducer_address string = os.Getenv("INTRODUCER_ADDRESS")
 var udp_address string = os.Getenv("MACHINE_UDP_ADDRESS")
 var machine_number string = os.Getenv("MACHINE_NUMBER")

@@ -27,7 +27,9 @@ func IntroducerJoin() {
     inc_num += 1 // increment incarnation number (starts at 1)
 
     if node_id == ""{ // if it's joining and not rejoining
-        node_id  = udp_address + "_" + time.Now().Format("2006-01-02_15:04:05") // create unique node id
+        curr_time := time.Now().Format("2006-01-02_15:04:05")
+        node_id  = udp_address + "_" + curr_time // create unique node id
+        ring_id = tcp_address + "_" + curr_time
         AddNode(node_id, 1, "alive") // add to membership list
     } 
 
@@ -294,7 +296,7 @@ func ProcessJoinMessage(message string) {
         AddNode(joined_node, 1, "alive")
     }
     send := "Node join detected for: " + joined_node + " at " + time.Now().Format("15:04:05") + "\n"
-    appendToFile(send, logfile)
+    AppendToFile(send, logfile)
     // check if a predecessor got added
     NewJoin(joined_node)
 }

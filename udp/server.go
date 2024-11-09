@@ -32,13 +32,13 @@ func UdpServer() {
             failed_node := message[5:]
             RemoveNode(failed_node)
             message := "Node failure message recieved for: " + failed_node + " at " + time.Now().Format("15:04:05") + "\n"
-            appendToFile(message, logfile)
+            AppendToFile(message, logfile)
         } else if message[:4] == "join" { // new machine joined
             recieved_node := message[5:]
             if udp_address == introducer_address {
                 // get the node id and timestamp
                 message := "Node join detected for: " + recieved_node + " at " + time.Now().Format("15:04:05") + "\n"
-                appendToFile(message, logfile)
+                AppendToFile(message, logfile)
                 index := FindNode(recieved_node)
                 if index >= 0 { // node is already in membership list
                     changeStatus(index, "alive")
@@ -76,12 +76,12 @@ func UdpServer() {
                 changeStatus(index, "leave")
             }
             message := "Node leave detected for: " + left_node + " at " + time.Now().Format("15:04:05") + "\n"
-            appendToFile(message, logfile)
+            AppendToFile(message, logfile)
         } else if message[:9] == "suspected" { // machine left
             if enabled_sus {
                 sus_node := message[10:]
                 message := "Node suspect detected for: " + sus_node + " at " + time.Now().Format("15:04:05") + "\n"
-                appendToFile(message, logfile)
+                AppendToFile(message, logfile)
                 index := FindNode(sus_node)
                 if sus_node == node_id {
                     fmt.Println("Node is currently suspected")
@@ -99,7 +99,7 @@ func UdpServer() {
             alive_node := message[6:62]
             inc_num, _ := strconv.Atoi(message[63:])
             message := "Suspected node cleared for: " + alive_node + " at " + time.Now().Format("15:04:05") + "\n"
-            appendToFile(message, logfile)
+            AppendToFile(message, logfile)
             index := FindNode(alive_node)
             if index >= 0 {
                 changeStatus(index, "alive")

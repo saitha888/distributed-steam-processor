@@ -35,7 +35,7 @@ func PingClient(plus_s bool) {
     if err2 != nil { // no response was receieved
         if plus_s == false { // if there's no suspicion immediately fail the machine
             message := "Node failure detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
-            appendToFile(message, logfile)
+            AppendToFile(message, logfile)
             RemoveNode(target_node.NodeID)
             for _,node := range membership_list {
                 SendMessage(node.NodeID, "fail", target_node.NodeID)
@@ -43,7 +43,7 @@ func PingClient(plus_s bool) {
         }
         if plus_s && checkStatus(target_node.NodeID) != " sus "  { // if there is suspicion and the node isn't already sus
             message := "Node suspect detected for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
-            appendToFile(message, logfile)
+            AppendToFile(message, logfile)
             for _,node := range membership_list { // let all machines know node is suspected
                 SendMessage(node.NodeID, "suspected",target_node.NodeID)
             }
@@ -65,7 +65,7 @@ func PingClient(plus_s bool) {
         if index >= 0 {
             if membership_list[index].Status == " sus " || membership_list[index].Inc < recieved_inc { // If the machine was suspected it is now cleared
                 message := "Node suspect cleared for: " + target_node.NodeID + " from machine " + udp_port + " at " + time.Now().Format("15:04:05") + "\n"
-                appendToFile(message, logfile)
+                AppendToFile(message, logfile)
                 for _,node := range membership_list { // let all machines know suspected node is alive
                     SendAlive(node.NodeID, target_node.NodeID, recieved_inc_str)
                 }
