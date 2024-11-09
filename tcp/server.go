@@ -252,9 +252,10 @@ func handleConnection(conn net.Conn) {
         merged_content := words[2]
         origin_num := udp.GetFileServers(udp.GetHash(hydfs_file))[0][13:15]
         hydfs_file = origin_num + "-" + hydfs_file
-        filePath := "./file-store" + hydfs_file
+        file_path := "./file-store" + hydfs_file
+        fmt.Println("filepath: " + file_path)
 
-        file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+        file, err := os.OpenFile(file_path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
         if err != nil {
             fmt.Println("Error opening file:", err)
             return

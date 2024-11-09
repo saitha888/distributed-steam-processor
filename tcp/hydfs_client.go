@@ -204,12 +204,12 @@ func Merge(hydfs_file string) {
 	chunks = chunks[:len(chunks)-1]
 	for _,chunk := range chunks {
 		filename := strings.Split(chunk, " ")[0]
-		fmt.Println(filename)
 		content := chunk[len(filename):]
 		timestamp := strings.Split(filename, "-")[2]
 		files_dict.Put(timestamp,content)
 	}
 	iterator := files_dict.Iterator()
+	iterator.First()
 	merged_content := iterator.Value().(string)
 	for iterator.Next() {
 		merged_content += iterator.Value().(string)
@@ -225,8 +225,9 @@ func Merge(hydfs_file string) {
 
 		//request chunks of file from replica
 		message := "merge" + " " + hydfs_file + " " + merged_content
+
 		conn.Write([]byte(message))
-			
+		fmt.Println("merge req sent")
 		buf := make([]byte, 1000000)
 		n, err := conn.Read(buf)
 		if err != nil {
