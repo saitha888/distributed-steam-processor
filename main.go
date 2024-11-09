@@ -197,6 +197,19 @@ func commandLoop() {
                 hydfs_file := args[2]
                 tcp.AppendFile(local_file, hydfs_file)
             
+            case "multiappend":
+                hydfs_file := args[1]
+                vms := []string{}
+                local_files := []string{}
+                for _,param := range args[2:] {
+                    if len(param) >=10 && param[:10] == "fa24-cs425" {
+                        vms = append(vms, param)
+                    } else {
+                        local_files = append(local_files, param)
+                    }
+                }
+                tcp.MultiAppend(hydfs_file, vms, local_files)
+            
             case "getfromreplica":
                 VMaddress := args[1]
                 HyDFSfilename := args[2]
