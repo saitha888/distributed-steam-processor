@@ -249,7 +249,7 @@ func handleConnection(conn net.Conn) {
     } else if len(message) >= 5 && message[:5] == "merge" {
         words := strings.Split(message, " ")
         hydfs_file := words[1]
-        merged_content := words[2:]
+        merged_content := message[7 + len(hydfs_file):]
         origin_num := udp.GetFileServers(udp.GetHash(hydfs_file))[0][13:15]
         hydfs_file = origin_num + "-" + hydfs_file
         file_path := "./file-store" + hydfs_file
