@@ -11,7 +11,6 @@ import (
     "github.com/joho/godotenv"
     "strings"
     "distributed_system/udp"
-    "regexp"
     
 )
 
@@ -228,7 +227,6 @@ func handleConnection(conn net.Conn) {
         words := strings.Split(message, " ")
         name := words[1]
         msg := ""
-        timestampPattern := regexp.MustCompile(`\b\d{2}:\d{2}:\d{2}\.\d{3}\b`)
         for _, file := range files {
             if !file.IsDir() && strings.Contains(file.Name(), name)  {
                 parts := strings.Split(file.Name(), "-")
@@ -248,8 +246,34 @@ func handleConnection(conn net.Conn) {
             fmt.Println("Error sending file content:", err)
         }
 
+    } else if len(message) >= 5 && message[:5] == "merge" {
+        words := strings.Split(message, " ")
+        hydfs_file := words[1]
+        merged_content := words[2]
+        origin_num := udp.GetFileServers(udp.GetHash(hydfs_file))[0][13:15]
+        hydfs_file = origin_num + "-" + hydfs_file
+        filePath := "./file-store" + hydfs_file
 
-    }else { 
+        file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+        if err != nil {
+            fmt.Println("Error opening file:", err)
+            return
+        }
+        defer file.Close()
+        // Append the merged content to the file
+        _, err = file.WriteString(merged_content)
+        if err != nil {
+            fmt.Println("Error writing to file:", err)
+            return
+        }
+        fmt.Println("Content appended to file successfully.")
+        msg := hydfs_file + " updated with merge"
+        _, err = conn.Write([]byte(msg))
+        if err != nil {
+            fmt.Println("Error sending file content:", err)
+        }
+
+    } else { 
         // Open the file to write the contents
         file, err := os.Create(filename)
         if err != nil {

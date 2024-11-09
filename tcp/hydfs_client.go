@@ -8,7 +8,9 @@ import (
 	"strconv"
 	"time"
 	"io"
-	// "strings"
+	"strings"
+	"github.com/emirpasic/gods/maps/treemap"
+    "github.com/emirpasic/gods/utils"
 )
 
 func GetFile(hydfs_file string, local_file string) {
@@ -168,6 +170,7 @@ func AppendFile(local_file string, hydfs_file string) {
 
 func Merge(hydfs_file string) {
 	replicas := udp.GetFileServers(udp.GetHash(hydfs_file))
+	tot_response := ""
 	for _, replica := range replicas {
 		port := replica[:36]
 		conn, err := net.Dial("tcp", port)
@@ -186,20 +189,51 @@ func Merge(hydfs_file string) {
 			fmt.Println(err)
 			return
 		}
+		response := string(buf[:n])
+		tot_response += response
+	}
+	files_dict := treemap.NewWith(func(a, b interface{}) int {
+        layout := "15:04:05.000"
+        timeA, _ := time.Parse(layout, a.(string))
+        timeB, _ := time.Parse(layout, b.(string))
+        return utils.TimeComparator(timeA, timeB)
+    })
 
-		//get back each chunk
+	fmt.Println(tot_response)
+	chunks := strings.Split(tot_response, "---BREAK---")
+	chunks = chunks[:len(chunks)-1]
+	for _,chunk := range chunks {
+		filename := strings.Split(chunk, " ")[0]
+		fmt.Println(filename)
+		content := chunk[len(filename):]
+		timestamp := strings.Split(filename, "-")[2]
+		files_dict.Put(timestamp,content)
+	}
+	iterator := files_dict.Iterator()
+	merged_content := iterator.Value().(string)
+	for iterator.Next() {
+		merged_content += iterator.Value().(string)
+	}
+
+	for _, replica := range replicas {
+		port := replica[:36]
+		conn, err := net.Dial("tcp", port)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		//request chunks of file from replica
+		message := "merge" + " " + hydfs_file + " " + merged_content
+		conn.Write([]byte(message))
+			
+		buf := make([]byte, 1000000)
+		n, err := conn.Read(buf)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 		response := string(buf[:n])
 		fmt.Println(response)
-		// chunks := strings.Split(response, "---BREAK---")
-		// dict := make(map[string]string)
-		// for _,chunk := range chunks {
-		// 	filename := strings.Split(chunk, " ")[0]
-		// 	content := chunk[len(filename):]
-		// 	timestamp := strings.Split(filename, "-")[2]
-		// 	dict[timestamp] = content
-		// }
-		// for key,val := range dict {
-		// 	fmt.Println(key + ": " + val)
-		// }
 	}
 }
