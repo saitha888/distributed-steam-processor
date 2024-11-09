@@ -12,6 +12,7 @@ import (
 	"github.com/emirpasic/gods/maps/treemap"
     "github.com/emirpasic/gods/utils"
 	"io/ioutil"
+	"sync"
 )
 
 func GetFile(hydfs_file string, local_file string) {
