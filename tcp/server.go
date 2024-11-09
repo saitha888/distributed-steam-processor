@@ -12,7 +12,6 @@ import (
     "strings"
     "distributed_system/udp"
     "regexp"
-    "time"
     
 )
 
@@ -145,26 +144,22 @@ func handleConnection(conn net.Conn) {
         for _, file := range files {
             if !file.IsDir() {
                 filename = file.Name()
-                if len(filename) > 12 {
-                    //do not send append chunks
-                    if _, err := time.Parse("15:04:05.000", filename[len(filename)-12:]); err != nil {
-                        // if file is from origin server send it back 
-                        if filename[:2] == udp.GetFilePrefix() {
-                            file_path := dir + "/" + filename
-                            content, err := ioutil.ReadFile(file_path)
-                            if err != nil {
-                                fmt.Println("Error reading file:", filename, err)
-                            }
-                            // Send the file name and content to the client
-                            message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", filename, string(content))
-                            _, err = conn.Write([]byte(message))
-                            if err != nil {
-                                fmt.Println("Error sending file content:", err)
-                            }
-                        }
+
+                pattern := `\d{2}:\d{2}:\d{2}\.\d{3}$`
+	            match, _ := regexp.MatchString(pattern, filename)
+                if filename[:2] == udp.GetFilePrefix() && !match {
+                    file_path := dir + "/" + filename
+                    content, err := ioutil.ReadFile(file_path)
+                    if err != nil {
+                        fmt.Println("Error reading file:", filename, err)
+                    }
+                    // Send the file name and content to the client
+                    message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", filename, string(content))
+                    _, err = conn.Write([]byte(message))
+                    if err != nil {
+                        fmt.Println("Error sending file content:", err)
                     }
                 }
-
             }
         }
     }  else if len(message) >= 5 && message[:5] == "split" {
