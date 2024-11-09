@@ -182,9 +182,9 @@ func handleConnection(conn net.Conn) {
         pred_port := strings.TrimRight(message[6:], " \t\n")
         fmt.Println("pred_port: ", pred_port)
         pred_hash := udp.GetHash(pred_port)
-        fmt.Println("pred_hash: ", pred_port)
+        fmt.Println("pred_hash: ",pred_hash)
         self_hash := udp.GetHash(udp.GetTCPVersion(udp.GetNodeID()))
-        fmt.Println("self_hash: ", pred_port)
+        fmt.Println("self_hash: ", self_hash)
 
         // go through all the files
         for _, file := range files {
