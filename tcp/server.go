@@ -180,8 +180,11 @@ func handleConnection(conn net.Conn) {
         }
 
         pred_port := strings.TrimRight(message[6:], " \t\n")
+        fmt.Println("pred_port: ", pred_port)
         pred_hash := udp.GetHash(pred_port)
+        fmt.Println("pred_hash: ", pred_port)
         self_hash := udp.GetHash(udp.GetTCPVersion(udp.GetNodeID()))
+        fmt.Println("self_hash: ", pred_port)
 
         // go through all the files
         for _, file := range files {
@@ -190,12 +193,14 @@ func handleConnection(conn net.Conn) {
                 // if the file is from the origin server
                 if strings.HasPrefix(filename, udp.GetFilePrefix()) || strings.HasPrefix(filename, pred_port[13:15]) {
                     file_hash := udp.GetHash(filename[3:])
+                    fmt.Println("file_hash: ", file_hash)
                     file_path := dir + "/" + filename
                     content, err := ioutil.ReadFile(file_path)
                     if err != nil {
                         fmt.Println("Error reading file:", filename, err)
                     }
                     if pred_hash >= file_hash && file_hash < self_hash { // if the hash now maps to the new server 
+                        fmt.Println("hash maps to new server")
                         new_filename := filename[3:] // rename the file and send it back
                         message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", new_filename, string(content))
                         _, err = conn.Write([]byte(message))
