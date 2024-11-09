@@ -10,6 +10,7 @@ import (
     "strings"
     "time"
     "log"
+    "distributed_system/test_scripts"
 )
 
 
@@ -176,6 +177,18 @@ func commandLoop() {
                 HyDFSfilename := args[2]
                 localfilename := args[3]
                 tcp.GetFromReplica(VMaddress, HyDFSfilename, localfilename)
+            
+            case "test1":
+                file1 := args[1]
+                file2 := args[2]
+                file3 := args[3]
+                file4 := args[4]
+                file5 := args[5]
+                filenames := [5]string{file1, file2, file3, file4, file5}
+                test_scripts.Test1(filenames)
+
+            case "test4":
+                test_scripts.Test4()
 
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join,  leave")
