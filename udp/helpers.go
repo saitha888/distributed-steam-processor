@@ -279,6 +279,10 @@ func GetMembershipList() []Node {
 	return membership_list
 }
 
+func GetFilePrefix() string {
+    return file_prefix
+}
+
 // Sends a message with contents to_send to target_node
 func SendMessage(target_node string, to_send string, node_to_send string) {
     target_addr := target_node[:36]
