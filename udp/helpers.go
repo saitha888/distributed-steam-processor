@@ -208,7 +208,7 @@ func GetFileServers(file_hash int) []string {
     return node_ids
 }
 
-func ListStore() {
+func ListStore() map[string]bool {
     timestamp_pattern := `^[\d]{2}:[\d]{2}:[\d]{2}\.[\d]{3}$`
     fmt.Println("STORE FOR: " + node_id[:31] + " - " + "HASH: " + strconv.Itoa(GetHash(ring_id)))
     dir := "./file-store"
@@ -228,7 +228,7 @@ func ListStore() {
 	        timestamp := filename[last_dash+1:]
             matched, _ := regexp.MatchString(timestamp_pattern, timestamp)
             if matched {
-                filename = prefix
+                filename = prefix[3:]
             }
         }
         if file_set[filename] {
@@ -236,9 +236,10 @@ func ListStore() {
         }
         file_set[filename] = true
         if !file.IsDir() {
-            fmt.Println("File: " + filename[3:] + " \tFile Hash: " + strconv.Itoa(GetHash(filename[3:])))
+            fmt.Println("File: " + filename + " \tFile Hash: " + strconv.Itoa(GetHash(filename)))
         }
     }
+    return file_set
 }
 
 func GetFileContents(filename string) string {
@@ -331,4 +332,37 @@ func DialUDPClient(target_addr string) (*net.UDPConn, error) {
         return nil, err
     }
     return conn, nil
+}
+
+func ListCache() map[string]bool {
+    dir := "./cache"
+
+    files, err := ioutil.ReadDir(dir)
+    if err != nil {
+        fmt.Println("Error reading directory:", err)
+    }
+
+    file_set := make(map[string]bool)
+
+    for _, file := range files {
+        filename := file.Name()
+        file_set[filename] = true
+    }
+    return file_set
+}
+
+func RemoveFromCache(filename string) {
+    dir := "./cache"
+
+    files, err := ioutil.ReadDir(dir)
+    if err != nil {
+        fmt.Println("Error reading directory:", err)
+    }
+
+    for _, file := range files {
+        curr_file := file.Name()
+        if curr_file == filename {
+            os.Remove(dir + "/" + filename)
+        }
+    }
 }
