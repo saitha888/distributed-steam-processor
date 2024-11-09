@@ -209,6 +209,7 @@ func GetFileServers(file_hash int) []string {
 }
 
 func ListStore() {
+    timestamp_pattern := `^[\d]{2}:[\d]{2}:[\d]{2}\.[\d]{3}$`
     fmt.Println("STORE FOR: " + node_id[:31] + " - " + "HASH: " + strconv.Itoa(GetHash(ring_id)))
     dir := "./file-store"
 
@@ -221,17 +222,21 @@ func ListStore() {
 
     for _, file := range files {
         filename := file.Name()
-        re := regexp.MustCompile(`^(.*)_[\d]{4}-[\d]{2}-[\d]{2}_[\d]{2}:[\d]{2}:[\d]{2}$`)
-        matches := re.FindStringSubmatch(filename)
-        if len(matches) > 1 {
-            filename = matches[1]
-        } 
+        last_dash := strings.LastIndex(filename, "-")
+        if last_dash != -1 {
+            prefix := filename[:last_dash]
+	        timestamp := filename[last_dash+1:]
+            matched, _ := regexp.MatchString(timestamp_pattern, timestamp)
+            if matched {
+                filename = prefix
+            }
+        }
         if file_set[filename] {
             continue
         }
         file_set[filename] = true
         if !file.IsDir() {
-            fmt.Println("File: " + filename[3:] + " \tFile Hash: " + strconv.Itoa(GetHash(filename[:3])))
+            fmt.Println("File: " + filename[3:] + " \tFile Hash: " + strconv.Itoa(GetHash(filename[3:])))
         }
     }
 }
