@@ -1,0 +1,29 @@
+file_cat created on machine fa24-cs425-1209.cs.illinois.edu:9089_2024-11-09_02:13:31
+file_cat created on machine fa24-cs425-1208.cs.illinois.edu:9088_2024-11-09_02:13:22
+Message received to create file file_cat at 02:14:23.743
+file_cat created at 02:14:23.743
+file_cat created on machine fa24-cs425-1207.cs.illinois.edu:9087_2024-11-09_02:13:41
+file_zebra created on machine fa24-cs425-1209.cs.illinois.edu:9089_2024-11-09_02:13:31
+file_zebra created on machine fa24-cs425-1208.cs.illinois.edu:9088_2024-11-09_02:13:22
+Message received to create file file_zebra at 02:14:23.753
+file_zebra created at 02:14:23.753
+file_zebra created on machine fa24-cs425-1207.cs.illinois.edu:9087_2024-11-09_02:13:41
+file_kangaroo created on machine fa24-cs425-1206.cs.illinois.edu:9086_2024-11-09_02:13:36
+file_kangaroo created on machine fa24-cs425-1209.cs.illinois.edu:9089_2024-11-09_02:13:31
+file_kangaroo created on machine fa24-cs425-1208.cs.illinois.edu:9088_2024-11-09_02:13:22
+file_chimpanzee created on machine fa24-cs425-1208.cs.illinois.edu:9088_2024-11-09_02:13:22
+Message received to create file file_chimpanzee at 02:14:23.765
+file_chimpanzee created at 02:14:23.766
+file_chimpanzee created on machine fa24-cs425-1207.cs.illinois.edu:9087_2024-11-09_02:13:41
+file_chimpanzee created on machine fa24-cs425-1210.cs.illinois.edu:9080_2024-11-09_02:13:17
+file_aardvark created on machine fa24-cs425-1208.cs.illinois.edu:9088_2024-11-09_02:13:22
+Message received to create file file_aardvark at 02:14:23.773
+file_aardvark created at 02:14:23.774
+file_aardvark created on machine fa24-cs425-1207.cs.illinois.edu:9087_2024-11-09_02:13:41
+file_aardvark created on machine fa24-cs425-1210.cs.illinois.edu:9080_2024-11-09_02:13:17
+Message received to retrieve file 08-file_aardvark at 02:14:39.150
+File 08-file_aardvark sent back to client at 02:14:39.150
+Got file file_aardvark from fa24-cs425-1207.cs.illinois.edu:8087 and saved in thullu1 at 02:14:39.150
+Message received to create file file_aardvark-02:15:33.959 at 02:15:33.961
+file_aardvark-02:15:33.959 created at 02:15:33.962
+file_aardvark-02:15:33.959 created on machine fa24-cs425-1207.cs.illinois.edu:9087_2024-11-09_02:13:41

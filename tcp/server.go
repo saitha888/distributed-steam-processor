@@ -87,7 +87,7 @@ func handleConnection(conn net.Conn) {
     } else if len(message) >= 6 && message[:6] == "create" {
         words := strings.Split(message, " ")
         HyDFSfilename := words[1]
-        udp.RemoveFromCache(HyDFSfilename)
+        udp.RemoveFromCache(HyDFSfilename[3:])
         log := "Message received to create file " + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
         fmt.Println(log)
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
