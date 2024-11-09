@@ -8,6 +8,9 @@ import (
 	"strconv"
 	"time"
 	"io"
+	"strings"
+	"github.com/emirpasic/gods/maps/treemap"
+    "github.com/emirpasic/gods/utils"
 )
 
 func GetFile(hydfs_file string, local_file string) {
@@ -103,7 +106,7 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 		message := "create " + HyDFSfilename + " " + replica_num + " " + content
 		conn.Write([]byte(message))
 		
-		buf := make([]byte, 1024)
+		buf := make([]byte, 1000000)
 		n, err := conn.Read(buf)
 		if err != nil {
 			fmt.Println(err)
@@ -148,7 +151,7 @@ func AppendFile(local_file string, hydfs_file string) {
 	message := "create" + " " + filename + " " + replica_num + " " + content
 	conn.Write([]byte(message))
 		
-	buf := make([]byte, 1024)
+	buf := make([]byte, 1000000)
 	n, err := conn.Read(buf)
 	if err != nil {
 		fmt.Println(err)
@@ -158,6 +161,11 @@ func AppendFile(local_file string, hydfs_file string) {
 	fmt.Println(response)
 }
 
+<<<<<<< tcp/hydfs_client.go
+}
+
+
+=======
 func GetFromReplica(VMaddress string, HyDFSfilename string, localfilename string){
     file_hash := udp.GetHash(HyDFSfilename)
 	node_ids := udp.GetFileServers(file_hash)
@@ -193,5 +201,82 @@ func GetFromReplica(VMaddress string, HyDFSfilename string, localfilename string
 	err = WriteToFile(localfilename, response)
 	if err != nil {
 		return
+	}
+}	
+>>>>>>> tcp/hydfs_client.go
+
+
+//get every chunk of file from each replica "chunks"
+//order chunks to create one merged file
+//send merged file to each replica "merge"
+
+func Merge(hydfs_file string) {
+	replicas := udp.GetFileServers(udp.GetHash(hydfs_file))
+	tot_response := ""
+	for _, replica := range replicas {
+		port := replica[:36]
+		conn, err := net.Dial("tcp", port)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		//request chunks of file from replica
+		message := "chunks" + " " + hydfs_file
+		conn.Write([]byte(message))
+			
+		buf := make([]byte, 1000000)
+		n, err := conn.Read(buf)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		response := string(buf[:n])
+		tot_response += response
+	}
+	files_dict := treemap.NewWith(func(a, b interface{}) int {
+        layout := "15:04:05.000"
+        timeA, _ := time.Parse(layout, a.(string))
+        timeB, _ := time.Parse(layout, b.(string))
+        return utils.TimeComparator(timeA, timeB)
+    })
+
+	fmt.Println(tot_response)
+	chunks := strings.Split(tot_response, "---BREAK---")
+	chunks = chunks[:len(chunks)-1]
+	for _,chunk := range chunks {
+		filename := strings.Split(chunk, " ")[0]
+		content := chunk[len(filename):]
+		timestamp := strings.Split(filename, "-")[2]
+		files_dict.Put(timestamp,content)
+	}
+	iterator := files_dict.Iterator()
+	iterator.First()
+	merged_content := iterator.Value().(string)
+	for iterator.Next() {
+		merged_content += iterator.Value().(string)
+	}
+	fmt.Println(merged_content)
+	for _, replica := range replicas {
+		port := replica[:36]
+		conn, err := net.Dial("tcp", port)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		//request chunks of file from replica
+		message := "merge" + " " + hydfs_file + " " + merged_content
+
+		conn.Write([]byte(message))
+		fmt.Println("merge req sent")
+		buf := make([]byte, 1000000)
+		n, err := conn.Read(buf)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		response := string(buf[:n])
+		fmt.Println(response)
 	}
 }

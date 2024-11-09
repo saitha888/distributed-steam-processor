@@ -201,6 +201,62 @@ func handleConnection(conn net.Conn) {
                 }
             }   
         }
+    } else if len(message) >= 6 && message[:6] == "chunks" {
+        dir := "./file-store"
+        files, err := ioutil.ReadDir(dir)
+        if err != nil {
+            fmt.Println("Error reading directory:", err)
+        }
+        words := strings.Split(message, " ")
+        name := words[1]
+        msg := ""
+        for _, file := range files {
+            if !file.IsDir() && strings.Contains(file.Name(), name)  {
+                parts := strings.Split(file.Name(), "-")
+                if len(parts) == 3 {
+                    filePath := dir + "/" + file.Name()       
+                    content, err := ioutil.ReadFile(filePath)
+                    if err != nil {
+                        fmt.Println("Error reading file:", err)
+                        continue
+                    }
+                    msg += fmt.Sprintf("%s %s\n---BREAK---\n", file.Name(), string(content))
+                }
+            }
+        }
+        _, err = conn.Write([]byte(msg))
+        if err != nil {
+            fmt.Println("Error sending file content:", err)
+        }
+
+    } else if len(message) >= 5 && message[:5] == "merge" {
+        words := strings.Split(message, " ")
+        hydfs_file := words[1]
+        merged_content := message[7 + len(hydfs_file):]
+        origin_num := udp.GetFileServers(udp.GetHash(hydfs_file))[0][13:15]
+        hydfs_file = origin_num + "-" + hydfs_file
+        file_path := "./file-store/" + hydfs_file
+        fmt.Println("filepath: " + file_path)
+
+        file, err := os.OpenFile(file_path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+        if err != nil {
+            fmt.Println("Error opening file:", err)
+            return
+        }
+        defer file.Close()
+        // Append the merged content to the file
+        _, err = file.WriteString(merged_content)
+        if err != nil {
+            fmt.Println("Error writing to file:", err)
+            return
+        }
+        fmt.Println("Content appended to file successfully.")
+        msg := hydfs_file + " updated with merge"
+        _, err = conn.Write([]byte(msg))
+        if err != nil {
+            fmt.Println("Error sending file content:", err)
+        }
+
     } else { 
         // Open the file to write the contents
         file, err := os.Create(filename)
