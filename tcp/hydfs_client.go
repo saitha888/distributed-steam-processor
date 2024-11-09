@@ -37,7 +37,7 @@ func GetFile(hydfs_file string, local_file string) {
     conn.Write([]byte(message))
 
     // write the command to an output file
-	buf := make([]byte, 1024) // Buffer to hold chunks of data
+	buf := make([]byte, 1000000) // Buffer to hold chunks of data
 	var response string        // Variable to hold the full response
 
 	for {
@@ -108,7 +108,7 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 		message := "create " + HyDFSfilename + " " + replica_num + " " + content
 		conn.Write([]byte(message))
 		
-		buf := make([]byte, 1024)
+		buf := make([]byte, 1000000)
 		n, err := conn.Read(buf)
 		if err != nil {
 			fmt.Println(err)
@@ -153,7 +153,7 @@ func AppendFile(local_file string, hydfs_file string) {
 	message := "create" + " " + filename + " " + replica_num + " " + content
 	conn.Write([]byte(message))
 		
-	buf := make([]byte, 1024)
+	buf := make([]byte, 1000000)
 	n, err := conn.Read(buf)
 	if err != nil {
 		fmt.Println(err)
