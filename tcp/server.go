@@ -114,6 +114,12 @@ func handleConnection(conn net.Conn) {
             fmt.Println("File already exists, modifying timestamp")
         }
 
+    } else if len(message) >= 10 && message[:10] == "append-req"{
+        fmt.Println("append request received")
+        words := strings.Split(message, " ")
+        hydfs_file := words[2]
+        local_file := words[1]
+        AppendFile(local_file, hydfs_file)
     } else if len(message) >=6 && message[:6] == "append" {
         timestamp := time.Now().Format("15:04:05.000")
         words := strings.Split(message, " ")
@@ -318,12 +324,6 @@ func handleConnection(conn net.Conn) {
             fmt.Println("Error sending file content:", err)
         }
 
-    } else if len(message) >= 10 && message[:10] == "append-req"{
-        fmt.Println("append request received")
-        words := strings.Split(message, " ")
-        hydfs_file := words[2]
-        local_file := words[1]
-        AppendFile(local_file, hydfs_file)
     } else { 
         // Open the file to write the contents
         file, err := os.Create(filename)
