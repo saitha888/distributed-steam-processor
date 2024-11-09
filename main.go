@@ -46,7 +46,7 @@ func main() {
     }
     defer file.Close()
 
-
+    // create/clear file store
     if _, err := os.Stat("file-store"); os.IsNotExist(err) {
 		err := os.Mkdir("file-store", 0755)
 		if err != nil {
@@ -58,6 +58,23 @@ func main() {
 			log.Fatalf("Failed to remove directory contents: %v", err)
 		}
 		err = os.Mkdir("file-store", 0755)
+		if err != nil {
+			log.Fatalf("Failed to recreate directory: %v", err)
+		}
+	}
+
+    // create/clear cache
+    if _, err := os.Stat("cache"); os.IsNotExist(err) {
+		err := os.Mkdir("cache", 0755)
+		if err != nil {
+			log.Fatalf("Failed to create directory: %v", err)
+		}
+	} else {
+		err := os.RemoveAll("cache")
+		if err != nil {
+			log.Fatalf("Failed to remove directory contents: %v", err)
+		}
+		err = os.Mkdir("cache", 0755)
 		if err != nil {
 			log.Fatalf("Failed to recreate directory: %v", err)
 		}

@@ -11,9 +11,11 @@ import (
 	"strings"
 	"github.com/emirpasic/gods/maps/treemap"
     "github.com/emirpasic/gods/utils"
+	"io/ioutil"
 )
 
 func GetFile(hydfs_file string, local_file string) {
+
 	file_hash := udp.GetHash(hydfs_file)
 	node_ids := udp.GetFileServers(file_hash)
 
@@ -23,6 +25,42 @@ func GetFile(hydfs_file string, local_file string) {
 	file_server := node_ids[replica_num][:36]
 
 	server_num := node_ids[0][13:15]
+
+	file_store := udp.ListStore()
+	for store_file := range file_store { // check if the file is in own store
+		if store_file == hydfs_file {
+			// write contents from own file store
+			file_path := server_num + "-" + hydfs_file
+			contents := udp.GetFileContents(file_path)
+			err = WriteToFile(local_file, string(contents))
+			return
+		}
+	}
+
+
+	cache := udp.ListCache()
+	for cache_file := range cache { // check if the file is in cache
+		if cache_file == hydfs_file {
+			// write contents from cache
+			dir := "./cache"
+
+			files, err := ioutil.ReadDir(dir)
+			if err != nil {
+				fmt.Println("Error reading directory:", err)
+			}
+
+			for _, file := range files {
+				if !file.IsDir() {
+					curr_file := file.Name()
+					if curr_file == hydfs_file {
+						content, _ := ioutil.ReadFile(dir + "/" + curr_file)
+						err = WriteToFile(local_file, string(content))
+						return
+					}
+				}
+			}
+		}
+	}
 
 	conn, err := net.Dial("tcp", file_server)
     if err != nil {
@@ -46,6 +84,9 @@ func GetFile(hydfs_file string, local_file string) {
 	if err != nil {
 		return
 	}
+	// add to cache
+	cache_path := "./cache" + "/" + hydfs_file
+	err = WriteToFile(cache_path, response)
 }
 
 // Function to write content to a local file
