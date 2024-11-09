@@ -173,15 +173,12 @@ func AppendFile(local_file string, hydfs_file string) {
 	// connect to port to write file contents into replica
 
 	port := replica[:36]
-	timestamp := time.Now().Format("15:04:05.000")
 	conn, err := net.Dial("tcp", port)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	filename := hydfs_file + "-" + timestamp
-
-	message := "create" + " " + filename + " " + replica_num + " " + content
+	message := "append" + " " + hydfs_file + " " + replica_num + " " + content
 	conn.Write([]byte(message))
 		
 	buf := make([]byte, 1000000)
@@ -329,7 +326,7 @@ func MultiAppend(hydfs_file string, vms []string, local_files []string) {
 			}
 			defer conn.Close()
 
-			message := "append " + localFile + " " + hydfs_file
+			message := "append-req" + localFile + " " + hydfs_file
 			_, writeErr := conn.Write([]byte(message))
 			if writeErr != nil {
 				fmt.Println("Write error:", writeErr)
