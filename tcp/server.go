@@ -87,10 +87,6 @@ func handleConnection(conn net.Conn) {
     } else if len(message) >= 6 && message[:6] == "create" {
         words := strings.Split(message, " ")
         HyDFSfilename := words[1]
-        udp.RemoveFromCache(HyDFSfilename[3:])
-        log := "Message received to create file " + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
-        fmt.Println(log)
-        udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
         replica_num := words[2]
 
         file_path := "file-store/" + replica_num + "-" + HyDFSfilename
@@ -99,17 +95,31 @@ func handleConnection(conn net.Conn) {
         _, err := os.Stat(file_path)
 	
         if os.IsNotExist(err) {
-            argument_length := 11 + len(HyDFSfilename)
-            file_contents := message[argument_length:]
-
-            WriteToFile(file_path, file_contents)
-            conn.Write([]byte(HyDFSfilename + " created on machine " + udp.GetNodeID()))
-            log = HyDFSfilename + " created at " + time.Now().Format("15:04:05.000")
-            fmt.Println(log)
-            udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
+            // File doesn't exist, use original filename
+            fmt.Println("Creating new file")
         } else {
-            fmt.Println("File already exists")
-        } 
+            // File exists, add 3 milliseconds to timestamp
+            fmt.Println("File already exists, modifying timestamp")
+            timestamp := HyDFSfilename[len(HyDFSfilename)-12:]
+            newTime, _ := time.Parse("15:04:05.000", timestamp)
+            formattedTime := newTime.Add(3 * time.Millisecond).Format("15:04:05.000")
+            HyDFSfilename = HyDFSfilename[:len(HyDFSfilename)-12] + formattedTime
+        }
+        
+        udp.RemoveFromCache(HyDFSfilename[3:])
+        log := "Message received to create file " + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
+        fmt.Println(log)
+        udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
+        
+        argument_length := 11 + len(HyDFSfilename)
+        file_contents := message[argument_length:]
+        WriteToFile(file_path, file_contents)
+        conn.Write([]byte(HyDFSfilename + " created on machine " + udp.GetNodeID()))
+        
+        log = HyDFSfilename + " created at " + time.Now().Format("15:04:05.000")
+        fmt.Println(log)
+        udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
+
     } else if len(message) >= 6 && message[:6] == "pull-3" {
         parts := strings.Split(message, " ")
         prefix := parts[1][13:15]
