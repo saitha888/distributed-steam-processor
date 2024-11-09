@@ -11,6 +11,7 @@ import (
     "github.com/joho/godotenv"
     "strings"
     "distributed_system/udp"
+    "regexp"
     
 )
 
@@ -143,8 +144,13 @@ func handleConnection(conn net.Conn) {
         for _, file := range files {
             if !file.IsDir() {
                 filename = file.Name()
+
+                // check if file is a chunk (has timestamp)
+                pattern := `\d{2}:\d{2}:\d{2}\.\d{3}$`
+                match, _ := regexp.MatchString(pattern, filename)
+
                 // if file is from origin server send it back 
-                if filename[:2] == udp.GetFilePrefix() {
+                if filename[:2] == udp.GetFilePrefix() && match {
                     file_path := dir + "/" + filename
                     content, err := ioutil.ReadFile(file_path)
                     if err != nil {
@@ -212,8 +218,9 @@ func handleConnection(conn net.Conn) {
         msg := ""
         for _, file := range files {
             if !file.IsDir() && strings.Contains(file.Name(), name)  {
-                parts := strings.Split(file.Name(), "-")
-                if len(parts) == 3 {
+                pattern := `\d{2}:\d{2}:\d{2}\.\d{3}$`
+                match, _ := regexp.MatchString(pattern, filename)
+                if match {
                     filePath := dir + "/" + file.Name()       
                     content, err := ioutil.ReadFile(filePath)
                     if err != nil {
@@ -234,7 +241,6 @@ func handleConnection(conn net.Conn) {
         if err != nil {
             fmt.Println("Error sending file content:", err)
         }
-
     } else if len(message) >= 5 && message[:5] == "merge" {
         words := strings.Split(message, " ")
         hydfs_file := words[1]
