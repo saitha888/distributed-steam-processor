@@ -270,9 +270,12 @@ func handleConnection(conn net.Conn) {
         }
         words := strings.Split(message, " ")
         name := words[1]
+        fmt.Println("req to give chunks with name " + name)
         msg := ""
         for _, file := range files {
+            fmt.Println("file: " + file.Name())
             if !file.IsDir() && strings.Contains(file.Name(), name)  {
+                fmt.Println(file.Name() " is a chunk")
                 pattern := `\d{2}:\d{2}:\d{2}\.\d{3}$`
                 match, _ := regexp.MatchString(pattern, file.Name())
                 if match {

@@ -326,7 +326,7 @@ func MultiAppend(hydfs_file string, vms []string, local_files []string) {
 			}
 			defer conn.Close()
 
-			message := "append-req" + localFile + " " + hydfs_file
+			message := "append-req " + localFile + " " + hydfs_file
 			_, writeErr := conn.Write([]byte(message))
 			if writeErr != nil {
 				fmt.Println("Write error:", writeErr)
