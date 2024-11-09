@@ -58,6 +58,9 @@ func PingClient(plus_s bool) {
         }
     } else { // response was recieved
         ack := string(buf[:n])
+        if len(ack) < 56 {
+            return
+        }
         recieved_node_id := ack[:56]
         recieved_inc_str := ack[57:]
         recieved_inc, _ := strconv.Atoi(ack[57:])
