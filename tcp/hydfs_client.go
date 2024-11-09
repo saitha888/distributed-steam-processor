@@ -214,7 +214,7 @@ func Merge(hydfs_file string) {
 	for iterator.Next() {
 		merged_content += iterator.Value().(string)
 	}
-
+	fmt.Println(merged_content)
 	for _, replica := range replicas {
 		port := replica[:36]
 		conn, err := net.Dial("tcp", port)
