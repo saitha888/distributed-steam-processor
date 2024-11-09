@@ -120,6 +120,10 @@ func commandLoop() {
                 ring_map := udp.GetRing()
                 go udp.ListRing(ring_map)
 
+            case "list_mem_ids":
+                membership_list := udp.GetMembershipList()
+                go udp.ListMemRing(membership_list)
+            
             case "list_mem":
                 membership_list := udp.GetMembershipList()
                 go udp.ListMem(membership_list)
@@ -166,6 +170,12 @@ func commandLoop() {
                 local_file := args[1]
                 hydfs_file := args[2]
                 tcp.AppendFile(local_file, hydfs_file)
+            
+            case "getfromreplica":
+                VMaddress := args[1]
+                HyDFSfilename := args[2]
+                localfilename := args[3]
+                tcp.GetFromReplica(VMaddress, HyDFSfilename, localfilename)
 
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join,  leave")

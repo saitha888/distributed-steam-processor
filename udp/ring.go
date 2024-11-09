@@ -49,7 +49,7 @@ func changeInc(index int, message int){
     membership_list[index].Inc = message
 }
 
-func ListMem(list_to_print []Node) {
+func ListMemRing(list_to_print []Node) {
     if len(list_to_print) == 0 {
         fmt.Println("List is empty.")
         return
@@ -73,6 +73,27 @@ func ListMem(list_to_print []Node) {
     fmt.Println()
     fmt.Print("> ")
 }
+
+func ListMem(list_to_print []Node) {
+    if len(list_to_print) == 0 {
+        fmt.Println("List is empty.")
+        return
+    }
+
+    nodeIDWidth := 54
+    statusWidth := 4
+
+    fmt.Printf("%-*s | %-*s | %s\n", nodeIDWidth, "NodeID", statusWidth, "Status", "Incarnation #")
+    fmt.Println(strings.Repeat("-", nodeIDWidth+statusWidth+25))
+
+    // Go through membership list and print each entry
+    for _, node := range list_to_print {
+        fmt.Printf("%s | %s  | %s\n",node.NodeID, node.Status, strconv.Itoa(node.Inc))
+    }
+    fmt.Println()
+    fmt.Print("> ")
+}
+
 
 func FindNodeWithPort(port string) int {
     for index,node := range(membership_list) {

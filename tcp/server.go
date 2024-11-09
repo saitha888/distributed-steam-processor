@@ -75,38 +75,31 @@ func handleConnection(conn net.Conn) {
     //if not grep or command call, must be call to create a log file
     } else if len(message) >= 3 && message[:3] == "get" {
         filename := message[4:]
+        fmt.Println("Message received to retrieve file " + filename)
         file_content := []byte(udp.GetFileContents(filename))
         conn.Write(file_content)
+        fmt.Println("File " + filename + " sent back to client.")
     } else if len(message) >= 6 && message[:6] == "create" {
         words := strings.Split(message, " ")
         HyDFSfilename := words[1]
+        fmt.Println("Message received to create file " + HyDFSfilename)
         replica_num := words[2]
 
+        file_path := "file-store/" + replica_num + "-" + HyDFSfilename
+
         // check if the file already exists
-        _, err := os.Stat("file-store/" + replica_num + "-" + HyDFSfilename)
+        _, err := os.Stat(file_path)
 	
         if os.IsNotExist(err) {
             argument_length := 11 + len(HyDFSfilename)
             file_contents := message[argument_length:]
 
-            file, err := os.Create("file-store/" + replica_num + "-" + HyDFSfilename)
-            if err != nil {
-                fmt.Println("Error creating the file:", err)
-                return
-            }
-
-            defer file.Close()
-
-            _, err = file.WriteString(file_contents)
-            if err != nil {
-                fmt.Println("Error writing to the file:", err)
-            }
-            output := fmt.Sprintf("file %s wrote to server %s", HyDFSfilename, os.Getenv("MACHINE_UDP_ADDRESS"))
-            conn.Write([]byte(output))
+            WriteToFile(file_path, file_contents)
+            conn.Write([]byte(HyDFSfilename + " created on machine " + udp.GetNodeID()))
+            fmt.Println("File " + HyDFSfilename + " created.")
         } else {
             fmt.Println("File already exists")
         } 
-        fmt.Println("File created: ", HyDFSfilename)
     } else if len(message) >= 6 && message[:6] == "pull-3" {
         parts := strings.Split(message, " ")
         prefix := parts[1][13:15]
@@ -120,8 +113,8 @@ func handleConnection(conn net.Conn) {
             if !file.IsDir() {
                 filename = file.Name()
                 // if file is from origin server send it back 
-                if filename[:2] == prefix || filename[:2] == os.Getenv("MACHINE_UDP_ADDRESS")[13:15] {
-                    machinePrefix := os.Getenv("MACHINE_UDP_ADDRESS")[13:15]
+                if filename[:2] == prefix || filename[:2] == udp.GetFilePrefix() {
+                    machinePrefix := udp.GetFilePrefix()
                     // Check conditions and update filename if needed
                     if filename[:2] == prefix {
                         filename = machinePrefix + filename[2:]
@@ -146,13 +139,12 @@ func handleConnection(conn net.Conn) {
         if err != nil {
             fmt.Println("Error reading directory:", err)
         }
-        fmt.Println(len(files))
         // go through all the files
         for _, file := range files {
             if !file.IsDir() {
                 filename = file.Name()
                 // if file is from origin server send it back 
-                if filename[:2] == os.Getenv("MACHINE_UDP_ADDRESS")[13:15] {
+                if filename[:2] == udp.GetFilePrefix() {
                     file_path := dir + "/" + filename
                     content, err := ioutil.ReadFile(file_path)
                     if err != nil {
@@ -184,7 +176,7 @@ func handleConnection(conn net.Conn) {
             if !file.IsDir() {
                 filename := file.Name()
                 // if the file is from the origin server
-                if strings.HasPrefix(filename, os.Getenv("MACHINE_UDP_ADDRESS")[13:15]) || strings.HasPrefix(filename, pred_port[13:15]) {
+                if strings.HasPrefix(filename, udp.GetFilePrefix()) || strings.HasPrefix(filename, pred_port[13:15]) {
                     file_hash := udp.GetHash(filename[3:])
 
                     file_path := dir + "/" + filename
