@@ -5,7 +5,7 @@ import (
 )
 
 func Test1(local_filenames [5]string) {
-	hydfs_filenames := [5]string{"file1", "file2", "file3", "file4", "file5"}
+	hydfs_filenames := [5]string{"file_cat", "file_zebra", "file_kangaroo", "file_chimpanzee", "file_aardvark"}
 	for i := 0; i < 5; i++ {
 		local_file := local_filenames[i]
 		hydfs_file := hydfs_filenames[i]
@@ -14,6 +14,6 @@ func Test1(local_filenames [5]string) {
 }
 
 func Test4() {
-	tcp.AppendFile("business_9.txt", "file1")
-	tcp.AppendFile("business_20.txt", "file1")
+	tcp.AppendFile("business_9.txt", "file_zebra")
+	tcp.AppendFile("business_20.txt", "file_zebra")
 }

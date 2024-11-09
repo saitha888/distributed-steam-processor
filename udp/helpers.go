@@ -217,8 +217,19 @@ func ListStore() {
         fmt.Println("Error reading directory:", err)
     }
 
+    file_set := make(map[string]bool)
+
     for _, file := range files {
         filename := file.Name()
+        re := regexp.MustCompile(`^(.*)_[\d]{4}-[\d]{2}-[\d]{2}_[\d]{2}:[\d]{2}:[\d]{2}$`)
+        matches := re.FindStringSubmatch(filename)
+        if len(matches) > 1 {
+            filename = matches[1]
+        } 
+        if file_set[filename] {
+            continue
+        }
+        file_set[filename] = true
         if !file.IsDir() {
             fmt.Println("File: " + filename[3:] + " \tFile Hash: " + strconv.Itoa(GetHash(filename[:3])))
         }
