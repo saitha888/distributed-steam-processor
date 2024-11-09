@@ -23,7 +23,7 @@ func TcpServer() {
     // listen for connection from other machine 
     ln, err := net.Listen("tcp", ":" + tcp_port)
     if err != nil {
-        fmt.Println(err)
+        fmt.Println(err) 
         return
     }
 
