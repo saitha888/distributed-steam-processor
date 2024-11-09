@@ -89,7 +89,7 @@ func handleConnection(conn net.Conn) {
         HyDFSfilename := words[1]
         replica_num := words[2]
 
-        file_path := "file-store/" + replica_num + "-" + HyDFSfilename
+        
 
         // check if the file already exists
         _, err := os.Stat(file_path)
@@ -110,7 +110,7 @@ func handleConnection(conn net.Conn) {
         log := "Message received to create file " + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
         fmt.Println(log)
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-        
+        file_path := "file-store/" + replica_num + "-" + HyDFSfilename
         argument_length := 11 + len(HyDFSfilename)
         file_contents := message[argument_length:]
         WriteToFile(file_path, file_contents)
