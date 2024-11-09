@@ -142,7 +142,7 @@ func AppendToFile(content string, filename string) error {
 	defer file.Close()
 
 	// Write the content to the file
-	_, err = file.WriteString(content)
+	_, err = file.WriteString(content + "\n")
 	if err != nil {
 		return err
 	}
@@ -209,6 +209,7 @@ func GetFileServers(file_hash int) []string {
 }
 
 func ListStore() {
+    fmt.Println("STORE FOR: " + node_id[:31] + " - " + "HASH: " + strconv.Itoa(GetHash(ring_id)))
     dir := "./file-store"
 
     files, err := ioutil.ReadDir(dir)

@@ -16,6 +16,7 @@ type Node struct {
 
 // node_id (includes timestamp) that is set when a process joins the system
 var node_id string = ""
+var ring_id string = ""
 
 // variable that enables suspicion mechanism. set based on logging.go
 var enabled_sus = false
