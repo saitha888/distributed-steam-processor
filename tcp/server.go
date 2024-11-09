@@ -273,18 +273,20 @@ func handleConnection(conn net.Conn) {
         fmt.Println("req to give chunks with name " + name)
         msg := ""
         for _, file := range files {
-            fmt.Println("file: " + file.Name())
             if !file.IsDir() && strings.Contains(file.Name(), name)  {
-                fmt.Println(file.Name() " is a chunk")
+
                 pattern := `\d{2}:\d{2}:\d{2}\.\d{3}$`
                 match, _ := regexp.MatchString(pattern, file.Name())
                 if match {
+                    fmt.Println(file.Name() + " is a chunk")
                     filePath := dir + "/" + file.Name()       
                     content, err := ioutil.ReadFile(filePath)
-                    if err != nil {
-                        fmt.Println("Error reading file:", err)
+                    fmt.Println(filePath + " is the file to read")
+                    if err_r != nil {
+                        fmt.Println("Error reading file:", err_r)
                         continue
                     }
+                    fmt.Println(string(content))
                     msg += fmt.Sprintf("%s %s\n---BREAK---\n", file.Name(), string(content))
                     err_rem := os.Remove(filePath)
                     if err_rem != nil {
@@ -292,6 +294,8 @@ func handleConnection(conn net.Conn) {
                     } else {
                         fmt.Println("File deleted successfully")
                     }
+                } else {
+                    fmt.Println(file.Name() + " is not a chunk")
                 }
             }
         }

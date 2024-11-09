@@ -1,2 +1,14 @@
-Node join detected for: fa24-cs425-1201.cs.illinois.edu:9081_2024-11-09_17:13:18 at 17:13:18
+Node join detected for: fa24-cs425-1203.cs.illinois.edu:9083_2024-11-09_17:23:30 at 17:23:30
+
+Node join detected for: fa24-cs425-1202.cs.illinois.edu:9082_2024-11-09_17:23:32 at 17:23:32
+
+Node join detected for: fa24-cs425-1201.cs.illinois.edu:9081_2024-11-09_17:23:34 at 17:23:34
+
+Node suspect detected for: fa24-cs425-1201.cs.illinois.edu:9081_2024-11-09_17:23:34 at 17:31:51
+
+Node suspect detected for: fa24-cs425-1202.cs.illinois.edu:9082_2024-11-09_17:23:32 from machine 9084 at 17:31:53
+
+Node suspect detected for: fa24-cs425-1202.cs.illinois.edu:9082_2024-11-09_17:23:32 at 17:31:53
+
+Node suspect detected for: fa24-cs425-1203.cs.illinois.edu:9083_2024-11-09_17:23:30 at 17:31:55
 
