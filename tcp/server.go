@@ -221,6 +221,12 @@ func handleConnection(conn net.Conn) {
                         continue
                     }
                     msg += fmt.Sprintf("%s %s\n---BREAK---\n", file.Name(), string(content))
+                    err := os.Remove(filePath)
+                    if err != nil {
+                        fmt.Println("Error deleting file:", err)
+                    } else {
+                        fmt.Println("File deleted successfully")
+                    }
                 }
             }
         }
