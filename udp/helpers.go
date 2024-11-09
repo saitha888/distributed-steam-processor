@@ -65,7 +65,7 @@ func susTimeout(duration time.Duration, sus_id string, inc_num int) {
             index := FindNode(sus_id)
             if index >= 0 && membership_list[index].Inc > inc_num {
                 message := "Node suspect removed for: " + sus_id + "\n"
-                appendToFile(message, logfile)
+                AppendToFile(message, logfile)
                 return
             }
 		}
@@ -133,7 +133,7 @@ func RenameFilesWithPrefix(oldPrefix string, newPrefix string) {
 }
 
 // Function to append a string to a file
-func appendToFile(content string, filename string) error {
+func AppendToFile(content string, filename string) error {
 	// Open the file or create it 
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -210,8 +210,6 @@ func GetFileServers(file_hash int) []string {
 
 func ListStore() {
     dir := "./file-store"
-    own_files := []string{}
-    replica_files := []string{}
 
     files, err := ioutil.ReadDir(dir)
     if err != nil {
@@ -219,23 +217,10 @@ func ListStore() {
     }
 
     for _, file := range files {
+        filename := file.Name()
         if !file.IsDir() {
-            filename := file.Name()
-            if strings.HasPrefix(filename, udp_address[13:15]) {
-                own_files = append(own_files, filename)
-            } else {
-                replica_files = append(replica_files, filename)
-            }
+            fmt.Println("File: " + filename[3:] + " \tFile Hash: " + strconv.Itoa(GetHash(filename[:3])))
         }
-    }
-
-    fmt.Println("Origin Server Files:")
-    for _,filename := range own_files {
-        fmt.Println(filename[3:])
-    }
-    fmt.Println("Replicated Files:")
-    for _,filename := range own_files {
-        fmt.Println(filename[3:])
     }
 }
 

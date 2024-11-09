@@ -35,24 +35,14 @@ func GetFile(hydfs_file string, local_file string) {
 
     conn.Write([]byte(message))
 
-    // write the command to an output file
-	buf := make([]byte, 1000000) // Buffer to hold chunks of data
-	var response string        // Variable to hold the full response
+	buf := make([]byte, 1000000)
+    n, _ := conn.Read(buf)
+    response := string(buf[:n])
 
-	for {
-		n, err := conn.Read(buf)
-		if err != nil {
-			// If we've reached the end of the data, break out of the loop
-			if err == io.EOF {
-				break
-			}
-			fmt.Println("Error reading from connection:", err)
-			return
-		}
-		response += string(buf[:n])
-	}
 	err = WriteToFile(local_file, response)
-	fmt.Println("Got file " + hydfs_file + " from " + file_server + " and saved in " + local_file)
+	log := "Got file " + hydfs_file + " from " + file_server + " and saved in " + local_file + " at " + time.Now().Format("15:04:05.000")
+	fmt.Println(log)
+	udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
 	if err != nil {
 		return
 	}
@@ -114,6 +104,7 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 		}
 		response := string(buf[:n])
 		fmt.Println(response)
+		udp.AppendToFile(response, os.Getenv("HDYFS_FILENAME"))
 	}
 }
 
@@ -159,6 +150,7 @@ func AppendFile(local_file string, hydfs_file string) {
 	}
 	response := string(buf[:n])
 	fmt.Println(response)
+	udp.AppendToFile(response, os.Getenv("HDYFS_FILENAME"))
 }
 
 func GetFromReplica(VMaddress string, HyDFSfilename string, localfilename string){
