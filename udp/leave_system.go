@@ -34,6 +34,7 @@ var removed = false
 
 // Remove a machine from the membership list
 func RemoveNode(id_to_rem string) {
+    fmt.Println("trying to remove " + id_to_rem)
     if removed {
         return
     }
@@ -43,8 +44,9 @@ func RemoveNode(id_to_rem string) {
 	
 	node_id = string(bytes)
 
-
+    fmt.Println("membership list: ", membership_list)
     for index,node := range membership_list {
+        fmt.Println("node id looking at: " + node.NodeID)
         if id_to_rem == node.NodeID { // remove the node if it's found
             membership_list = append(membership_list[:index], membership_list[index+1:]...)
         }

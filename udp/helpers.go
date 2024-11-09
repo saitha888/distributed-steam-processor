@@ -289,10 +289,12 @@ func GetFilePrefix() string {
 // Sends a message with contents to_send to target_node
 func SendMessage(target_node string, to_send string, node_to_send string) {
     target_addr := target_node[:36]
+    fmt.Println("send message target_addr: ", target_addr)
     conn, err := DialUDPClient(target_addr)
     defer conn.Close()
 
     message := to_send + " " + node_to_send
+    fmt.Println("message sent: " + message)
     _, err = conn.Write([]byte(message))
     if err != nil {
         fmt.Println("Error sending fail message:", err)

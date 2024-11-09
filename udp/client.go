@@ -51,7 +51,12 @@ func PingClient(plus_s bool) {
             fmt.Println("reaches after the sus timeout")
             index := FindNode(target_node.NodeID)
             fmt.Println("tried to find index")
-            if index < 0 || checkStatus(target_node.NodeID) == " sus " { // if node was removed
+            fmt.Println("node status: " + checkStatus(target_node.NodeID))
+            if index < 0 || checkStatus(target_node.NodeID) != "alive" { // if node was removed
+                fmt.Println("sending fail message")
+                fmt.Println("target node: " + target_node.NodeID)
+                RemoveNode(target_node.NodeID)
+                fmt.Println("membership list: ", membership_list)
                 for _, node := range(membership_list) { // let all other nodes know node has failed
                     SendMessage(node.NodeID, "fail", target_node.NodeID)
                 }
