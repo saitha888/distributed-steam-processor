@@ -254,10 +254,11 @@ func Merge(hydfs_file string) {
 		n, err := conn.Read(buf)
 		if err != nil {
 			fmt.Println(err)
-			return
+		} else {
+			response := string(buf[:n])
+			tot_response += response
 		}
-		response := string(buf[:n])
-		tot_response += response
+
 	}
 	files_dict := treemap.NewWith(func(a, b interface{}) int {
         layout := "15:04:05.000"

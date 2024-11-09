@@ -280,7 +280,7 @@ func handleConnection(conn net.Conn) {
                 if match {
                     fmt.Println(file.Name() + " is a chunk")
                     filePath := dir + "/" + file.Name()       
-                    content, err := ioutil.ReadFile(filePath)
+                    content, err_r := ioutil.ReadFile(filePath)
                     fmt.Println(filePath + " is the file to read")
                     if err_r != nil {
                         fmt.Println("Error reading file:", err_r)
