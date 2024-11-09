@@ -12,6 +12,7 @@ import (
     "strings"
     "distributed_system/udp"
     "time"
+    "regexp"
 )
 
 var err = godotenv.Load(".env")
@@ -272,6 +273,11 @@ func handleConnection(conn net.Conn) {
             fmt.Println("Error sending file content:", err)
         }
 
+    } else if len(message) >= 6 && message[:5] == "append"{
+        words := strings.Split(message, " ")
+        hydfs_file := words[2]
+        local_file := words[1]
+        AppendFile(local_file, hydfs_file)
     } else { 
         // Open the file to write the contents
         file, err := os.Create(filename)
