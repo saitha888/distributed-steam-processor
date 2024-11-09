@@ -233,7 +233,8 @@ func Merge(hydfs_file string) {
 	for _,chunk := range chunks {
 		filename := strings.Split(chunk, " ")[0]
 		content := chunk[len(filename):]
-		timestamp := strings.Split(filename, "-")[2]
+		timestamp := filename[len(filename)-12:]
+		fmt.Println(timestamp)
 		files_dict.Put(timestamp,content)
 	}
 	iterator := files_dict.Iterator()
