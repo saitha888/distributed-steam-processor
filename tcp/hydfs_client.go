@@ -161,11 +161,6 @@ func AppendFile(local_file string, hydfs_file string) {
 	fmt.Println(response)
 }
 
-<<<<<<< tcp/hydfs_client.go
-}
-
-
-=======
 func GetFromReplica(VMaddress string, HyDFSfilename string, localfilename string){
     file_hash := udp.GetHash(HyDFSfilename)
 	node_ids := udp.GetFileServers(file_hash)
@@ -203,7 +198,6 @@ func GetFromReplica(VMaddress string, HyDFSfilename string, localfilename string
 		return
 	}
 }	
->>>>>>> tcp/hydfs_client.go
 
 
 //get every chunk of file from each replica "chunks"
