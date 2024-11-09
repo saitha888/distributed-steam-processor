@@ -75,11 +75,14 @@ func handleConnection(conn net.Conn) {
     //if not grep or command call, must be call to create a log file
     } else if len(message) >= 3 && message[:3] == "get" {
         filename := message[4:]
+        fmt.Println("Message received to retrieve file " + filename)
         file_content := []byte(udp.GetFileContents(filename))
         conn.Write(file_content)
+        fmt.Println("File " + filename + " sent back to client.")
     } else if len(message) >= 6 && message[:6] == "create" {
         words := strings.Split(message, " ")
         HyDFSfilename := words[1]
+        fmt.Println("Message received to create file " + HyDFSfilename)
         replica_num := words[2]
 
         file_path := "file-store/" + replica_num + "-" + HyDFSfilename
@@ -92,6 +95,8 @@ func handleConnection(conn net.Conn) {
             file_contents := message[argument_length:]
 
             WriteToFile(file_path, file_contents)
+            conn.Write([]byte(HyDFSfilename + " created on machine " + udp.GetNodeID()))
+            fmt.Println("File " + HyDFSfilename + " created.")
         } else {
             fmt.Println("File already exists")
         } 

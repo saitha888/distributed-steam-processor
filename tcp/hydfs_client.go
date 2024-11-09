@@ -49,6 +49,7 @@ func GetFile(hydfs_file string, local_file string) {
 		response += string(buf[:n])
 	}
 	err = WriteToFile(local_file, response)
+	fmt.Println("Got file " + hydfs_file + " from " + file_server + " and saved in " + local_file)
 	if err != nil {
 		return
 	}
