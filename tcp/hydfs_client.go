@@ -273,8 +273,12 @@ func MultiAppend(hydfs_file string, vms []string, local_files []string) {
 		fmt.Println("Must have equal number of vms and filenames")
 		return
 	}
-	for i:= range vms {
+	var wg sync.WaitGroup
+	for i := range vms {
+		wg.Add(1)
 		go func(vm, localFile string) {
+			defer wg.Done()
+
 			port := vm[:36]
 			conn, err := net.Dial("tcp", port)
 			if err != nil {
@@ -300,4 +304,6 @@ func MultiAppend(hydfs_file string, vms []string, local_files []string) {
 			fmt.Println("Response from", vm, ":", response)
 		}(vms[i], local_files[i]) // Pass i-th VM and local file as arguments to avoid closure issues
 	}
+
+	wg.Wait()
 }
