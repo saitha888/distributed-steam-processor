@@ -30,15 +30,9 @@ func LeaveList() {
     }
 }
 
-var removed = false
-
 // Remove a machine from the membership list
 func RemoveNode(id_to_rem string) {
     fmt.Println("trying to remove " + id_to_rem)
-    if removed {
-        return
-    }
-    removed = true
     bytes := []byte(node_id)
 	bytes[32] = '8'
 	
