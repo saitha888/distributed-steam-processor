@@ -49,8 +49,8 @@ func PingClient(plus_s bool) {
             }
             susTimeout(6*time.Second, target_node.NodeID, target_node.Inc) // wait 6 seconds to recieve update about node status
             index := FindNode(target_node.NodeID)
-            fmt.Println("status of node that was suspected: " + membership_list[index].NodeID)
-            if index < 0 { // if node was removed
+            if index < 0 || checkStatus(target_node.NodeID) != "alive" { // if node was removed
+                RemoveNode(target_node.NodeID)
                 for _, node := range(membership_list) { // let all other nodes know node has failed
                     SendMessage(node.NodeID, "fail", target_node.NodeID)
                 }
