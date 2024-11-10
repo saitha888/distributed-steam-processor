@@ -146,7 +146,7 @@ func handleConnection(conn net.Conn) {
         log := "Message received to create append chunk" + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
         fmt.Println(log)
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-        argument_length := 11 + len(HyDFSfilename) - 12
+        argument_length := 11 + len(HyDFSfilename) - 13
         file_contents := message[argument_length:]
         WriteToFile(file_path, file_contents)
         conn.Write([]byte("append chunk "+ HyDFSfilename + " created on machine " + udp.GetNodeID()))
