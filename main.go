@@ -10,7 +10,7 @@ import (
     "strings"
     "time"
     "log"
-    "distributed_system/test_scripts"
+    "distributed_system/scripts"
 )
 
 
@@ -136,6 +136,7 @@ func commandLoop() {
                 hydfs_file := args[1]
                 local_file := args[2]
                 tcp.GetFile(hydfs_file, local_file)
+                fmt.Println(hydfs_file " retrieved and written to " + local_file)
 
             case "join":
                 udp.JoinSystem(addr)
@@ -184,6 +185,7 @@ func commandLoop() {
                 localfilename := args[1]
                 HyDFSfilename := args[2]
                 tcp.CreateFile(localfilename, HyDFSfilename)
+                fmt.Println(HyDFSfilename " Created")
             
             case "ls":
                 HyDFSfilename := args[1]
@@ -196,6 +198,7 @@ func commandLoop() {
                 local_file := args[1]
                 hydfs_file := args[2]
                 tcp.AppendFile(local_file, hydfs_file)
+                fmt.Println(local_file + "added to" + hydfs_file )
             
             case "multiappend":
                 hydfs_file := args[1]
@@ -223,15 +226,23 @@ func commandLoop() {
                 file4 := args[4]
                 file5 := args[5]
                 filenames := [5]string{file1, file2, file3, file4, file5}
-                test_scripts.Test1(filenames)
+                scripts.Test1(filenames)
 
             case "test4":
-                test_scripts.Test4()
+                scripts.Test4()
 
             case "merge":
                 hydfs_file := args[1]
                 tcp.Merge(hydfs_file)
-
+                fmt.Println("Merging of " + hydfs_file + " complete")
+            
+            case "merge_performance":
+                num_clients := args[1]
+                append_size := args[2]
+                scripts.MergePerformance(num_clients, append_size)
+            
+            case "cache_performance":
+                scripts.CachePerformance()
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join,  leave")
             }
