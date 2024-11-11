@@ -136,7 +136,7 @@ func commandLoop() {
                 hydfs_file := args[1]
                 local_file := args[2]
                 tcp.GetFile(hydfs_file, local_file)
-                fmt.Println(hydfs_file " retrieved and written to " + local_file)
+                fmt.Println(hydfs_file+ " retrieved and written to " + local_file)
 
             case "join":
                 udp.JoinSystem(addr)
@@ -185,7 +185,7 @@ func commandLoop() {
                 localfilename := args[1]
                 HyDFSfilename := args[2]
                 tcp.CreateFile(localfilename, HyDFSfilename)
-                fmt.Println(HyDFSfilename " Created")
+                fmt.Println(HyDFSfilename +" Created")
             
             case "ls":
                 HyDFSfilename := args[1]
@@ -235,14 +235,6 @@ func commandLoop() {
                 hydfs_file := args[1]
                 tcp.Merge(hydfs_file)
                 fmt.Println("Merging of " + hydfs_file + " complete")
-            
-            case "merge_performance":
-                num_clients := args[1]
-                append_size := args[2]
-                scripts.MergePerformance(num_clients, append_size)
-            
-            case "cache_performance":
-                scripts.CachePerformance()
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join,  leave")
             }

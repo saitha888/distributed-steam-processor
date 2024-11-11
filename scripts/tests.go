@@ -1,4 +1,4 @@
-package test_scripts
+package scripts
 
 import (
 	"distributed_system/tcp"

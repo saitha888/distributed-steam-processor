@@ -289,12 +289,11 @@ func Merge(hydfs_file string) {
 
         conn.Write([]byte(message))
         buf := make([]byte, 1000000)
-        n, err := conn.Read(buf)
-        if err != nil {
+        _, er2r := conn.Read(buf)
+        if er2r != nil {
             fmt.Println(err)
             return
         }
-        response := string(buf[:n])
     }
 }
 
@@ -325,12 +324,11 @@ func MultiAppend(hydfs_file string, vms []string, local_files []string) {
             }
 
             buf := make([]byte, 1000000)
-            n, readErr := conn.Read(buf)
+            _, readErr := conn.Read(buf)
             if readErr != nil {
                 fmt.Println("Read error:", readErr)
                 return
             }
-            response := string(buf[:n])
         }(vms[i], local_files[i]) // Pass i-th VM and local file as arguments to avoid closure issues
     }
 
