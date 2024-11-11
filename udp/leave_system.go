@@ -32,15 +32,12 @@ func LeaveList() {
 
 // Remove a machine from the membership list
 func RemoveNode(id_to_rem string) {
-    fmt.Println("trying to remove " + id_to_rem)
     bytes := []byte(node_id)
 	bytes[32] = '8'
 	
 	node_id = string(bytes)
 
-    fmt.Println("membership list: ", membership_list)
     for index,node := range membership_list {
-        fmt.Println("node id looking at: " + node.NodeID)
         if id_to_rem == node.NodeID { // remove the node if it's found
             membership_list = append(membership_list[:index], membership_list[index+1:]...)
         }
@@ -51,7 +48,6 @@ func RemoveNode(id_to_rem string) {
 	bytes_remove[32] = '8'
 	
 	id_to_remove := string(bytes_remove)
-    fmt.Println("\nREMOVAL OF NODE " + id_to_remove + "\n")
 
     ring_map := GetRing()
     iterator := IteratorAt(ring_map, id_to_remove)
@@ -61,7 +57,6 @@ func RemoveNode(id_to_rem string) {
     }
     id = iterator.Value().(string)
     if (id == node_id) {
-        fmt.Println("immediate predecessor failed")
         //if removed node is right before this node
         //this node becomes new origin for failed node, rename files
         RenameFilesWithPrefix(id_to_remove[13:15], node_id[13:15])
@@ -100,7 +95,6 @@ func RemoveNode(id_to_rem string) {
                 // Process all complete messages in parts
                 for i := 0; i < len(parts)-1; i++ {
                     if strings.TrimSpace(parts[i]) != "" { // Ignore empty messages
-                        fmt.Println("Received message:", parts[i])
                         filename := strings.Split(parts[i], " ")[0]
                         argument_length := 1 + len(filename)
                         contents := parts[i][argument_length:]
@@ -129,14 +123,12 @@ func RemoveNode(id_to_rem string) {
     }
     id2 = iterator.Value().(string)
     if (id2 == node_id) {
-        fmt.Println("node 2 elements behind failed")
         //if removed node is 2 nodes before this node
         //rename files of origin n-2 to n-1 
         RenameFilesWithPrefix(IteratorAtNMinusSteps(ring_map, node_id, 2)[13:15], IteratorAtNMinusSteps(ring_map, node_id, 1)[13:15])
 
         //pull files of origin n-3
         nod := IteratorAtNMinusSteps(ring_map, node_id, 3)
-        fmt.Println(nod)
         port := nod[:36]
         // pull for files
         conn_pred, err := net.Dial("tcp", port )
@@ -169,7 +161,6 @@ func RemoveNode(id_to_rem string) {
                 // Process all complete messages in parts
                 for i := 0; i < len(parts)-1; i++ {
                     if strings.TrimSpace(parts[i]) != "" { // Ignore empty messages
-                        fmt.Println("Received message:", parts[i])
                         filename := strings.Split(parts[i], " ")[0]
                         argument_length := 1 + len(filename)
                         contents := parts[i][argument_length:]
@@ -199,7 +190,6 @@ func RemoveNode(id_to_rem string) {
     //3, 1, 2, 4, 5
     id3 = iterator.Value().(string)
     if (id3 == node_id) {
-        fmt.Println("node 3 elemetns behind failed")
         nod := IteratorAtNMinusSteps(ring_map, node_id, 2)
         port := nod[:36]
         // pull for files
@@ -209,7 +199,6 @@ func RemoveNode(id_to_rem string) {
             return
         }
         defer conn_pred.Close()
-        fmt.Println("sending pull-3 to get files from "+ id_to_remove)
         message := fmt.Sprintf("pull-3 %s", id_to_remove)
         conn_pred.Write([]byte(message))
         reader := bufio.NewReader(conn_pred)
@@ -234,7 +223,6 @@ func RemoveNode(id_to_rem string) {
                 // Process all complete messages in parts
                 for i := 0; i < len(parts)-1; i++ {
                     if strings.TrimSpace(parts[i]) != "" { // Ignore empty messages
-                        fmt.Println("Received message:", parts[i])
                         filename := strings.Split(parts[i], " ")[0]
                         argument_length := 1 + len(filename)
                         contents := parts[i][argument_length:]
