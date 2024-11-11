@@ -1,21 +1,11 @@
-# CS425-mp2-g12: Distributed Log Membership System
+# CS425-mp3-g12: Hybrid Distributed File System
 
+## Introduction
 
-This project implements a distributed group membership service as part of a distributed system. The system maintains a full membership list at each machine, keeping track of other machines that are connected and up in the network. It updates the membership list when:
-
-- A machine joins the group.
-- A machine voluntarily leaves the group.
-- A machine crashes.
-
-
-There are two failure detection methods included:
-
-- PingAck
-- PingAck + S
 
 ## Instructions
 
-There are 2 versions of the code, but they work very similarily. In the "introducer" branch you will find introducer code and in the "main" branch you will find code for every other machine.
+Clone the repository on each of your 
 
 
 ### Common Workflow

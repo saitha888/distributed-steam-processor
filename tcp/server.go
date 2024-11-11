@@ -115,7 +115,6 @@ func handleConnection(conn net.Conn) {
         }
 
     } else if len(message) >= 10 && message[:10] == "append-req"{
-        fmt.Println("append request received")
         words := strings.Split(message, " ")
         hydfs_file := words[2]
         local_file := words[1]
@@ -132,10 +131,8 @@ func handleConnection(conn net.Conn) {
         
         if os.IsNotExist(err) {
             // File doesn't exist, use original filename
-            fmt.Println("Creating new file")
         } else {
             // File exists, add 3 milliseconds to timestamp
-            fmt.Println("File already exists, modifying timestamp")
             timestamp := HyDFSfilename[len(HyDFSfilename)-12:]
             newTime, _ := time.Parse("15:04:05.000", timestamp)
             formattedTime := newTime.Add(3 * time.Millisecond).Format("15:04:05.000")
@@ -200,7 +197,7 @@ func handleConnection(conn net.Conn) {
                 filename = file.Name()
 
                 pattern := `\d{2}:\d{2}:\d{2}\.\d{3}$`
-	            match, _ := regexp.MatchString(pattern, filename)
+                match, _ := regexp.MatchString(pattern, filename)
                 if filename[:2] == udp.GetFilePrefix() && !match {
                     file_path := dir + "/" + filename
                     content, err := ioutil.ReadFile(file_path)
@@ -225,11 +222,8 @@ func handleConnection(conn net.Conn) {
         }
 
         pred_port := strings.TrimRight(message[6:], " \t\n")
-        fmt.Println("pred_port: ", pred_port)
         pred_hash := udp.GetHash(pred_port)
-        fmt.Println("pred_hash: ",pred_hash)
         self_hash := udp.GetHash(udp.GetTCPVersion(udp.GetNodeID()))
-        fmt.Println("self_hash: ", self_hash)
 
         // go through all the files
         for _, file := range files {
@@ -238,14 +232,12 @@ func handleConnection(conn net.Conn) {
                 // if the file is from the origin server
                 if strings.HasPrefix(filename, udp.GetFilePrefix()) || strings.HasPrefix(filename, pred_port[13:15]) {
                     file_hash := udp.GetHash(filename[3:])
-                    fmt.Println("file_hash: ", file_hash)
                     file_path := dir + "/" + filename
                     content, err := ioutil.ReadFile(file_path)
                     if err != nil {
                         fmt.Println("Error reading file:", filename, err)
                     }
                     if pred_hash >= file_hash && file_hash < self_hash { // if the hash now maps to the new server 
-                        fmt.Println("hash maps to new server")
                         new_filename := filename[3:] // rename the file and send it back
                         message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", new_filename, string(content))
                         _, err = conn.Write([]byte(message))
@@ -270,7 +262,6 @@ func handleConnection(conn net.Conn) {
         }
         words := strings.Split(message, " ")
         name := words[1]
-        fmt.Println("req to give chunks with name " + name)
         msg := ""
         for _, file := range files {
             if !file.IsDir() && strings.Contains(file.Name(), name)  {
@@ -278,25 +269,18 @@ func handleConnection(conn net.Conn) {
                 pattern := `\d{2}:\d{2}:\d{2}\.\d{3}$`
                 match, _ := regexp.MatchString(pattern, file.Name())
                 if match {
-                    fmt.Println(file.Name() + " is a chunk")
                     filePath := dir + "/" + file.Name()       
                     content, err_r := ioutil.ReadFile(filePath)
-                    fmt.Println(filePath + " is the file to read")
                     if err_r != nil {
                         fmt.Println("Error reading file:", err_r)
                         continue
                     }
-                    fmt.Println(string(content))
                     msg += fmt.Sprintf("%s %s\n---BREAK---\n", file.Name(), string(content))
                     err_rem := os.Remove(filePath)
                     if err_rem != nil {
                         fmt.Println("Error deleting file:", err_rem)
-                    } else {
-                        fmt.Println("File deleted successfully")
-                    }
-                } else {
-                    fmt.Println(file.Name() + " is not a chunk")
-                }
+                    } 
+                } 
             }
         }
         _, err = conn.Write([]byte(msg))
@@ -310,7 +294,6 @@ func handleConnection(conn net.Conn) {
         origin_num := udp.GetFileServers(udp.GetHash(hydfs_file))[0][13:15]
         hydfs_file = origin_num + "-" + hydfs_file
         file_path := "./file-store/" + hydfs_file
-        fmt.Println("filepath: " + file_path)
 
         file, err := os.OpenFile(file_path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
         if err != nil {
@@ -324,7 +307,6 @@ func handleConnection(conn net.Conn) {
             fmt.Println("Error writing to file:", err)
             return
         }
-        fmt.Println("Content appended to file successfully.")
         msg := hydfs_file + " updated with merge"
         _, err = conn.Write([]byte(msg))
         if err != nil {
@@ -366,3 +348,4 @@ func handleConnection(conn net.Conn) {
         }
     }
 }
+
