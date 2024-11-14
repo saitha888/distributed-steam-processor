@@ -263,13 +263,21 @@ func Merge(hydfs_file string) {
     })
 
     chunks := strings.Split(tot_response, "---BREAK---")
-    chunks = chunks[:len(chunks)-1]
-    for _,chunk := range chunks {
-        filename := strings.Split(chunk, " ")[0]
-        content := chunk[len(filename):]
-        timestamp := filename[len(filename)-12:]
-        files_dict.Put(timestamp,content)
-    }
+    chunks_set := make(map[string]bool)
+	for _,chunk := range chunks {
+		filename := strings.Split(chunk, " ")[0]
+		content := chunk[len(filename):]
+		timestamp := filename[len(filename)-12:]
+		_, exists := chunks_set[timestamp]
+		if exists {
+			val, _ := files_dict.Get(timestamp)
+			res, _ := val.(string)
+			files_dict.Put(timestamp,  res + "\n" + content)
+		} else {
+			files_dict.Put(timestamp,content)
+			chunks_set[timestamp] = true
+		}
+	}
     iterator := files_dict.Iterator()
     iterator.First()
     merged_content := iterator.Value().(string)
