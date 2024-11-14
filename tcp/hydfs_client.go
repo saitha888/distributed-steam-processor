@@ -263,6 +263,7 @@ func Merge(hydfs_file string) {
     })
 
     chunks := strings.Split(tot_response, "---BREAK---")
+    chunks = chunks[:len(chunks)-1]
     chunks_set := make(map[string]bool)
 	for _,chunk := range chunks {
 		filename := strings.Split(chunk, " ")[0]

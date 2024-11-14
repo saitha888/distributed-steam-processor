@@ -265,7 +265,6 @@ func handleConnection(conn net.Conn) {
         msg := ""
         for _, file := range files {
             if !file.IsDir() && strings.Contains(file.Name(), name)  {
-
                 pattern := `\d{2}:\d{2}:\d{2}\.\d{3}$`
                 match, _ := regexp.MatchString(pattern, file.Name())
                 if match {
