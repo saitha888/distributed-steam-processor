@@ -1,10 +1,5 @@
-Message received to create file file_cat at 14:08:35.037
-file_cat created at 14:08:35.037
-Message received to create file file_zebra at 14:08:35.042
-file_zebra created at 14:08:35.042
-Message received to create file file_chimpanzee at 14:08:35.053
-file_chimpanzee created at 14:08:35.053
-Message received to create file file_aardvark at 14:08:35.061
-file_aardvark created at 14:08:35.061
-Message received to create append chunkfile_chimpanzee-14:10:33.399 at 14:10:33.399
-append chunk file_chimpanzee-14:10:33.399 created at 14:10:33.399
+file2 created on machine fa24-cs425-1205.cs.illinois.edu:8085_2024-11-16_14:31:35
+file2 created on machine fa24-cs425-1203.cs.illinois.edu:8083_2024-11-16_14:31:38
+Message received to create file file2 at 14:33:25.777
+file2 created on machine fa24-cs425-1201.cs.illinois.edu:9081_2024-11-16_14:33:07
+file2 created at 14:33:25.779
