@@ -15,55 +15,31 @@ import (
     "sync"
 )
 
+var cache_set = make(map[string]bool)
+
 func GetFile(hydfs_file string, local_file string) {
 
-    file_hash := udp.GetHash(hydfs_file)
-    node_ids := udp.GetFileServers(file_hash)
+	file_hash := udp.GetHash(hydfs_file)
+	node_ids := udp.GetFileServers(file_hash)
 
-    machine_num, _ := strconv.Atoi(machine_number)
-    replica_num := machine_num % 3
+	machine_num, _ := strconv.Atoi(machine_number)
+	replica_num := machine_num % 3
 
-    file_server := node_ids[replica_num][:36]
+	file_server := node_ids[replica_num][:36]
 
-    server_num := node_ids[0][13:15]
+	server_num := node_ids[0][13:15]
+	dir := "./cache"
 
-    file_store := udp.ListStore()
-    for store_file := range file_store { // check if the file is in own store
-        if store_file == hydfs_file {
-            // write contents from own file store
-            file_path := server_num + "-" + hydfs_file
-            contents := udp.GetFileContents(file_path)
-            err = WriteToFile(local_file, string(contents))
-            return
-        }
-    }
+	_, exists := cache_set[hydfs_file]
+	
+	if exists {
+		fmt.Println("found file in set, will look at cache")
+		content, _ := ioutil.ReadFile(dir + "/" + hydfs_file)
+		err = WriteToFile(local_file, string(content))
+		return
+	}
 
-
-    cache := udp.ListCache()
-    for cache_file := range cache { // check if the file is in cache
-        if cache_file == hydfs_file {
-            // write contents from cache
-            dir := "./cache"
-
-            files, err := ioutil.ReadDir(dir)
-            if err != nil {
-                fmt.Println("Error reading directory:", err)
-            }
-
-            for _, file := range files {
-                if !file.IsDir() {
-                    curr_file := file.Name()
-                    if curr_file == hydfs_file {
-                        content, _ := ioutil.ReadFile(dir + "/" + curr_file)
-                        err = WriteToFile(local_file, string(content))
-                        return
-                    }
-                }
-            }
-        }
-    }
-
-    conn, err := net.Dial("tcp", file_server)
+	conn, err := net.Dial("tcp", file_server)
     if err != nil {
         fmt.Println(err)
         return
@@ -74,19 +50,26 @@ func GetFile(hydfs_file string, local_file string) {
 
     conn.Write([]byte(message))
 
-    buf := make([]byte, 1000000)
+	buf := make([]byte, 1000000)
     n, _ := conn.Read(buf)
     response := string(buf[:n])
 
-    err = WriteToFile(local_file, response)
-    log := "Got file " + hydfs_file + " from " + file_server + " and saved in " + local_file + " at " + time.Now().Format("15:04:05.000")
-    udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-    if err != nil {
-        return
-    }
-    // add to cache
-    cache_path := "./cache" + "/" + hydfs_file
-    err = WriteToFile(cache_path, response)
+	err = WriteToFile(local_file, response)
+	log := "Got file " + hydfs_file + " from " + file_server + " and saved in " + local_file + " at " + time.Now().Format("15:04:05.000")
+	fmt.Println(log)
+	udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
+	if err != nil {
+		return
+	}
+	// add to cache
+	cache_path := "./cache" + "/" + hydfs_file
+	fmt.Println(cache_path)
+	err2 = WriteToFile(cache_path, response)
+	if err2 != nil {
+		fmt.Println("error writing to cache")
+		return
+	}
+	cache_set[hydfs_file] = true
 }
 
 // Function to write content to a local file

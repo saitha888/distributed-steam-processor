@@ -57,16 +57,13 @@ func handleConnection(conn net.Conn) {
     // Check if message is a grep command
     if len(message) >= 4 && message[:4] == "grep" {
         grep := message + " " + filename
-
         // run the grep command on machine
         cmd := exec.Command("sh", "-c", grep)
         output, err := cmd.CombinedOutput()
-        
         if err != nil {
             fmt.Println(err)
             return
         }
-        
         // send the result back to the initial machine
         conn.Write(output)
     // Check if message is a client call (for testing)
@@ -87,22 +84,21 @@ func handleConnection(conn net.Conn) {
     } else if len(message) >= 6 && message[:6] == "create" {
         words := strings.Split(message, " ")
         HyDFSfilename := words[1]
+        cache_set[HyDFSfilename] = true
+        cache_path := "./cache" + "/" + HyDFSfilename
+        argument_length := 11 + len(HyDFSfilename)
+        err = WriteToFile(cache_path, message[argument_length:])
+        cache_set[HyDFSfilename] = true
         replica_num := words[2]
-
         
-
         // check if the file already exists
         file_path := "file-store/" + replica_num + "-" + HyDFSfilename
         _, err := os.Stat(file_path)
 
         if os.IsNotExist(err) {
-            // File doesn't exist, use original filename
-            fmt.Println("Creating new file")
-            udp.RemoveFromCache(HyDFSfilename[3:])
             log := "Message received to create file " + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
             fmt.Println(log)
             udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-            argument_length := 11 + len(HyDFSfilename)
             file_contents := message[argument_length:]
             WriteToFile(file_path, file_contents)
             conn.Write([]byte(HyDFSfilename + " created on machine " + udp.GetNodeID()))
@@ -110,10 +106,7 @@ func handleConnection(conn net.Conn) {
             log = HyDFSfilename + " created at " + time.Now().Format("15:04:05.000")
             fmt.Println(log)
             udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-        } else {
-            fmt.Println("File already exists, modifying timestamp")
-        }
-
+        } 
     } else if len(message) >= 10 && message[:10] == "append-req"{
         words := strings.Split(message, " ")
         hydfs_file := words[2]
