@@ -74,12 +74,10 @@ func handleConnection(conn net.Conn) {
     } else if len(message) >= 3 && message[:3] == "get" {
         filename := message[4:]
         log := "Message received to retrieve file " + filename + " at " + time.Now().Format("15:04:05.000")
-        fmt.Println(log)
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
         file_content := []byte(udp.GetFileContents(filename))
         conn.Write(file_content)
         log = "File " + filename + " sent back to client at " + time.Now().Format("15:04:05.000")
-        fmt.Println(log)
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
     } else if len(message) >= 6 && message[:6] == "create" {
         words := strings.Split(message, " ")
@@ -97,14 +95,12 @@ func handleConnection(conn net.Conn) {
 
         if os.IsNotExist(err) {
             log := "Message received to create file " + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
-            fmt.Println(log)
             udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
             file_contents := message[argument_length:]
             WriteToFile(file_path, file_contents)
             conn.Write([]byte(HyDFSfilename + " created on machine " + udp.GetNodeID()))
             
             log = HyDFSfilename + " created at " + time.Now().Format("15:04:05.000")
-            fmt.Println(log)
             udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
         } 
     } else if len(message) >= 10 && message[:10] == "append-req"{
@@ -134,7 +130,6 @@ func handleConnection(conn net.Conn) {
         }
         udp.RemoveFromCache(HyDFSfilename[3:])
         log := "Message received to create append chunk" + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
-        fmt.Println(log)
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
         argument_length := 11 + len(HyDFSfilename) - 13
         file_contents := message[argument_length:]
@@ -142,7 +137,6 @@ func handleConnection(conn net.Conn) {
         conn.Write([]byte("append chunk "+ HyDFSfilename + " created on machine " + udp.GetNodeID()))
         
         log = "append chunk " + HyDFSfilename + " created at " + time.Now().Format("15:04:05.000")
-        fmt.Println(log)
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
 
     } else if len(message) >= 6 && message[:6] == "pull-3" {

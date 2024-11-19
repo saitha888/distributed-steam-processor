@@ -33,7 +33,6 @@ func GetFile(hydfs_file string, local_file string) {
 	_, exists := cache_set[hydfs_file]
 	
 	if exists {
-		fmt.Println("found file in set, will look at cache")
 		content, _ := ioutil.ReadFile(dir + "/" + hydfs_file)
 		err = WriteToFile(local_file, string(content))
 		return
@@ -56,17 +55,14 @@ func GetFile(hydfs_file string, local_file string) {
 
 	err = WriteToFile(local_file, response)
 	log := "Got file " + hydfs_file + " from " + file_server + " and saved in " + local_file + " at " + time.Now().Format("15:04:05.000")
-	fmt.Println(log)
 	udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
 	if err != nil {
 		return
 	}
 	// add to cache
 	cache_path := "./cache" + "/" + hydfs_file
-	fmt.Println(cache_path)
 	err2 = WriteToFile(cache_path, response)
 	if err2 != nil {
-		fmt.Println("error writing to cache")
 		return
 	}
 	cache_set[hydfs_file] = true
