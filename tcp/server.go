@@ -79,12 +79,15 @@ func handleConnection(conn net.Conn) {
     if received_data.Action == "get" {
         log := "Message received to retrieve file " + received_data.Filename + " at " + time.Now().Format("15:04:05.000")
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-        file_content := []byte(udp.GetFileContents(received_data.Filename))
+        fmt.Println("getting " + received_data.Filename)
+        file_content, _ := os.ReadFile("file-store/" + received_data.Filename)
+        fmt.Println("file content " + string(file_content))
         responseStruct := Message{
             Action:    "",
             Filename:  "",
             FileContents: string(file_content),
         }
+        fmt.Println("response struct:")
         fmt.Println(responseStruct)
         encoder := json.NewEncoder(conn)
         err = encoder.Encode(responseStruct)
