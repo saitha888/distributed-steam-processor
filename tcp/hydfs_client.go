@@ -13,6 +13,7 @@ import (
     "github.com/emirpasic/gods/utils"
     "io/ioutil"
     "sync"
+    "encoding/json"
 )
 
 var cache_set = make(map[string]bool)
@@ -45,25 +46,35 @@ func GetFile(hydfs_file string, local_file string) {
     }
     defer conn.Close() 
 
-    message := fmt.Sprintf("get %s-%s", server_num, hydfs_file)
-
-    conn.Write([]byte(message))
-
-	buf := make([]byte, 1000000)
-    n, _ := conn.Read(buf)
-    response := string(buf[:n])
-
-	err = WriteToFile(local_file, response)
-	log := "Got file " + hydfs_file + " from " + file_server + " and saved in " + local_file + " at " + time.Now().Format("15:04:05.000")
-	udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-	if err != nil {
-		return
+    data := Message{
+		Action:    "get",
+		Filename:  server_num + hydfs_file,
+		FileContents: "",
 	}
+
+	// Encode the structure into JSON
+	encoder := json.NewEncoder(conn)
+	err = encoder.Encode(data)
+	if err != nil {
+		panic(err)
+	}
+
+    localfile, err := os.Create(local_file) 
+	if err != nil {
+		panic(err)
+	}
+	defer localfile.Close()
+
+	_, err = io.Copy(localfile, conn)
+	if err != nil {
+		panic(err)
+	}
+
 	// add to cache
-	cache_path := "./cache" + "/" + hydfs_file
-	err2 = WriteToFile(cache_path, response)
-	if err2 != nil {
-		return
+    localfile_cache, err := os.Create("./cache" + "/" + hydfs_file) 
+    _, err = io.Copy(localfile_cache, conn)
+	if err != nil {
+		panic(err)
 	}
 	cache_set[hydfs_file] = true
 }

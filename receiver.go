@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net"
 	"os"
 )
@@ -41,27 +40,35 @@ func handleConnection(conn net.Conn) {
 	decoder := json.NewDecoder(conn)
 	err := decoder.Decode(&receivedData)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error decoding received data:", err)
+		return
 	}
 
 	// Print the received structure
 	fmt.Printf("Received: %+v\n", receivedData)
 
-	// Specify the file to send back
-	filePath := "10mb_file.txt" // Change this to the file you want to send
-	file, err := os.Open(filePath)
+	// Read the contents of the file
+	filePath := "10mb_file.txt"
+	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return
-	}
-	defer file.Close()
-
-	// Send the file contents back to the client
-	_, err = io.Copy(conn, file)
-	if err != nil {
-		fmt.Println("Error sending file:", err)
+		fmt.Println("Error reading file:", err)
 		return
 	}
 
-	fmt.Println("File sent successfully.")
+	// Create a new struct with the file content as the Email field
+	responseStruct := MyStruct{
+		ID:    receivedData.ID,
+		Name:  "Server Response",
+		Email: string(fileContent), // File content becomes the Email field
+	}
+
+	// Encode the new struct into JSON and send it back
+	encoder := json.NewEncoder(conn)
+	err = encoder.Encode(responseStruct)
+	if err != nil {
+		fmt.Println("Error encoding response struct:", err)
+		return
+	}
+
+	fmt.Println("Response struct sent successfully.")
 }
