@@ -63,6 +63,7 @@ func GetFile(hydfs_file string, local_file string) {
     total_content := ""
     for {
         err = decoder.Decode(&response)
+        fmt.Println(response.Filename)
         if err != nil {
             if err == io.EOF {
                 fmt.Println("All files received")

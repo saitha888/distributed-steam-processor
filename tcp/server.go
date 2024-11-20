@@ -93,6 +93,7 @@ func handleConnection(conn net.Conn) {
                     Filename:  "",
                     FileContents: string(file_content),
                 }
+                fmt.Println(file.Name() + " is being sent back for get")
                 encoder := json.NewEncoder(conn)
                 err = encoder.Encode(responseStruct)
             }
