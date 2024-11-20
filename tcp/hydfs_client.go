@@ -32,7 +32,7 @@ func GetFile(hydfs_file string, local_file string) {
 	dir := "./cache"
 
 	_, exists := cache_set[hydfs_file]
-	
+
 	if exists {
 		content, _ := ioutil.ReadFile(dir + "/" + hydfs_file)
 		err = WriteToFile(local_file, string(content))
@@ -40,39 +40,53 @@ func GetFile(hydfs_file string, local_file string) {
 	}
 
 	conn, err := net.Dial("tcp", file_server)
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-    defer conn.Close() 
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer conn.Close()
 
-    data := Message{
-		Action:    "get",
-		Filename:  server_num + hydfs_file,
+	data := Message{
+		Action: "get",
+		Filename: server_num + hydfs_file,
 		FileContents: "",
 	}
 
 	// Encode the structure into JSON
 	encoder := json.NewEncoder(conn)
-	err = encoder.Encode(data.FileContents)
+	err = encoder.Encode(data)
 	if err != nil {
 		panic(err)
 	}
 
-    localfile, err := os.Create(local_file) 
+	// Decode the server's response
+	var response Message
+	decoder := json.NewDecoder(conn)
+	err = decoder.Decode(&response)
+	if err != nil {
+		panic(err)
+	}
+
+	// Write only the FileContents to the local file
+	localfile, err := os.Create(local_file)
 	if err != nil {
 		panic(err)
 	}
 	defer localfile.Close()
 
-	_, err = io.Copy(localfile, conn)
+	_, err = localfile.WriteString(response.FileContents)
 	if err != nil {
 		panic(err)
 	}
 
-	// add to cache
-    localfile_cache, err := os.Create("./cache/" + hydfs_file) 
-    _, err = io.Copy(localfile_cache, conn)
+	// Add to cache
+	localfile_cache, err := os.Create("./cache/" + hydfs_file)
+	if err != nil {
+		panic(err)
+	}
+	defer localfile_cache.Close()
+
+	_, err = localfile_cache.WriteString(response.FileContents)
 	if err != nil {
 		panic(err)
 	}
