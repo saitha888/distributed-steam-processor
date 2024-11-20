@@ -280,25 +280,25 @@ func handleConnection(conn net.Conn) {
 //         hydfs_file = origin_num + "-" + hydfs_file
 //         file_path := "./file-store/" + hydfs_file
 
-//         file, err := os.OpenFile(file_path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-//         if err != nil {
-//             fmt.Println("Error opening file:", err)
-//             return
-//         }
-//         defer file.Close()
-//         // Append the merged content to the file
-//         _, err = file.WriteString(merged_content)
-//         if err != nil {
-//             fmt.Println("Error writing to file:", err)
-//             return
-//         }
-//         msg := hydfs_file + " updated with merge"
-//         _, err = conn.Write([]byte(msg))
-//         if err != nil {
-//             fmt.Println("Error sending file content:", err)
-//         }
-
-//     } else { 
+        file, err := os.OpenFile(file_path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+        if err != nil {
+            fmt.Println("Error opening file:", err)
+            return
+        }
+        defer file.Close()
+        // Append the merged content to the file
+        _, err = file.WriteString(merged_content)
+        if err != nil {
+            fmt.Println("Error writing to file:", err)
+            return
+        }
+        // msg := hydfs_file + " updated with merge"
+        // _, err = conn.Write([]byte(msg))
+        // if err != nil {
+        //     fmt.Println("Error sending file content:", err)
+        // }
+    } 
+//else { 
 //         // Open the file to write the contents
 //         file, err := os.Create(filename)
 //         if err != nil {
@@ -332,5 +332,6 @@ func handleConnection(conn net.Conn) {
 //             }
 //         }
 //     }
-}
+//}
 
+}

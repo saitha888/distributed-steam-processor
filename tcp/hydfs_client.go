@@ -8,7 +8,6 @@ import (
     "strconv"
     "time"
     "io"
-    "strings"
     "github.com/emirpasic/gods/maps/treemap"
     "github.com/emirpasic/gods/utils"
     "io/ioutil"
@@ -234,7 +233,7 @@ func GetFromReplica(VMaddress string, HyDFSfilename string, localfilename string
 
 func Merge(hydfs_file string) {
     replicas := udp.GetFileServers(udp.GetHash(hydfs_file))
-    tot_response := ""
+    tot_response := make([]Message, 0)
     for _, replica := range replicas {
         port := replica[:36]
         conn, err := net.Dial("tcp", port)
@@ -243,19 +242,26 @@ func Merge(hydfs_file string) {
             return
         }
 
-        //request chunks of file from replica
-        message := "chunks" + " " + hydfs_file
-        conn.Write([]byte(message))
-            
-        buf := make([]byte, 1000000)
-        n, err := conn.Read(buf)
-        if err != nil {
-            fmt.Println(err)
-        } else {
-            response := string(buf[:n])
-            tot_response += response
+        data := Message{
+            Action: "chunks",
+            Filename: hydfs_file,
+            FileContents: "",
         }
 
+        // Encode the structure into JSON
+        encoder := json.NewEncoder(conn)
+        err = encoder.Encode(data)
+        if err != nil {
+            fmt.Println("Error encoding structure in get to json", err)
+        }
+
+        var response Message
+        decoder := json.NewDecoder(conn)
+        err = decoder.Decode(&response)
+        if err != nil {
+            fmt.Println("Error decoding server response in get to json", err)
+        }
+        tot_response = append(tot_response, response)
     }
     files_dict := treemap.NewWith(func(a, b interface{}) int {
         layout := "15:04:05.000"
@@ -264,12 +270,14 @@ func Merge(hydfs_file string) {
         return utils.TimeComparator(timeA, timeB)
     })
 
-    chunks := strings.Split(tot_response, "---BREAK---")
-    chunks = chunks[:len(chunks)-1]
+    // chunks := strings.Split(tot_response, "---BREAK---")
+    // chunks = chunks[:len(chunks)-1]
     chunks_set := make(map[string]bool)
-	for _,chunk := range chunks {
-		filename := strings.Split(chunk, " ")[0]
-		content := chunk[len(filename):]
+    tot_response = tot_response[:len(tot_response)-1]
+	for _,chunk := range tot_response {
+		filename := chunk.Filename
+		content := chunk.FileContents
+        fmt.Println(filename)
 		timestamp := filename[len(filename)-12:]
 		_, exists := chunks_set[timestamp]
 		if exists {
@@ -296,14 +304,17 @@ func Merge(hydfs_file string) {
         }
 
         //request chunks of file from replica
-        message := "merge" + " " + hydfs_file + " " + merged_content
+        message := Message{
+            Action: "merge",
+            Filename: "hydfs_file",
+            FileContents: merged_content,
+        }
 
-        conn.Write([]byte(message))
-        buf := make([]byte, 1000000)
-        _, er2r := conn.Read(buf)
-        if er2r != nil {
-            fmt.Println(err)
-            return
+        // Encode the structure into JSON
+        encoder := json.NewEncoder(conn)
+        err = encoder.Encode(message)
+        if err != nil {
+            fmt.Println("Error encoding structure in get to json", err)
         }
     }
 }
