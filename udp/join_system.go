@@ -6,7 +6,6 @@ import (
     "strings"
     "time"
     "strconv"
-    "bufio"
     "os"
     "log"
     "io/ioutil"
@@ -179,46 +178,12 @@ func SelfJoin(ring_id string) {
 
         // Send a split message to the successor
         fmt.Fprintln(conn_successor, "split " + ring_id)
-
-        reader := bufio.NewReader(conn_successor)
-        buffer := ""
-
-        for {
-            // Keep reading till the next new line until we reach the delimiter
-            part, err := reader.ReadString('\n')
-            if err != nil {
-                fmt.Println("Error reading from server:", err)
-                break
-            }
-
-            // Append the read part to the buffer
-            buffer += part
-
-            // Check if buffer contains the  delimiter
-            if strings.Contains(buffer, "\n---END_OF_MESSAGE---\n") {
-                parts := strings.Split(buffer, "\n---END_OF_MESSAGE---\n")
-
-                for i := 0; i < len(parts)-1; i++ {
-                    if strings.TrimSpace(parts[i]) != "" {
-                        filename := strings.Split(parts[i], " ")[0] // get the filename
-                        argument_length := 1 + len(filename)
-                        contents := parts[i][argument_length:] // get the contents
-                        new_filename := "./file-store/" + file_prefix + "-" + filename // rename the file
-                        file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644) // write to file
-                        if err != nil {
-                            fmt.Println(err)
-                        }
-                        defer file.Close()
-
-                        _, err = file.WriteString(contents)
-                        if err != nil {
-                            fmt.Println(err)
-                        }
-                    }
-                }
-                buffer = parts[len(parts)-1] // reset the buffer
-            }
+        data := Message{
+            Action: "split" + ring_id,
+            Filename:  "",
+            FileContents: "",
         }
+        GetFiles(conn_successor, data)
     }
 
     // find the predecessors
@@ -238,48 +203,12 @@ func SelfJoin(ring_id string) {
             defer conn_pred.Close()
 
             // Send a message to the server
-            fmt.Fprintln(conn_pred, "pull")
-
-            reader := bufio.NewReader(conn_pred)
-            buffer := ""
-
-            for {
-                // Keep reading till the next new line until we reach the delimiter
-                part, err := reader.ReadString('\n')
-                if err != nil {
-                    fmt.Println("Error reading from server:", err)
-                    break
-                }
-
-                // Append the read part to the buffer
-                buffer += part
-
-                // Check if buffer contains the delimiter
-                if strings.Contains(buffer, "\n---END_OF_MESSAGE---\n") {
-                    parts := strings.Split(buffer, "\n---END_OF_MESSAGE---\n")
-
-                    for i := 0; i < len(parts)-1; i++ {
-                        if strings.TrimSpace(parts[i]) != "" { 
-                            filename := strings.Split(parts[i], " ")[0] // get filename
-                            argument_length := 1 + len(filename)
-                            contents := parts[i][argument_length:] // get contents
-                            new_filename := "./file-store/" + filename // add directory to file
-            
-                            file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644) // write to file
-                            if err != nil {
-                                fmt.Println(err)
-                            }
-                            defer file.Close()
-            
-                            _, err = file.WriteString(contents)
-                            if err != nil {
-                                fmt.Println(err)
-                            }
-                        }
-                    }
-                    buffer = parts[len(parts)-1] // reset the buffer
-                }
+            data := Message{
+                Action: "pull",
+                Filename:  "",
+                FileContents: "",
             }
+            GetFiles(conn_pred,data)
         }
     }
 }

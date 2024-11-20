@@ -14,6 +14,12 @@ type Node struct {
     RingID int // unique ring id (tcp port version)
 }
 
+type Message struct {
+    Action string
+	Filename  string
+	FileContents string
+}
+
 // node_id (includes timestamp) that is set when a process joins the system
 var node_id string = ""
 var ring_id string = ""
@@ -35,16 +41,16 @@ var err = godotenv.Load(".env")
 
 // list of udp ports in process
 var ports = []string{
-    "fa24-cs425-1201.cs.illinois.edu:9081", 
-    "fa24-cs425-1202.cs.illinois.edu:9082", 
-    "fa24-cs425-1203.cs.illinois.edu:9083", 
-    "fa24-cs425-1204.cs.illinois.edu:9084", 
-    "fa24-cs425-1205.cs.illinois.edu:9085", 
-    // "fa24-cs425-1206.cs.illinois.edu:9086", 
-    // "fa24-cs425-1207.cs.illinois.edu:9087", 
-    // "fa24-cs425-1208.cs.illinois.edu:9088", 
-    // "fa24-cs425-1209.cs.illinois.edu:9089",
-    // "fa24-cs425-1210.cs.illinois.edu:9080",
+    // "fa24-cs425-1201.cs.illinois.edu:9081", 
+    // "fa24-cs425-1202.cs.illinois.edu:9082", 
+    // "fa24-cs425-1203.cs.illinois.edu:9083", 
+    // "fa24-cs425-1204.cs.illinois.edu:9084", 
+    // "fa24-cs425-1205.cs.illinois.edu:9085", 
+    "fa24-cs425-1206.cs.illinois.edu:9086", 
+    "fa24-cs425-1207.cs.illinois.edu:9087", 
+    "fa24-cs425-1208.cs.illinois.edu:9088", 
+    "fa24-cs425-1209.cs.illinois.edu:9089",
+    "fa24-cs425-1210.cs.illinois.edu:9080",
 }
 
 // env file variables

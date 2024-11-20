@@ -12,6 +12,8 @@ import (
     "io/ioutil"
     "regexp"
 	"github.com/emirpasic/gods/maps/treemap"
+    "encoding/json"
+    "io"
 )
 
 func ConnectToMachine(port string) (*net.UDPConn, error){
@@ -363,6 +365,39 @@ func RemoveFromCache(filename string) {
         curr_file := file.Name()
         if curr_file == filename {
             os.Remove(dir + "/" + filename)
+        }
+    }
+}
+
+func GetFiles(conn net.Conn, data Message) {
+    encoder := json.NewEncoder(conn)
+    err = encoder.Encode(data)
+    if err != nil {
+        fmt.Println("Error encoding data in pull-files in self join", err)
+    } 
+
+    decoder := json.NewDecoder(conn)
+    for {
+        var response Message
+        err = decoder.Decode(&response)
+        if err != nil {
+            if err == io.EOF {
+                // End of the response from the server
+                fmt.Println("All messages received.")
+                break
+            }
+            fmt.Println("Error decoding message from server:", err)
+            return
+        }
+        file, err := os.OpenFile("file-store/"+response.Filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+        if err != nil {
+            fmt.Println(err)
+        }
+        defer file.Close()
+
+        _, err = file.WriteString(response.FileContents)
+        if err != nil {
+            fmt.Println(err)
         }
     }
 }
