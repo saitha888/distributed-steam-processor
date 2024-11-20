@@ -236,6 +236,7 @@ func Merge(hydfs_file string) {
     tot_response := make([]Message, 0)
     for _, replica := range replicas {
         port := replica[:36]
+        fmt.Println(" replica port: "+ port)
         conn, err := net.Dial("tcp", port)
         if err != nil {
             fmt.Println(err)
@@ -260,8 +261,9 @@ func Merge(hydfs_file string) {
         err = decoder.Decode(&response)
         if err != nil {
             fmt.Println("Error decoding server response in get to json", err)
+        } else {
+            tot_response = append(tot_response, response)
         }
-        tot_response = append(tot_response, response)
     }
     files_dict := treemap.NewWith(func(a, b interface{}) int {
         layout := "15:04:05.000"
@@ -273,7 +275,7 @@ func Merge(hydfs_file string) {
     // chunks := strings.Split(tot_response, "---BREAK---")
     // chunks = chunks[:len(chunks)-1]
     chunks_set := make(map[string]bool)
-    tot_response = tot_response[:len(tot_response)-1]
+    // tot_response = tot_response[:len(tot_response)-1]
 	for _,chunk := range tot_response {
 		filename := chunk.Filename
 		content := chunk.FileContents
@@ -306,7 +308,7 @@ func Merge(hydfs_file string) {
         //request chunks of file from replica
         message := Message{
             Action: "merge",
-            Filename: "hydfs_file",
+            Filename: hydfs_file,
             FileContents: merged_content,
         }
 
