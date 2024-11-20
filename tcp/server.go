@@ -10,6 +10,7 @@ import (
     "encoding/json"
     "strings"
     "io/ioutil"
+    "regexp"
 )
 
 var err = godotenv.Load(".env")
@@ -166,35 +167,37 @@ func handleConnection(conn net.Conn) {
                 }
             }
         }
-    } //else if len(message) >= 4 && message[:4] == "pull" {
-//         dir := "./file-store"
-//         files, err := ioutil.ReadDir(dir)
-//         if err != nil {
-//             fmt.Println("Error reading directory:", err)
-//         }
-//         // go through all the files
-//         for _, file := range files {
-//             if !file.IsDir() {
-//                 filename = file.Name()
+    } else if received_data.Action == "pull" {
+        dir := "./file-store"
+        files, err := ioutil.ReadDir(dir)
+        if err != nil {
+            fmt.Println("Error reading directory:", err)
+        }
+        // go through all the files
+        for _, file := range files {
+            if !file.IsDir() {
+                filename = file.Name()
 
-//                 pattern := `\d{2}:\d{2}:\d{2}\.\d{3}$`
-//                 match, _ := regexp.MatchString(pattern, filename)
-//                 if filename[:2] == udp.GetFilePrefix() && !match {
-//                     file_path := dir + "/" + filename
-//                     content, err := ioutil.ReadFile(file_path)
-//                     if err != nil {
-//                         fmt.Println("Error reading file:", filename, err)
-//                     }
-//                     // Send the file name and content to the client
-//                     message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", filename, string(content))
-//                     _, err = conn.Write([]byte(message))
-//                     if err != nil {
-//                         fmt.Println("Error sending file content:", err)
-//                     }
-//                 }
-//             }
-//         }
-//     }  else if len(message) >= 5 && message[:5] == "split" {
+                pattern := `\d{2}:\d{2}:\d{2}\.\d{3}$`
+                match, _ := regexp.MatchString(pattern, filename)
+                if filename[:2] == udp.GetFilePrefix() && !match {
+                    file_path := dir + "/" + filename
+                    content, err := ioutil.ReadFile(file_path)
+                    if err != nil {
+                        fmt.Println("Error reading file:", filename, err)
+                    }
+                    // Send the file name and content to the client
+                    responseStruct := Message{
+                        Action:    "",
+                        Filename:  filename,
+                        FileContents: string(content),
+                    }
+                    encoder := json.NewEncoder(conn)
+                    err = encoder.Encode(responseStruct)
+                }
+            }
+        }
+    }  // else if len(message) >= 5 && message[:5] == "split" {
 //         dir := "./file-store"
 
 //         files, err := ioutil.ReadDir(dir)

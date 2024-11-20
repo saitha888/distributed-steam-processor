@@ -4,8 +4,6 @@ import (
     "fmt"
     "net"
     "os"
-    "strings"
-    "bufio"
     "encoding/json"
     "io"
 )
@@ -73,51 +71,7 @@ func RemoveNode(id_to_rem string) {
             return
         }
         defer conn_pred.Close()
-        message := fmt.Sprintf("pull")
-        conn_pred.Write([]byte(message))
-        reader := bufio.NewReader(conn_pred)
-        buffer := ""
-
-        for {
-            // Read up to the next newline in chunks
-            part, err := reader.ReadString('\n')
-            if err != nil {
-                fmt.Println("Error reading from server:", err)
-                break
-            }
-
-            // Append the read part to the buffer
-            buffer += part
-
-            // Check if buffer contains the custom delimiter
-            if strings.Contains(buffer, "\n---END_OF_MESSAGE---\n") {
-                // Split buffer by the custom delimiter
-                parts := strings.Split(buffer, "\n---END_OF_MESSAGE---\n")
-
-                // Process all complete messages in parts
-                for i := 0; i < len(parts)-1; i++ {
-                    if strings.TrimSpace(parts[i]) != "" { // Ignore empty messages
-                        filename := strings.Split(parts[i], " ")[0]
-                        argument_length := 1 + len(filename)
-                        contents := parts[i][argument_length:]
-                        new_filename := "./file-store/" + filename
-        
-                        file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-                        if err != nil {
-                            fmt.Println(err)
-                        }
-                        defer file.Close()
-        
-                        _, err = file.WriteString(contents)
-                        if err != nil {
-                            fmt.Println(err)
-                        }
-                    }
-                }
-                // Retain the last part in the buffer (incomplete message)
-                buffer = parts[len(parts)-1]
-            }
-        }
+        PullFiles(conn_pred)
     }
     id2 := ""
     if (!iterator.Next()) {
@@ -139,51 +93,7 @@ func RemoveNode(id_to_rem string) {
             return
         }
         defer conn_pred.Close()
-        message := fmt.Sprintf("pull")
-        conn_pred.Write([]byte(message))
-        reader := bufio.NewReader(conn_pred)
-        buffer := ""
-
-        for {
-            // Read up to the next newline in chunks
-            part, err := reader.ReadString('\n')
-            if err != nil {
-                fmt.Println("Error reading from server:", err)
-                break
-            }
-
-            // Append the read part to the buffer
-            buffer += part
-
-            // Check if buffer contains the custom delimiter
-            if strings.Contains(buffer, "\n---END_OF_MESSAGE---\n") {
-                // Split buffer by the custom delimiter
-                parts := strings.Split(buffer, "\n---END_OF_MESSAGE---\n")
-
-                // Process all complete messages in parts
-                for i := 0; i < len(parts)-1; i++ {
-                    if strings.TrimSpace(parts[i]) != "" { // Ignore empty messages
-                        filename := strings.Split(parts[i], " ")[0]
-                        argument_length := 1 + len(filename)
-                        contents := parts[i][argument_length:]
-                        new_filename := "./file-store/" + filename
-        
-                        file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-                        if err != nil {
-                            fmt.Println(err)
-                        }
-                        defer file.Close()
-        
-                        _, err = file.WriteString(contents)
-                        if err != nil {
-                            fmt.Println(err)
-                        }
-                    }
-                }
-                // Retain the last part in the buffer (incomplete message)
-                buffer = parts[len(parts)-1]
-            }
-        }
+        PullFiles(conn_pred)
     } 
     id3 := ""
     if (!iterator.Next()) {
@@ -225,7 +135,7 @@ func RemoveNode(id_to_rem string) {
                 fmt.Println("Error decoding message from server:", err)
                 return
             }
-            file, err := os.OpenFile("file-store"+response.Filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+            file, err := os.OpenFile("file-store/"+response.Filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
             if err != nil {
                 fmt.Println(err)
             }
