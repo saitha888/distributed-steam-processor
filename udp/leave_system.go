@@ -3,9 +3,6 @@ package udp
 import (
     "fmt"
     "net"
-    "os"
-    "encoding/json"
-    "io"
 )
 
 //Function to leave the system
@@ -71,7 +68,12 @@ func RemoveNode(id_to_rem string) {
             return
         }
         defer conn_pred.Close()
-        PullFiles(conn_pred)
+        data := Message{
+            Action: "pull",
+            Filename:  "",
+            FileContents: "",
+        }
+        GetFiles(conn_pred, data)
     }
     id2 := ""
     if (!iterator.Next()) {
@@ -93,7 +95,12 @@ func RemoveNode(id_to_rem string) {
             return
         }
         defer conn_pred.Close()
-        PullFiles(conn_pred)
+        data := Message{
+            Action: "pull",
+            Filename:  "",
+            FileContents: "",
+        }
+        GetFiles(conn_pred, data)
     } 
     id3 := ""
     if (!iterator.Next()) {
@@ -116,37 +123,7 @@ func RemoveNode(id_to_rem string) {
             Filename:  "",
             FileContents: "",
         }
-        encoder := json.NewEncoder(conn_pred)
-        err = encoder.Encode(data)
-        if err != nil {
-            fmt.Println("Error encoding data in pull-3", err)
-        } 
-
-        decoder := json.NewDecoder(conn_pred)
-        for {
-            var response Message
-            err = decoder.Decode(&response)
-            if err != nil {
-                if err == io.EOF {
-                    // End of the response from the server
-                    fmt.Println("All messages received.")
-                    break
-                }
-                fmt.Println("Error decoding message from server:", err)
-                return
-            }
-            file, err := os.OpenFile("file-store/"+response.Filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-            if err != nil {
-                fmt.Println(err)
-            }
-            defer file.Close()
-
-            _, err = file.WriteString(response.FileContents)
-            if err != nil {
-                fmt.Println(err)
-            }
-
-        }
+        GetFiles(conn_pred,data)
     }
     ring_map.Remove(GetHash(id_to_remove))
 }

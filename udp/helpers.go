@@ -369,12 +369,7 @@ func RemoveFromCache(filename string) {
     }
 }
 
-func PullFiles(conn net.Conn) {
-    data := Message{
-        Action: "pull",
-        Filename:  "",
-        FileContents: "",
-    }
+func GetFiles(conn net.Conn, data Message) {
     encoder := json.NewEncoder(conn)
     err = encoder.Encode(data)
     if err != nil {

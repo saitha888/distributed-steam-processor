@@ -197,48 +197,50 @@ func handleConnection(conn net.Conn) {
                 }
             }
         }
-    }  // else if len(message) >= 5 && message[:5] == "split" {
-//         dir := "./file-store"
+    } else if len(received_data.Action) >= 5 && received_data.Action[:5] == "split" {
+        dir := "./file-store"
 
-//         files, err := ioutil.ReadDir(dir)
-//         if err != nil {
-//             fmt.Println("Error reading directory:", err)
-//         }
+        files, err := ioutil.ReadDir(dir)
+        if err != nil {
+            fmt.Println("Error reading directory:", err)
+        }
 
-//         pred_port := strings.TrimRight(message[6:], " \t\n")
-//         pred_hash := udp.GetHash(pred_port)
-//         self_hash := udp.GetHash(udp.GetTCPVersion(udp.GetNodeID()))
+        pred_port := strings.TrimRight(received_data.Action[6:], " \t\n")
+        pred_hash := udp.GetHash(pred_port)
+        self_hash := udp.GetHash(udp.GetTCPVersion(udp.GetNodeID()))
 
-//         // go through all the files
-//         for _, file := range files {
-//             if !file.IsDir() {
-//                 filename := file.Name()
-//                 // if the file is from the origin server
-//                 if strings.HasPrefix(filename, udp.GetFilePrefix()) || strings.HasPrefix(filename, pred_port[13:15]) {
-//                     file_hash := udp.GetHash(filename[3:])
-//                     file_path := dir + "/" + filename
-//                     content, err := ioutil.ReadFile(file_path)
-//                     if err != nil {
-//                         fmt.Println("Error reading file:", filename, err)
-//                     }
-//                     if pred_hash >= file_hash && file_hash < self_hash { // if the hash now maps to the new server 
-//                         new_filename := filename[3:] // rename the file and send it back
-//                         message := fmt.Sprintf("%s %s\n---END_OF_MESSAGE---\n", new_filename, string(content))
-//                         _, err = conn.Write([]byte(message))
-//                         if err != nil {
-//                             fmt.Println("Error sending file content:", err)
-//                         }
-//                         // rename file in own directory
-//                         renamed := dir+"/"+pred_port[13:15]+"-"+new_filename
-//                         err = os.Rename(dir+"/"+filename, renamed)
-//                         if err != nil {
-//                             fmt.Println("Error renaming file:", err)
-//                         }
-//                     }
-//                 }
-//             }   
-//         }
-//     } else if len(message) >= 6 && message[:6] == "chunks" {
+        // go through all the files
+        for _, file := range files {
+            if !file.IsDir() {
+                filename := file.Name()
+                // if the file is from the origin server
+                if strings.HasPrefix(filename, udp.GetFilePrefix()) || strings.HasPrefix(filename, pred_port[13:15]) {
+                    file_hash := udp.GetHash(filename[3:])
+                    file_path := dir + "/" + filename
+                    content, err := ioutil.ReadFile(file_path)
+                    if err != nil {
+                        fmt.Println("Error reading file:", filename, err)
+                    }
+                    if pred_hash >= file_hash && file_hash < self_hash { // if the hash now maps to the new server 
+                        new_filename := filename[3:] // rename the file and send it back
+                        responseStruct := Message{
+                            Action:    "",
+                            Filename:  pred_port[13:15] + new_filename,
+                            FileContents: string(content),
+                        }
+                        encoder := json.NewEncoder(conn)
+                        err = encoder.Encode(responseStruct)
+                        // rename file in own directory
+                        renamed := dir+"/"+pred_port[13:15]+"-"+new_filename
+                        err = os.Rename(dir+"/"+filename, renamed)
+                        if err != nil {
+                            fmt.Println("Error renaming file:", err)
+                        }
+                    }
+                }
+            }   
+        }
+    } //else if len(message) >= 6 && message[:6] == "chunks" {
 //         dir := "./file-store"
 //         files, err := ioutil.ReadDir(dir)
 //         if err != nil {
