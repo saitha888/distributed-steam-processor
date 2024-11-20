@@ -178,17 +178,16 @@ func AppendFile(local_file string, hydfs_file string) {
         fmt.Println(err)
         return
     }
-    message := "append" + " " + hydfs_file + " " + replica_num + " " + content
-    conn.Write([]byte(message))
-        
-    buf := make([]byte, 1000000)
-    n, err := conn.Read(buf)
-    if err != nil {
-        fmt.Println(err)
-        return
+    data := Message{
+        Action:    "append",
+        Filename:  replica_num + "-" + hydfs_file,
+        FileContents: content,
     }
-    response := string(buf[:n])
-    udp.AppendToFile(response, os.Getenv("HDYFS_FILENAME"))
+    encoder := json.NewEncoder(conn)
+    err = encoder.Encode(data)
+    if err != nil {
+        fmt.Println("Error encoding data in create", err)
+    } 
 }
 
 func GetFromReplica(VMaddress string, HyDFSfilename string, localfilename string){
@@ -328,18 +327,17 @@ func MultiAppend(hydfs_file string, vms []string, local_files []string) {
             }
             defer conn.Close()
 
-            message := "append-req " + localFile + " " + hydfs_file
-            _, writeErr := conn.Write([]byte(message))
-            if writeErr != nil {
-                fmt.Println("Write error:", writeErr)
-                return
+            data := Message{
+                Action: "append-req " + localFile + " " + hydfs_file,
+                Filename: "",
+                FileContents: "",
             }
-
-            buf := make([]byte, 1000000)
-            _, readErr := conn.Read(buf)
-            if readErr != nil {
-                fmt.Println("Read error:", readErr)
-                return
+        
+            // Encode the structure into JSON
+            encoder := json.NewEncoder(conn)
+            err = encoder.Encode(data)
+            if err != nil {
+                fmt.Println("Error encoding structure in multiappend to json", err)
             }
         }(vms[i], local_files[i]) // Pass i-th VM and local file as arguments to avoid closure issues
     }
