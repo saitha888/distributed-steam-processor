@@ -37,7 +37,6 @@ func TcpServer() {
             continue
         }
 
-        fmt.Printf("New connection from: %s\n", conn.RemoteAddr().String())
 
         // Handle the connection in a go routine
         go handleConnection(conn)
@@ -53,10 +52,7 @@ func handleConnection(conn net.Conn) {
     // Get the connection message
     var received_data Message
 	decoder := json.NewDecoder(conn)
-	err := decoder.Decode(&received_data)
-	if err != nil {
-		fmt.Printf("Error decoding JSON: %v\n", err)
-	}
+	_ = decoder.Decode(&received_data)
 
     // Check if message is a grep command
     // if len(message) >= 4 && message[:4] == "grep" {
@@ -79,16 +75,12 @@ func handleConnection(conn net.Conn) {
     if received_data.Action == "get" {
         log := "Message received to retrieve file " + received_data.Filename + " at " + time.Now().Format("15:04:05.000")
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-        fmt.Println("getting " + received_data.Filename)
         file_content, _ := os.ReadFile("file-store/" + received_data.Filename)
-        fmt.Println("file content " + string(file_content))
         responseStruct := Message{
             Action:    "",
             Filename:  "",
             FileContents: string(file_content),
         }
-        fmt.Println("response struct:")
-        fmt.Println(responseStruct)
         encoder := json.NewEncoder(conn)
         err = encoder.Encode(responseStruct)
         log = "File " + filename + " sent back to client at " + time.Now().Format("15:04:05.000")

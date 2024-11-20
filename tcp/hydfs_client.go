@@ -66,7 +66,6 @@ func GetFile(hydfs_file string, local_file string) {
 	if err != nil {
 		fmt.Println("Error decoding server response in get to json", err)
 	}
-    fmt.Println(response)
 
 	// Write only the FileContents to the local file
 	localfile, _ := os.Create(local_file)
