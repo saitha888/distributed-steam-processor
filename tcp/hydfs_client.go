@@ -32,7 +32,7 @@ func GetFile(hydfs_file string, local_file string) {
 	dir := "./cache"
 
 	_, exists := cache_set[hydfs_file]
-	
+
 	if exists {
 		content, _ := ioutil.ReadFile(dir + "/" + hydfs_file)
 		err = WriteToFile(local_file, string(content))
@@ -40,15 +40,15 @@ func GetFile(hydfs_file string, local_file string) {
 	}
 
 	conn, err := net.Dial("tcp", file_server)
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-    defer conn.Close() 
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer conn.Close()
 
-    data := Message{
-		Action:    "get",
-		Filename:  server_num + hydfs_file,
+	data := Message{
+		Action: "get",
+		Filename: server_num + "-" + hydfs_file,
 		FileContents: "",
 	}
 
@@ -56,25 +56,39 @@ func GetFile(hydfs_file string, local_file string) {
 	encoder := json.NewEncoder(conn)
 	err = encoder.Encode(data)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error encoding structure in get to json", err)
 	}
 
-    localfile, err := os.Create(local_file) 
+	// Decode the server's response
+	var response Message
+	decoder := json.NewDecoder(conn)
+	err = decoder.Decode(&response)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error decoding server response in get to json", err)
+	}
+
+	// Write only the FileContents to the local file
+	localfile, _ := os.Create(local_file)
+	if err != nil {
+        fmt.Println("Error creating local file in get", err)
 	}
 	defer localfile.Close()
 
-	_, err = io.Copy(localfile, conn)
+	_, err = localfile.WriteString(response.FileContents)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error writing to local file in get", err)
 	}
 
-	// add to cache
-    localfile_cache, err := os.Create("./cache/" + hydfs_file) 
-    _, err = io.Copy(localfile_cache, conn)
+	// Add to cache
+	localfile_cache, err := os.Create("./cache/" + hydfs_file)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error creating file in cache in get", err)
+	}
+	defer localfile_cache.Close()
+
+	_, err = localfile_cache.WriteString(response.FileContents)
+	if err != nil {
+		fmt.Println("Error writing to file in cache in get", err)
 	}
 	cache_set[hydfs_file] = true
 }
@@ -125,13 +139,13 @@ func CreateFile(localfilename string, HyDFSfilename string) {
         // send the file message to the machine
         data := Message{
             Action:    "create",
-            Filename:  replica_num + HyDFSfilename,
+            Filename:  replica_num + "-" + HyDFSfilename,
             FileContents: content,
         }
         encoder := json.NewEncoder(conn)
         err = encoder.Encode(data)
         if err != nil {
-            panic(err)
+            fmt.Println("Error encoding data in create", err)
         }
     }
 }
@@ -164,17 +178,16 @@ func AppendFile(local_file string, hydfs_file string) {
         fmt.Println(err)
         return
     }
-    message := "append" + " " + hydfs_file + " " + replica_num + " " + content
-    conn.Write([]byte(message))
-        
-    buf := make([]byte, 1000000)
-    n, err := conn.Read(buf)
-    if err != nil {
-        fmt.Println(err)
-        return
+    data := Message{
+        Action:    "append",
+        Filename:  replica_num + "-" + hydfs_file,
+        FileContents: content,
     }
-    response := string(buf[:n])
-    udp.AppendToFile(response, os.Getenv("HDYFS_FILENAME"))
+    encoder := json.NewEncoder(conn)
+    err = encoder.Encode(data)
+    if err != nil {
+        fmt.Println("Error encoding data in create", err)
+    } 
 }
 
 func GetFromReplica(VMaddress string, HyDFSfilename string, localfilename string){
@@ -314,18 +327,17 @@ func MultiAppend(hydfs_file string, vms []string, local_files []string) {
             }
             defer conn.Close()
 
-            message := "append-req " + localFile + " " + hydfs_file
-            _, writeErr := conn.Write([]byte(message))
-            if writeErr != nil {
-                fmt.Println("Write error:", writeErr)
-                return
+            data := Message{
+                Action: "append-req " + localFile + " " + hydfs_file,
+                Filename: "",
+                FileContents: "",
             }
-
-            buf := make([]byte, 1000000)
-            _, readErr := conn.Read(buf)
-            if readErr != nil {
-                fmt.Println("Read error:", readErr)
-                return
+        
+            // Encode the structure into JSON
+            encoder := json.NewEncoder(conn)
+            err = encoder.Encode(data)
+            if err != nil {
+                fmt.Println("Error encoding structure in multiappend to json", err)
             }
         }(vms[i], local_files[i]) // Pass i-th VM and local file as arguments to avoid closure issues
     }

@@ -40,7 +40,6 @@ func TcpServer() {
             continue
         }
 
-        fmt.Printf("New connection from: %s\n", conn.RemoteAddr().String())
 
         // Handle the connection in a go routine
         go handleConnection(conn)
@@ -56,10 +55,7 @@ func handleConnection(conn net.Conn) {
     // Get the connection message
     var received_data Message
 	decoder := json.NewDecoder(conn)
-	err := decoder.Decode(&received_data)
-	if err != nil {
-		fmt.Printf("Error decoding JSON: %v\n", err)
-	}
+	_ = decoder.Decode(&received_data)
 
     // Check if message is a grep command
     // if len(message) >= 4 && message[:4] == "grep" {
@@ -82,7 +78,7 @@ func handleConnection(conn net.Conn) {
     if received_data.Action == "get" {
         log := "Message received to retrieve file " + received_data.Filename + " at " + time.Now().Format("15:04:05.000")
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-        file_content := []byte(udp.GetFileContents(received_data.Filename))
+        file_content, _ := os.ReadFile("file-store/" + received_data.Filename)
         responseStruct := Message{
             Action:    "",
             Filename:  "",
@@ -108,43 +104,35 @@ func handleConnection(conn net.Conn) {
             log = received_data.Filename + " created at " + time.Now().Format("15:04:05.000")
             udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
         } 
- //else if len(message) >= 10 && message[:10] == "append-req"{
-//         words := strings.Split(message, " ")
-//         hydfs_file := words[2]
-//         local_file := words[1]
-//         AppendFile(local_file, hydfs_file)
-//     } else if len(message) >=6 && message[:6] == "append" {
-//         timestamp := time.Now().Format("15:04:05.000")
-//         words := strings.Split(message, " ")
-//         HyDFSfilename := words[1]
-//         HyDFSfilename = HyDFSfilename + "-" + timestamp
-//         replica_num := words[2]
-//         // check if the file already exists
-//         file_path := "file-store/" + replica_num + "-" + HyDFSfilename
-//         _, err := os.Stat(file_path)
+    } else if len(received_data.Action) >= 10 && received_data.Action[:10] == "append-req"{
+        words := strings.Split(received_data.Action, " ")
+        hydfs_file := words[2]
+        local_file := words[1]
+        AppendFile(local_file, hydfs_file)
+    } else if received_data.Action == "append" {
+        timestamp := time.Now().Format("15:04:05.000")
+        HyDFSfilename := received_data.Filename + "-" + timestamp
+        // check if the file already exists
+        file_path := "file-store/" + HyDFSfilename
+        _, err := os.Stat(file_path)
         
-//         if os.IsNotExist(err) {
-//             // File doesn't exist, use original filename
-//         } else {
-//             // File exists, add 3 milliseconds to timestamp
-//             timestamp := HyDFSfilename[len(HyDFSfilename)-12:]
-//             newTime, _ := time.Parse("15:04:05.000", timestamp)
-//             formattedTime := newTime.Add(3 * time.Millisecond).Format("15:04:05.000")
-//             HyDFSfilename = HyDFSfilename[:len(HyDFSfilename)-12] + formattedTime
-//             file_path = "file-store/" + replica_num + "-" + HyDFSfilename
-//         }
-//         udp.RemoveFromCache(HyDFSfilename[3:])
-//         log := "Message received to create append chunk" + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
-//         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-//         argument_length := 11 + len(HyDFSfilename) - 13
-//         file_contents := message[argument_length:]
-//         WriteToFile(file_path, file_contents)
-//         conn.Write([]byte("append chunk "+ HyDFSfilename + " created on machine " + udp.GetNodeID()))
-        
-//         log = "append chunk " + HyDFSfilename + " created at " + time.Now().Format("15:04:05.000")
-//         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-
-//     } else if len(message) >= 6 && message[:6] == "pull-3" {
+        if os.IsNotExist(err) {
+            // File doesn't exist, use original filename
+        } else {
+            // File exists, add 3 milliseconds to timestamp
+            timestamp := HyDFSfilename[len(HyDFSfilename)-12:]
+            newTime, _ := time.Parse("15:04:05.000", timestamp)
+            formattedTime := newTime.Add(3 * time.Millisecond).Format("15:04:05.000")
+            HyDFSfilename = HyDFSfilename[:len(HyDFSfilename)-12] + formattedTime
+            file_path = "file-store/" + HyDFSfilename
+        }
+        udp.RemoveFromCache(HyDFSfilename[3:len(HyDFSfilename)-12])
+        log := "Message received to create append chunk" + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
+        udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
+        WriteToFile(file_path, received_data.FileContents)        
+        log = "append chunk " + HyDFSfilename + " created at " + time.Now().Format("15:04:05.000")
+        udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
+    } //else if len(message) >= 6 && message[:6] == "pull-3" {
 //         parts := strings.Split(message, " ")
 //         prefix := parts[1][13:15]
 //         dir := "./file-store"
