@@ -78,14 +78,25 @@ func handleConnection(conn net.Conn) {
     if received_data.Action == "get" {
         log := "Message received to retrieve file " + received_data.Filename + " at " + time.Now().Format("15:04:05.000")
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-        file_content, _ := os.ReadFile("file-store/" + received_data.Filename)
-        responseStruct := Message{
-            Action:    "",
-            Filename:  "",
-            FileContents: string(file_content),
+
+        dir := "./file-store"
+        files, err := ioutil.ReadDir(dir)
+        if err != nil {
+            fmt.Println("Error reading directory:", err)
         }
-        encoder := json.NewEncoder(conn)
-        err = encoder.Encode(responseStruct)
+        name := received_data.Filename
+        for _, file := range files {
+            if !file.IsDir() && strings.Contains(file.Name(), name)  {
+                file_content, _ := os.ReadFile("file-store/" + received_data.Filename)
+                responseStruct := Message {
+                    Action:    "",
+                    Filename:  "",
+                    FileContents: string(file_content),
+                }
+                encoder := json.NewEncoder(conn)
+                err = encoder.Encode(responseStruct)
+            }
+        }
         log = "File " + filename + " sent back to client at " + time.Now().Format("15:04:05.000")
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
     } else if received_data.Action == "create" {

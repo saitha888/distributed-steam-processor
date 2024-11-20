@@ -27,7 +27,6 @@ func GetFile(hydfs_file string, local_file string) {
 
 	file_server := node_ids[replica_num][:36]
 
-	server_num := node_ids[0][13:15]
 	dir := "./cache"
 
 	_, exists := cache_set[hydfs_file]
@@ -47,7 +46,7 @@ func GetFile(hydfs_file string, local_file string) {
 
 	data := Message{
 		Action: "get",
-		Filename: server_num + "-" + hydfs_file,
+		Filename: hydfs_file,
 		FileContents: "",
 	}
 
@@ -59,12 +58,22 @@ func GetFile(hydfs_file string, local_file string) {
 	}
 
 	// Decode the server's response
-	var response Message
-	decoder := json.NewDecoder(conn)
-	err = decoder.Decode(&response)
-	if err != nil {
-		fmt.Println("Error decoding server response in get to json", err)
-	}
+    var response Message
+    decoder := json.NewDecoder(conn)
+    total_content := ""
+    for {
+        err = decoder.Decode(&response)
+        if err != nil {
+            if err == io.EOF {
+                fmt.Println("All files received")
+                break
+            } else {
+                fmt.Println("error reading file and chunks", err)
+            }
+        } else {
+            total_content += response.FileContents
+        }
+    }   
 
 	// Write only the FileContents to the local file
 	localfile, _ := os.Create(local_file)
@@ -73,7 +82,7 @@ func GetFile(hydfs_file string, local_file string) {
 	}
 	defer localfile.Close()
 
-	_, err = localfile.WriteString(response.FileContents)
+	_, err = localfile.WriteString(total_content)
 	if err != nil {
 		fmt.Println("Error writing to local file in get", err)
 	}
@@ -85,7 +94,7 @@ func GetFile(hydfs_file string, local_file string) {
 	}
 	defer localfile_cache.Close()
 
-	_, err = localfile_cache.WriteString(response.FileContents)
+	_, err = localfile_cache.WriteString(total_content)
 	if err != nil {
 		fmt.Println("Error writing to file in cache in get", err)
 	}
@@ -241,22 +250,18 @@ func Merge(hydfs_file string) {
             fmt.Println(err)
             return
         }
-
         data := Message{
             Action: "chunks",
             Filename: hydfs_file,
             FileContents: "",
         }
-
         // Encode the structure into JSON
         encoder := json.NewEncoder(conn)
         err = encoder.Encode(data)
         if err != nil {
             fmt.Println("Error encoding structure in get to json", err)
         }
-
         var response Message
-
         decoder := json.NewDecoder(conn)
         for {
             err = decoder.Decode(&response)
@@ -278,11 +283,7 @@ func Merge(hydfs_file string) {
         timeB, _ := time.Parse(layout, b.(string))
         return utils.TimeComparator(timeA, timeB)
     })
-
-    // chunks := strings.Split(tot_response, "---BREAK---")
-    // chunks = chunks[:len(chunks)-1]
     chunks_set := make(map[string]bool)
-    // tot_response = tot_response[:len(tot_response)-1]
 	for _,chunk := range tot_response {
 		filename := chunk.Filename
 		content := chunk.FileContents
@@ -311,14 +312,12 @@ func Merge(hydfs_file string) {
             fmt.Println(err)
             return
         }
-
         //request chunks of file from replica
         message := Message{
             Action: "merge",
             Filename: hydfs_file,
             FileContents: merged_content,
         }
-
         // Encode the structure into JSON
         encoder := json.NewEncoder(conn)
         err = encoder.Encode(message)
