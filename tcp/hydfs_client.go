@@ -56,7 +56,7 @@ func GetFile(hydfs_file string, local_file string) {
 	encoder := json.NewEncoder(conn)
 	err = encoder.Encode(data)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error encoding structure in get to json", err)
 	}
 
 	// Decode the server's response
@@ -64,31 +64,31 @@ func GetFile(hydfs_file string, local_file string) {
 	decoder := json.NewDecoder(conn)
 	err = decoder.Decode(&response)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error decoding server response in get to json", err)
 	}
 
 	// Write only the FileContents to the local file
-	localfile, err := os.Create(local_file)
+	localfile, _ := os.Create(local_file)
 	if err != nil {
-		panic(err)
+        fmt.Println("Error creating local file in get", err)
 	}
 	defer localfile.Close()
 
 	_, err = localfile.WriteString(response.FileContents)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error writing to local file in get", err)
 	}
 
 	// Add to cache
 	localfile_cache, err := os.Create("./cache/" + hydfs_file)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error creating file in cache in get", err)
 	}
 	defer localfile_cache.Close()
 
 	_, err = localfile_cache.WriteString(response.FileContents)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error writing to file in cache in get", err)
 	}
 	cache_set[hydfs_file] = true
 }
@@ -139,13 +139,13 @@ func CreateFile(localfilename string, HyDFSfilename string) {
         // send the file message to the machine
         data := Message{
             Action:    "create",
-            Filename:  replica_num + HyDFSfilename,
+            Filename:  replica_num + "-" + HyDFSfilename,
             FileContents: content,
         }
         encoder := json.NewEncoder(conn)
         err = encoder.Encode(data)
         if err != nil {
-            panic(err)
+            fmt.Println("Error encoding data in create", err)
         }
     }
 }
