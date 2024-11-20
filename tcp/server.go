@@ -85,6 +85,7 @@ func handleConnection(conn net.Conn) {
             Filename:  "",
             FileContents: string(file_content),
         }
+        fmt.Println(responseStruct)
         encoder := json.NewEncoder(conn)
         err = encoder.Encode(responseStruct)
         log = "File " + filename + " sent back to client at " + time.Now().Format("15:04:05.000")
