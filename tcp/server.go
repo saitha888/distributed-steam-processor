@@ -240,46 +240,47 @@ func handleConnection(conn net.Conn) {
                 }
             }   
         }
-    } //else if len(message) >= 6 && message[:6] == "chunks" {
-//         dir := "./file-store"
-//         files, err := ioutil.ReadDir(dir)
-//         if err != nil {
-//             fmt.Println("Error reading directory:", err)
-//         }
-//         words := strings.Split(message, " ")
-//         name := words[1]
-//         msg := ""
-//         for _, file := range files {
-//             if !file.IsDir() && strings.Contains(file.Name(), name)  {
-//                 pattern := `\d{2}:\d{2}:\d{2}\.\d{3}$`
-//                 match, _ := regexp.MatchString(pattern, file.Name())
-//                 if match {
-//                     filePath := dir + "/" + file.Name()       
-//                     content, err_r := ioutil.ReadFile(filePath)
-//                     if err_r != nil {
-//                         fmt.Println("Error reading file:", err_r)
-//                         continue
-//                     }
-//                     msg += fmt.Sprintf("%s %s\n---BREAK---\n", file.Name(), string(content))
-//                     err_rem := os.Remove(filePath)
-//                     if err_rem != nil {
-//                         fmt.Println("Error deleting file:", err_rem)
-//                     } 
-//                 } 
-//             }
-//         }
-//         _, err = conn.Write([]byte(msg))
-//         if err != nil {
-//             fmt.Println("Error sending file content:", err)
-//         }
-//     } else if len(message) >= 5 && message[:5] == "merge" {
-//         words := strings.Split(message, " ")
-//         hydfs_file := words[1]
-//         merged_content := message[7 + len(hydfs_file):]
-//         origin_num := udp.GetFileServers(udp.GetHash(hydfs_file))[0][13:15]
-//         hydfs_file = origin_num + "-" + hydfs_file
-//         file_path := "./file-store/" + hydfs_file
-
+    } else if received_data.Action == "chunks" {
+        dir := "./file-store"
+        files, err := ioutil.ReadDir(dir)
+        if err != nil {
+            fmt.Println("Error reading directory:", err)
+        }
+        name := received_data.Filename
+        for _, file := range files {
+            if !file.IsDir() && strings.Contains(file.Name(), name)  {
+                pattern := `\d{2}:\d{2}:\d{2}\.\d{3}$`
+                match, _ := regexp.MatchString(pattern, file.Name())
+                if match {
+                    filePath := dir + "/" + file.Name()       
+                    content, err_r := ioutil.ReadFile(filePath)
+                    if err_r != nil {
+                        fmt.Println("Error reading file:", err_r)
+                        continue
+                    }
+                    chunk_message := Message{
+                        Action: "",
+                        Filename: file.Name(),
+                        FileContents: string(content),
+                    }
+                    encoder := json.NewEncoder(conn)
+                    err_send := encoder.Encode(chunk_message)
+                    if err_send != nil {
+                        fmt.Println("error sending chunk", err_send)
+                    }
+                    err_rem := os.Remove(filePath)
+                    if err_rem != nil {
+                        fmt.Println("Error deleting file:", err_rem)
+                    } 
+                } 
+            }
+        }
+    } else if received_data.Action == "merge" {
+        hydfs_file := received_data.Filename
+        merged_content := received_data.FileContents
+        origin_num := udp.GetFileServers(udp.GetHash(hydfs_file))[0][13:15]
+        hydfs_file = origin_num + "-" + hydfs_file
+        file_path := "./file-store/" + hydfs_file
         file, err := os.OpenFile(file_path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
         if err != nil {
             fmt.Println("Error opening file:", err)
@@ -292,11 +293,6 @@ func handleConnection(conn net.Conn) {
             fmt.Println("Error writing to file:", err)
             return
         }
-        // msg := hydfs_file + " updated with merge"
-        // _, err = conn.Write([]byte(msg))
-        // if err != nil {
-        //     fmt.Println("Error sending file content:", err)
-        // }
     } 
 //else { 
 //         // Open the file to write the contents
