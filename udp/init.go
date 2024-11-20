@@ -14,6 +14,12 @@ type Node struct {
     RingID int // unique ring id (tcp port version)
 }
 
+type Message struct {
+    Action string
+	Filename  string
+	FileContents string
+}
+
 // node_id (includes timestamp) that is set when a process joins the system
 var node_id string = ""
 var ring_id string = ""

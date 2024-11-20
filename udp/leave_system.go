@@ -6,6 +6,8 @@ import (
     "os"
     "strings"
     "bufio"
+    "encoding/json"
+    "io"
 )
 
 //Function to leave the system
@@ -199,59 +201,42 @@ func RemoveNode(id_to_rem string) {
             return
         }
         defer conn_pred.Close()
-        message := fmt.Sprintf("pull-3 %s", id_to_remove)
-        conn_pred.Write([]byte(message))
-        reader := bufio.NewReader(conn_pred)
-        buffer := ""
+        data := Message{
+            Action: fmt.Sprintf("pull-3 %s", id_to_remove),
+            Filename:  "",
+            FileContents: "",
+        }
+        encoder := json.NewEncoder(conn_pred)
+        err = encoder.Encode(data)
+        if err != nil {
+            fmt.Println("Error encoding data in pull-3", err)
+        } 
 
+        decoder := json.NewDecoder(conn_pred)
         for {
-            // Read up to the next newline in chunks
-            part, err := reader.ReadString('\n')
+            var response Message
+            err = decoder.Decode(&response)
             if err != nil {
-                fmt.Println("Error reading from server:", err)
-                break
-            }
-
-            // Append the read part to the buffer
-            buffer += part
-
-            // Check if buffer contains the custom delimiter
-            if strings.Contains(buffer, "\n---END_OF_MESSAGE---\n") {
-                // Split buffer by the custom delimiter
-                parts := strings.Split(buffer, "\n---END_OF_MESSAGE---\n")
-
-                // Process all complete messages in parts
-                for i := 0; i < len(parts)-1; i++ {
-                    if strings.TrimSpace(parts[i]) != "" { // Ignore empty messages
-                        filename := strings.Split(parts[i], " ")[0]
-                        argument_length := 1 + len(filename)
-                        contents := parts[i][argument_length:]
-                        new_filename := "./file-store/" + filename
-        
-                        file, err := os.OpenFile(new_filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-                        if err != nil {
-                            fmt.Println(err)
-                        }
-                        defer file.Close()
-        
-                        _, err = file.WriteString(contents)
-                        if err != nil {
-                            fmt.Println(err)
-                        }
-                    }
+                if err == io.EOF {
+                    // End of the response from the server
+                    fmt.Println("All messages received.")
+                    break
                 }
-                // Retain the last part in the buffer (incomplete message)
-                buffer = parts[len(parts)-1]
+                fmt.Println("Error decoding message from server:", err)
+                return
             }
+            file, err := os.OpenFile(response.Filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+            if err != nil {
+                fmt.Println(err)
+            }
+            defer file.Close()
+
+            _, err = file.WriteString(response.FileContents)
+            if err != nil {
+                fmt.Println(err)
+            }
+
         }
     }
-
-
     ring_map.Remove(GetHash(id_to_remove))
-
-    // say node that fails is n
-    // files with n origin, n-1 origin, n-2 origin
-    // give files of origin n to nodes n+3
-    // give files of origin n-1 to n+2
-    // give files of origin n-2 to n+1
 }
