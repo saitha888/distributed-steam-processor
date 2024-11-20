@@ -54,7 +54,7 @@ func GetFile(hydfs_file string, local_file string) {
 
 	// Encode the structure into JSON
 	encoder := json.NewEncoder(conn)
-	err = encoder.Encode(data)
+	err = encoder.Encode(data.FileContents)
 	if err != nil {
 		panic(err)
 	}
