@@ -37,6 +37,8 @@ func TcpServer() {
             continue
         }
 
+        fmt.Printf("New connection from: %s\n", conn.RemoteAddr().String())
+
         // Handle the connection in a go routine
         go handleConnection(conn)
     }
@@ -53,7 +55,7 @@ func handleConnection(conn net.Conn) {
 	decoder := json.NewDecoder(conn)
 	err := decoder.Decode(&received_data)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error decoding JSON: %v\n", err)
 	}
 
     // Check if message is a grep command
