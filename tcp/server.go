@@ -87,7 +87,7 @@ func handleConnection(conn net.Conn) {
         name := received_data.Filename
         for _, file := range files {
             if !file.IsDir() && strings.Contains(file.Name(), name)  {
-                file_content, _ := os.ReadFile("file-store/" + received_data.Filename)
+                file_content, _ := os.ReadFile("file-store/" + file.Name())
                 responseStruct := Message {
                     Action:    "",
                     Filename:  "",
