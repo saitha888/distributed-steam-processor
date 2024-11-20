@@ -41,7 +41,6 @@ func TcpServer() {
     }
 }
 
-
 //handler of any incoming connection from other machines
 func handleConnection(conn net.Conn) {
 
