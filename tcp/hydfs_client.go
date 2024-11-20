@@ -71,7 +71,7 @@ func GetFile(hydfs_file string, local_file string) {
 	}
 
 	// add to cache
-    localfile_cache, err := os.Create("./cache" + "/" + hydfs_file) 
+    localfile_cache, err := os.Create("./cache/" + hydfs_file) 
     _, err = io.Copy(localfile_cache, conn)
 	if err != nil {
 		panic(err)
@@ -123,17 +123,16 @@ func CreateFile(localfilename string, HyDFSfilename string) {
         defer conn.Close()
     
         // send the file message to the machine
-        message := "create " + HyDFSfilename + " " + replica_num + " " + content
-        conn.Write([]byte(message))
-        
-        buf := make([]byte, 1000000)
-        n, err := conn.Read(buf)
-        if err != nil {
-            fmt.Println(err)
-            return
+        data := Message{
+            Action:    "create",
+            Filename:  replica_num + HyDFSfilename,
+            FileContents: content,
         }
-        response := string(buf[:n])
-        udp.AppendToFile(response, os.Getenv("HDYFS_FILENAME"))
+        encoder := json.NewEncoder(conn)
+        err = encoder.Encode(data)
+        if err != nil {
+            panic(err)
+        }
     }
 }
 

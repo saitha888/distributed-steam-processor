@@ -87,31 +87,23 @@ func handleConnection(conn net.Conn) {
         err = encoder.Encode(responseStruct)
         log = "File " + filename + " sent back to client at " + time.Now().Format("15:04:05.000")
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-    } //else if len(message) >= 6 && message[:6] == "create" {
-//         words := strings.Split(message, " ")
-//         HyDFSfilename := words[1]
-//         cache_set[HyDFSfilename] = true
-//         cache_path := "./cache" + "/" + HyDFSfilename
-//         argument_length := 11 + len(HyDFSfilename)
-//         err = WriteToFile(cache_path, message[argument_length:])
-//         cache_set[HyDFSfilename] = true
-//         replica_num := words[2]
+    } else if received_data.Action == "create" {
+        cache_set[received_data.Filename[3:]] = true
+        cache_path := "./cache/" + received_data.Filename[3:]
+        err = WriteToFile(cache_path, received_data.FileContents[3:])
         
-//         // check if the file already exists
-//         file_path := "file-store/" + replica_num + "-" + HyDFSfilename
-//         _, err := os.Stat(file_path)
+        // check if the file already exists
+        file_path := "file-store/" + received_data.Filename
+        _, err := os.Stat(file_path)
 
-//         if os.IsNotExist(err) {
-//             log := "Message received to create file " + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
-//             udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-//             file_contents := message[argument_length:]
-//             WriteToFile(file_path, file_contents)
-//             conn.Write([]byte(HyDFSfilename + " created on machine " + udp.GetNodeID()))
-            
-//             log = HyDFSfilename + " created at " + time.Now().Format("15:04:05.000")
-//             udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-//         } 
-//     } else if len(message) >= 10 && message[:10] == "append-req"{
+        if os.IsNotExist(err) {
+            log := "Message received to create file " + received_data.Filename + " at " + time.Now().Format("15:04:05.000")
+            udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
+            WriteToFile(file_path, received_data.FileContents)
+            log = received_data.Filename + " created at " + time.Now().Format("15:04:05.000")
+            udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
+        } 
+    } //else if len(message) >= 10 && message[:10] == "append-req"{
 //         words := strings.Split(message, " ")
 //         hydfs_file := words[2]
 //         local_file := words[1]
