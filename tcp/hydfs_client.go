@@ -48,7 +48,7 @@ func GetFile(hydfs_file string, local_file string) {
 
 	data := Message{
 		Action: "get",
-		Filename: server_num + hydfs_file,
+		Filename: server_num + "-" + hydfs_file,
 		FileContents: "",
 	}
 
