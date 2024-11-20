@@ -40,11 +40,11 @@ var ports = []string{
     "fa24-cs425-1203.cs.illinois.edu:9083", 
     "fa24-cs425-1204.cs.illinois.edu:9084", 
     "fa24-cs425-1205.cs.illinois.edu:9085", 
-    "fa24-cs425-1206.cs.illinois.edu:9086", 
-    "fa24-cs425-1207.cs.illinois.edu:9087", 
-    "fa24-cs425-1208.cs.illinois.edu:9088", 
-    "fa24-cs425-1209.cs.illinois.edu:9089",
-    "fa24-cs425-1210.cs.illinois.edu:9080",
+    // "fa24-cs425-1206.cs.illinois.edu:9086", 
+    // "fa24-cs425-1207.cs.illinois.edu:9087", 
+    // "fa24-cs425-1208.cs.illinois.edu:9088", 
+    // "fa24-cs425-1209.cs.illinois.edu:9089",
+    // "fa24-cs425-1210.cs.illinois.edu:9080",
 }
 
 // env file variables

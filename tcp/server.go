@@ -132,7 +132,7 @@ func handleConnection(conn net.Conn) {
         WriteToFile(file_path, received_data.FileContents)        
         log = "append chunk " + HyDFSfilename + " created at " + time.Now().Format("15:04:05.000")
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
-    } //else if len(message) >= 6 && message[:6] == "pull-3" {
+ //else if len(message) >= 6 && message[:6] == "pull-3" {
 //         parts := strings.Split(message, " ")
 //         prefix := parts[1][13:15]
 //         dir := "./file-store"
@@ -235,6 +235,7 @@ func handleConnection(conn net.Conn) {
 //             }   
 //         }
     // } 
+    //} 
     } else if received_data.Action == "chunks" {
         dir := "./file-store"
         files, err := ioutil.ReadDir(dir)
@@ -296,7 +297,7 @@ func handleConnection(conn net.Conn) {
         //     fmt.Println("Error sending file content:", err)
         // }
     } 
-    //else { 
+//else { 
 //         // Open the file to write the contents
 //         file, err := os.Create(filename)
 //         if err != nil {
@@ -330,5 +331,6 @@ func handleConnection(conn net.Conn) {
 //             }
 //         }
 //     }
-}
+//}
 
+}
