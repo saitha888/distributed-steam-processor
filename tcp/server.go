@@ -140,7 +140,7 @@ func handleConnection(conn net.Conn) {
             HyDFSfilename = HyDFSfilename[:len(HyDFSfilename)-12] + formattedTime
             file_path = "file-store/" + HyDFSfilename
         }
-        udp.RemoveFromCache(HyDFSfilename[3:len(HyDFSfilename)-12])
+        udp.RemoveFromCache(received_data.Filename[3:])
         log := "Message received to create append chunk" + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
         WriteToFile(file_path, received_data.FileContents)        
