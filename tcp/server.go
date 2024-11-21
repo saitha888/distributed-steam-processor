@@ -103,10 +103,6 @@ func handleConnection(conn net.Conn) {
         log = "File " + filename + " sent back to client at " + time.Now().Format("15:04:05.000")
         udp.AppendToFile(log, os.Getenv("HDYFS_FILENAME"))
     } else if received_data.Action == "create" {
-        cache_set[received_data.Filename[3:]] = true
-        cache_path := "./cache/" + received_data.Filename[3:]
-        err = WriteToFile(cache_path, received_data.FileContents[3:])
-        
         // check if the file already exists
         file_path := "file-store/" + received_data.Filename
         _, err := os.Stat(file_path)
