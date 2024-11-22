@@ -3,14 +3,15 @@ package grep
 import (
     "fmt"
     "net"
-    "os"
     "strings"
-    "io"
     "strconv"
+    "distributed_system/global"
+    "encoding/json"
+    "distributed_system/util"
 )
 
 //handler of grep query
-func sendCommand(port string, message string) {
+func sendCommand(port string, message string, filename string) {
 
     // connect to the port
     conn, err := net.Dial("tcp", port)
@@ -20,26 +21,32 @@ func sendCommand(port string, message string) {
     }
     defer conn.Close()
 
-    // send the grep command to the machine
-    conn.Write([]byte(message))
+	data := global.Message{
+		Action: message,
+		Filename: filename,
+		FileContents: "",
+	}
+
+	// Encode the structure into JSON
+	encoder := json.NewEncoder(conn)
+	err = encoder.Encode(data)
+	if err != nil {
+		fmt.Println("Error encoding structure in get to json", err)
+	}
 
     // write the command to an output file
-    file, err := os.OpenFile("output.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    var response global.Message
+    decoder := json.NewDecoder(conn)
+    err = decoder.Decode(&response)
     if err != nil {
-        fmt.Println(err)
-        return
+        fmt.Println("error sending grep command")
     }
-    defer file.Close()
 
-    _, err = io.Copy(file, conn)
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
+    util.WriteToFile("output.txt", response.FileContents)
 }
 
 //handler of grep line query
-func sendLineCommand(port string, message string) int {
+func sendLineCommand(port string, message string, filename string) int {
     // connect to the port
     conn, err := net.Dial("tcp", port)
     if err != nil {
@@ -48,16 +55,27 @@ func sendLineCommand(port string, message string) int {
     }
     defer conn.Close()
 
-    // send the grep command to the machine
-    conn.Write([]byte(message))
+    data := global.Message{
+		Action: message,
+		Filename: filename,
+		FileContents: "",
+	}
 
-    // get the response from the machine
-    buf := make([]byte, 1024)
-    n, err := conn.Read(buf)
+	// Encode the structure into JSON
+	encoder := json.NewEncoder(conn)
+	err = encoder.Encode(data)
+	if err != nil {
+		fmt.Println("Error encoding structure in get to json", err)
+	}
 
-    // convert the response into int and return it back to client
-    lineCountStr := string(buf[:n])
-    lineCountStr = strings.TrimSpace(lineCountStr)
+    var response global.Message
+    decoder := json.NewDecoder(conn)
+    err = decoder.Decode(&response)
+    if err != nil {
+        fmt.Println("error sending grep command")
+    }
+
+    lineCountStr := strings.TrimSpace(response.FileContents)
     lineCount, err := strconv.Atoi(lineCountStr)
     if err != nil {
         fmt.Printf("Error converting line count from %s to int: %v\n", port, err)

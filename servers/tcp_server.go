@@ -12,6 +12,7 @@ import (
     "strings"
     "io/ioutil"
     "regexp"
+    "os/exec"
 )
 
 //starts tcp server that listens for grep commands
@@ -49,25 +50,24 @@ func handleConnection(conn net.Conn) {
 	decoder := json.NewDecoder(conn)
 	_ = decoder.Decode(&received_data)
 
-    // Check if Message is a grep command
-    // if len(message) >= 4 && message[:4] == "grep" {
-    //     grep := message + " " + filename
-    //     // run the grep command on machine
-    //     cmd := exec.Command("sh", "-c", grep)
-    //     output, err := cmd.CombinedOutput()
-    //     if err != nil {
-    //         fmt.Println(err)
-    //         return
-    //     }
-    //     // send the result back to the initial machine
-    //     conn.Write(output)
-    // // Check if message is a client call (for testing)
-    // } else if len(message) >= 6 && message[:6] == "client" {
-    //     totalLines := TcpClient(message[7:])
-    //     conn.Write([]byte(strconv.Itoa(totalLines)))
-    //if not grep or command call, must be call to create a log file
-    // }
-    if received_data.Action == "get" {
+    if len(received_data.Action) >= 4 && received_data.Action[:4] == "grep" {
+        grep_command := received_data.Action + " " + received_data.Filename
+        // run the grep command on machine
+        cmd := exec.Command("sh", "-c", grep_command)
+        output, err := cmd.CombinedOutput()
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+        // send the result back to the initial machine
+        responseStruct := global.Message {
+            Action:    "",
+            Filename:  "",
+            FileContents: string(output),
+        }
+        encoder := json.NewEncoder(conn)
+        err = encoder.Encode(responseStruct)
+    } else if received_data.Action == "get" {
         log := "Message received to retrieve file " + received_data.Filename + " at " + time.Now().Format("15:04:05.000")
         util.AppendToFile(log, global.Hydfs_log)
 
@@ -296,42 +296,4 @@ func handleConnection(conn net.Conn) {
             return
         }
     } 
-//else { 
-//         // Open the file to write the contents
-//         file, err := os.Create(filename)
-//         if err != nil {
-//             fmt.Println(err)
-//         }
-//         defer file.Close()
-
-//         // Write initial chunk to the file
-//         _, err = file.Write(buf[:n])
-//         if err != nil {
-//             fmt.Println(err)
-//         }
-
-//         // Read from the connection in chunks and write to the file
-//         for {
-//             n, err := conn.Read(buf)
-
-//             if err != nil {
-
-//                 //break once at the end of the buffer
-//                 if err == io.EOF {
-//                     break
-//                 }
-//                 fmt.Println(err)
-//             }
-
-//             // Write the chunk to the file
-//             _, err = file.Write(buf[:n])
-//             if err != nil {
-//                 fmt.Println(err)
-//             }
-//         }
-//     }
-//}
-
 }
-
-

@@ -86,10 +86,10 @@ func GrepClient(pattern string, filename string) int {
             grep_count := "grep -c " + pattern
 
             // connect to machine and send grep command
-            sendCommand(global.Tcp_ports[i], grep_response)
+            sendCommand(global.Tcp_ports[i], grep_response, filename)
 
             //connect to machine and send grep line command
-            lineCount := sendLineCommand(global.Tcp_ports[i], grep_count)
+            lineCount := sendLineCommand(global.Tcp_ports[i], grep_count, filename)
             
             //append line counts for connected machine
             lineStr := fmt.Sprintf("Machine %s: %d", global.Tcp_ports[i][13:15], lineCount) + "\n"
