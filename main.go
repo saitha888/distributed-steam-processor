@@ -85,9 +85,9 @@ func main() {
     // check whether it's a server (receiver) or client (sender)
     if len(os.Args) > 1 && os.Args[1] == "client" { // run client
         grep_command := os.Args[2]
-        grep.TcpClient(grep_command)
+        filename := os.Args[3]
+        grep.GrepClient(grep_command, filename)
     } else { 
-
         //run server
         go servers.TcpServer()
         go servers.UdpServer()
@@ -128,12 +128,12 @@ func commandLoop() {
         switch args[0] {
             case "grep":   
                 if len(args) < 2 {
-                    fmt.Println("Error: Missing pattern parameter. Usage: grep <pattern>")
+                    fmt.Println("Error: Missing pattern parameter. Usage: grep <pattern> <filename>")
                     continue
                 }
                 pattern := args[1]
-                fmt.Println(pattern)
-                grep.TcpClient(pattern)
+                filename := args[2]
+                grep.GrepClient(pattern, filename)
 
             case "get":
                 hydfs_file := args[1]
