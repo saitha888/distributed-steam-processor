@@ -108,7 +108,7 @@ func IntroducerJoin() {
     }
 
     // handle fixing the ring
-    hydfs.SelfJoin(global.Ring_id)
+    hydfs.SelfRingJoin(global.Ring_id)
 }
 
 // Handles a process joining/rejoining the system
@@ -155,7 +155,7 @@ func ProcessJoin(address string) {
     fmt.Printf("Received mem_list from introducer\n")
 
     // handle fixing the ring id
-    hydfs.SelfJoin(global.Ring_id)
+    hydfs.SelfRingJoin(global.Ring_id)
 }
 
 
@@ -172,7 +172,7 @@ func ProcessJoinMessage(message string) {
     send := "Node join detected for: " + joined_node + " at " + time.Now().Format("15:04:05") + "\n"
     util.AppendToFile(send, global.Membership_log)
     // check if a predecessor got added
-    hydfs.NewJoin(joined_node)
+    hydfs.HandleRingJoin(joined_node)
 }
 
 

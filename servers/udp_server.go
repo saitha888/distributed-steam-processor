@@ -67,7 +67,7 @@ func UdpServer() {
                         }
                     }
                 }
-                hydfs.NewJoin(recieved_node)
+                hydfs.HandleRingJoin(recieved_node)
             } else {
                 if recieved_node[:36] != global.Udp_address {
                     membership.ProcessJoinMessage(message)

@@ -79,7 +79,7 @@ func ListRing(treeMap *treemap.Map) {
     }
 }
 
-func RereplicateRemove(id_to_rem string) {
+func HandleRingRemove(id_to_rem string) {
     bytes := []byte(global.Node_id)
 	bytes[32] = '8'
 	
@@ -173,7 +173,7 @@ func RereplicateRemove(id_to_rem string) {
 }
 
 // Checks if a new predecessor got added and files need to be updated
-func NewJoin(joined_node string) {
+func HandleRingJoin(joined_node string) {
     // get ring ids for both nodes
     self_id := util.GetTCPVersion(global.Node_id)
     joined_node = util.GetTCPVersion(joined_node)
@@ -270,7 +270,7 @@ func NewJoin(joined_node string) {
 }
 
 // Handles a process pulling files from successors and predecessors when it joins the system
-func SelfJoin(ring_id string) {
+func SelfRingJoin(ring_id string) {
     // find successor and connect
     successor := util.GetSuccessor(ring_id)
     if len(successor) == 0 {

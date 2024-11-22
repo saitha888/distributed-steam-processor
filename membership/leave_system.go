@@ -41,5 +41,5 @@ func RemoveNode(id_to_rem string) {
     }
 
     //remove node from ring and update file storing
-    hydfs.RereplicateRemove(id_to_rem)
+    hydfs.HandleRingRemove(id_to_rem)
 }
