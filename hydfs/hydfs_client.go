@@ -349,3 +349,4 @@ func MultiAppend(hydfs_file string, vms []string, local_files []string) {
 
     wg.Wait()
 }
+
