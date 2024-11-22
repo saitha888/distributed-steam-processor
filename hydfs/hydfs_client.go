@@ -181,6 +181,7 @@ func AppendFile(local_file string, hydfs_file string) {
     if err != nil {
         fmt.Println("Error encoding data in create", err)
     } 
+    util.RemoveFromCache(hydfs_file)
 }
 
 func GetFromReplica(VMaddress string, HyDFSfilename string, localfilename string){
