@@ -19,7 +19,7 @@ import (
 func GetFile(hydfs_file string, local_file string) {
 
 	file_hash := util.GetHash(hydfs_file)
-	node_ids := util.GetFileServers(file_hash)
+	node_ids := GetFileServers(file_hash)
 
 	machine_num, _ := strconv.Atoi(global.Machine_number)
 	replica_num := machine_num % 3
@@ -104,7 +104,7 @@ func GetFile(hydfs_file string, local_file string) {
 func CreateFile(localfilename string, HyDFSfilename string) {
     // find which machine to create the file on
     file_hash := util.GetHash(HyDFSfilename)
-    node_ids := util.GetFileServers(file_hash)
+    node_ids := GetFileServers(file_hash)
 
     // get the contents of the local filename
     file_contents, err := os.ReadFile(localfilename)
@@ -145,7 +145,7 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 
 func AppendFile(local_file string, hydfs_file string) {
 
-    replicas := util.GetFileServers(util.GetHash(hydfs_file))
+    replicas := GetFileServers(util.GetHash(hydfs_file))
     machine_num, err := strconv.Atoi(os.Getenv("MACHINE_NUMBER"))
     if err != nil {
         return
@@ -181,12 +181,12 @@ func AppendFile(local_file string, hydfs_file string) {
     if err != nil {
         fmt.Println("Error encoding data in create", err)
     } 
-    util.RemoveFromCache(hydfs_file)
+    RemoveFromCache(hydfs_file)
 }
 
 func GetFromReplica(VMaddress string, HyDFSfilename string, localfilename string){
     file_hash := util.GetHash(HyDFSfilename)
-    node_ids := util.GetFileServers(file_hash)
+    node_ids := GetFileServers(file_hash)
 
     server_num := node_ids[0][13:15]
 
@@ -227,7 +227,7 @@ func GetFromReplica(VMaddress string, HyDFSfilename string, localfilename string
 //send merged file to each replica "merge"
 
 func Merge(hydfs_file string) {
-    replicas := util.GetFileServers(util.GetHash(hydfs_file))
+    replicas := GetFileServers(util.GetHash(hydfs_file))
     tot_response := make([]global.Message, 0)
     for _, replica := range replicas {
         port := replica[:36]

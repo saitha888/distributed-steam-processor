@@ -128,7 +128,7 @@ func handleConnection(conn net.Conn) {
             HyDFSfilename = HyDFSfilename[:len(HyDFSfilename)-12] + formattedTime
             file_path = "file-store/" + HyDFSfilename
         }
-        util.RemoveFromCache(received_data.Filename[3:])
+        hydfs.RemoveFromCache(received_data.Filename[3:])
         log := "Message received to create append chunk" + HyDFSfilename + " at " + time.Now().Format("15:04:05.000")
         util.AppendToFile(log, global.Hydfs_log)
         util.WriteToFile(file_path, received_data.FileContents)        
@@ -280,7 +280,7 @@ func handleConnection(conn net.Conn) {
     } else if received_data.Action == "merge" {
         hydfs_file := received_data.Filename
         merged_content := received_data.FileContents
-        origin_num := util.GetFileServers(util.GetHash(hydfs_file))[0][13:15]
+        origin_num := hydfs.GetFileServers(util.GetHash(hydfs_file))[0][13:15]
         hydfs_file = origin_num + "-" + hydfs_file
         file_path := "./file-store/" + hydfs_file
         file, err := os.OpenFile(file_path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)

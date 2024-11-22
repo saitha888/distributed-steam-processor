@@ -18,7 +18,7 @@ func HandleRingJoin(joined_node string) {
     joined_node = util.GetTCPVersion(joined_node)
 
     // get predecessors
-    predecessors := util.GetPredecessors(self_id)
+    predecessors := GetPredecessors(self_id)
 
     dir := "./file-store" 
 
@@ -111,7 +111,7 @@ func HandleRingJoin(joined_node string) {
 // Handles a process pulling files from successors and predecessors when it joins the system
 func SelfRingJoin(ring_id string) {
     // find successor and connect
-    successor := util.GetSuccessor(ring_id)
+    successor := GetSuccessor(ring_id)
     if len(successor) == 0 {
         return
     }
@@ -131,11 +131,11 @@ func SelfRingJoin(ring_id string) {
             Filename:  "",
             FileContents: "",
         }
-        util.GetFiles(conn_successor, data)
+        GetFiles(conn_successor, data)
     }
 
     // find the predecessors
-    predecessors := util.GetPredecessors(ring_id)
+    predecessors := GetPredecessors(ring_id)
     // go through each predecessor
     for i,p :=  range predecessors {
         if i == 2 || len(p) == 0 { // if it's the third predecessor or empty continue
@@ -156,7 +156,7 @@ func SelfRingJoin(ring_id string) {
                 Filename:  "",
                 FileContents: "",
             }
-            util.GetFiles(conn_pred,data)
+            GetFiles(conn_pred,data)
         }
     }
 }

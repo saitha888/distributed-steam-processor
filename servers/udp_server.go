@@ -59,7 +59,7 @@ func UdpServer() {
                     if node.Status == "alive" {
                         node_address := node.NodeID[:36]
                         if node_address != global.Udp_address { // check that it's not self
-                            conn, _ := util.DialUDPClient(node_address)
+                            conn, _ := membership.DialUDPClient(node_address)
 
                             result := "join " + recieved_node
                             // send join message

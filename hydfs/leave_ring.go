@@ -19,7 +19,7 @@ func HandleRingRemove(id_to_rem string) {
 	
 	id_to_remove := string(bytes_remove)
 
-    iterator := util.IteratorAt(global.Ring_map, id_to_remove)
+    iterator := IteratorAt(global.Ring_map, id_to_remove)
     id := ""
     if (!iterator.Next()) {
         iterator.First()
@@ -31,7 +31,7 @@ func HandleRingRemove(id_to_rem string) {
         RenameFilesWithPrefix(id_to_remove[13:15], node_id[13:15])
 
         //pull files of origin n-3
-        nod := util.IteratorAtNMinusSteps(global.Ring_map, node_id, 3)
+        nod := IteratorAtNMinusSteps(global.Ring_map, node_id, 3)
         port := nod[:36]
         // pull for files
         conn_pred, err := net.Dial("tcp", port )
@@ -45,7 +45,7 @@ func HandleRingRemove(id_to_rem string) {
             Filename:  "",
             FileContents: "",
         }
-        util.GetFiles(conn_pred, data)
+        GetFiles(conn_pred, data)
     }
     id2 := ""
     if (!iterator.Next()) {
@@ -55,10 +55,10 @@ func HandleRingRemove(id_to_rem string) {
     if (id2 == node_id) {
         //if removed node is 2 nodes before this node
         //rename files of origin n-2 to n-1 
-        RenameFilesWithPrefix(util.IteratorAtNMinusSteps(global.Ring_map, node_id, 2)[13:15], util.IteratorAtNMinusSteps(global.Ring_map, node_id, 1)[13:15])
+        RenameFilesWithPrefix(IteratorAtNMinusSteps(global.Ring_map, node_id, 2)[13:15], IteratorAtNMinusSteps(global.Ring_map, node_id, 1)[13:15])
 
         //pull files of origin n-3
-        nod := util.IteratorAtNMinusSteps(global.Ring_map, node_id, 3)
+        nod := IteratorAtNMinusSteps(global.Ring_map, node_id, 3)
         port := nod[:36]
         // pull for files
         conn_pred, err := net.Dial("tcp", port )
@@ -72,7 +72,7 @@ func HandleRingRemove(id_to_rem string) {
             Filename:  "",
             FileContents: "",
         }
-        util.GetFiles(conn_pred, data)
+        GetFiles(conn_pred, data)
     } 
     id3 := ""
     if (!iterator.Next()) {
@@ -81,7 +81,7 @@ func HandleRingRemove(id_to_rem string) {
     //3, 1, 2, 4, 5
     id3 = iterator.Value().(string)
     if (id3 == node_id) {
-        nod := util.IteratorAtNMinusSteps(global.Ring_map, node_id, 2)
+        nod := IteratorAtNMinusSteps(global.Ring_map, node_id, 2)
         port := nod[:36]
         // pull for files
         conn_pred, err := net.Dial("tcp", port )
@@ -95,7 +95,7 @@ func HandleRingRemove(id_to_rem string) {
             Filename:  "",
             FileContents: "",
         }
-        util.GetFiles(conn_pred,data)
+        GetFiles(conn_pred,data)
     }
     global.Ring_map.Remove(util.GetHash(id_to_remove))
 }

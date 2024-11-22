@@ -16,7 +16,7 @@ func LeaveList() {
             util.ChangeStatus(i, "leave")
         } else { 
             node_address := node.NodeID[:36]
-            conn, err := util.DialUDPClient(node_address)
+            conn, err := DialUDPClient(node_address)
             defer conn.Close()
 
             // Send leave message

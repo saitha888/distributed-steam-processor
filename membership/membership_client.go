@@ -18,7 +18,7 @@ func PingClient(plus_s bool) {
     global.Enabled_sus = plus_s
     target_addr := target_node.NodeID[:36]
     // Connect to the randomly selected node
-    conn, err := util.DialUDPClient(target_addr)
+    conn, err := DialUDPClient(target_addr)
     defer conn.Close()
 
     // Send a ping message
@@ -40,21 +40,21 @@ func PingClient(plus_s bool) {
             util.AppendToFile(message, global.Membership_log)
             RemoveNode(target_node.NodeID)
             for _,node := range global.Membership_list {
-                util.SendMessage(node.NodeID, "fail", target_node.NodeID)
+                SendMessage(node.NodeID, "fail", target_node.NodeID)
             }
         }
         if plus_s && CheckStatus(target_node.NodeID) != " sus "  { // if there is suspicion and the node isn't already sus
             message := "Node suspect detected for: " + target_node.NodeID + " from machine " + global.Udp_port + " at " + time.Now().Format("15:04:05") + "\n"
             util.AppendToFile(message, global.Membership_log)
             for _,node := range global.Membership_list { // let all machines know node is suspected
-                util.SendMessage(node.NodeID, "suspected",target_node.NodeID)
+                SendMessage(node.NodeID, "suspected",target_node.NodeID)
             }
             susTimeout(6*time.Second, target_node.NodeID, target_node.Inc) // wait 6 seconds to recieve update about node status
             index := FindNode(target_node.NodeID)
             if index < 0 || CheckStatus(target_node.NodeID) != "alive" { // if node was removed
                 RemoveNode(target_node.NodeID)
                 for _, node := range(global.Membership_list) { // let all other nodes know node has failed
-                    util.SendMessage(node.NodeID, "fail", target_node.NodeID)
+                    SendMessage(node.NodeID, "fail", target_node.NodeID)
                 }
             }
 
@@ -73,7 +73,7 @@ func PingClient(plus_s bool) {
                 message := "Node suspect cleared for: " + target_node.NodeID + " from machine " + global.Udp_port + " at " + time.Now().Format("15:04:05") + "\n"
                 util.AppendToFile(message, global.Membership_log)
                 for _,node := range global.Membership_list { // let all machines know suspected node is alive
-                    util.SendAlive(node.NodeID, target_node.NodeID, recieved_inc_str)
+                    SendAlive(node.NodeID, target_node.NodeID, recieved_inc_str)
                 }
             }
             // update status and inc number

@@ -38,7 +38,7 @@ func IntroducerJoin() {
             continue
         }
         // connect to the port
-        conn, _ := util.DialUDPClient(port)
+        conn, _ := DialUDPClient(port)
         defer conn.Close()
 
         // request membership list
@@ -122,7 +122,7 @@ func ProcessJoin(address string) {
     }
 
     // Connect to introducer
-    conn_introducer, err := util.DialUDPClient(global.Introducer_address)
+    conn_introducer, err := DialUDPClient(global.Introducer_address)
     defer conn_introducer.Close()
 
 

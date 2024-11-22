@@ -190,7 +190,7 @@ func commandLoop() {
             
             case "ls":
                 HyDFSfilename := args[1]
-                util.ListServers(HyDFSfilename)
+                hydfs.ListServers(HyDFSfilename)
             
             case "store":
                 util.ListStore()
