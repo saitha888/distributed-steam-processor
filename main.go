@@ -183,6 +183,7 @@ func commandLoop() {
             
             case "create":
                 localfilename := args[1]
+                localfilename = "local-files/" + localfilename
                 HyDFSfilename := args[2]
                 hydfs.CreateFile(localfilename, HyDFSfilename)
                 fmt.Println(HyDFSfilename +" Created")
@@ -196,6 +197,7 @@ func commandLoop() {
 
             case "append":
                 local_file := args[1]
+                local_file = "local-files/" + local_file
                 hydfs_file := args[2]
                 hydfs.AppendFile(local_file, hydfs_file)
                 fmt.Println(local_file + "added to" + hydfs_file )
