@@ -3,8 +3,12 @@ package main
 import (
     "fmt"
     "os"
-    "distributed_system/tcp"
-    "distributed_system/udp"
+    "distributed_system/servers"
+    "distributed_system/global"
+    "distributed_system/util"
+    "distributed_system/membership"
+    "distributed_system/hydfs"
+    "distributed_system/grep"
     "github.com/joho/godotenv"
     "bufio"
     "strings"
@@ -14,7 +18,6 @@ import (
 )
 
 
-var addr string = os.Getenv("MACHINE_UDP_ADDRESS")
 var stopPing chan bool
 var suspicionEnabled bool = true
 
@@ -31,7 +34,7 @@ func main() {
     defer file.Close()
 
     // clear the membership logging file 
-    file, err = os.OpenFile(os.Getenv("MEMBERSHIP_FILENAME"), os.O_WRONLY|os.O_TRUNC, 0644)
+    file, err = os.OpenFile(global.Membership_log, os.O_WRONLY|os.O_TRUNC, 0644)
     if err != nil {
         fmt.Println("Error opening file: ", err)
         return
@@ -39,7 +42,7 @@ func main() {
     defer file.Close()
 
     // clear the hydfs logging file 
-    file, err = os.OpenFile(os.Getenv("HDYFS_FILENAME"), os.O_WRONLY|os.O_TRUNC, 0644)
+    file, err = os.OpenFile(global.Hydfs_log, os.O_WRONLY|os.O_TRUNC, 0644)
     if err != nil {
         fmt.Println("Error opening file: ", err)
         return
@@ -82,12 +85,12 @@ func main() {
     // check whether it's a server (receiver) or client (sender)
     if len(os.Args) > 1 && os.Args[1] == "client" { // run client
         grep := os.Args[2]
-        tcp.TcpClient(grep)
+        grep.TcpClient(grep)
     } else { 
 
         //run server
-        go tcp.TcpServer()
-        go udp.UdpServer()
+        go servers.TcpServer()
+        go servers.UdpServer()
         commandLoop()
 
         select {}
@@ -108,7 +111,7 @@ func startPinging() {
 				return
 			default:
 				time.Sleep(1 * time.Second)
-				udp.PingClient(suspicionEnabled)
+				membership.PingClient(suspicionEnabled)
 			}
 		}
 	}()
@@ -139,28 +142,25 @@ func commandLoop() {
                 fmt.Println(hydfs_file+ " retrieved and written to " + local_file)
 
             case "join":
-                udp.JoinSystem(addr)
+                membership.JoinSystem(global.Udp_address)
         
                 // Start pinging if joining the system
                 startPinging()
             case "list_ring":
-                ring_map := udp.GetRing()
-                go udp.ListRing(ring_map)
+                go util.ListRing(global.Ring_map)
 
             case "list_mem_ids":
-                membership_list := udp.GetMembershipList()
-                go udp.ListMemRing(membership_list)
+                go util.ListMemRing(global.Membership_list)
             
             case "list_mem":
-                membership_list := udp.GetMembershipList()
-                go udp.ListMem(membership_list)
+                go util.ListMem(global.Membership_list)
         
             case "leave":
                 // Send a signal to stop the ping loop
                 if stopPing != nil {
                     close(stopPing) // Close the stopPing channel to stop the ping loop
                 }
-                go udp.LeaveList()
+                go util.LeaveList()
             case "enable_sus":
                 // Toggle suspicion flag
                 suspicionEnabled = true
@@ -178,8 +178,8 @@ func commandLoop() {
                 }
             
             case "list_sus":
-                sus_list := udp.FindSusMachines()
-                go udp.ListMem(sus_list)
+                sus_list := util.FindSusMachines()
+                go util.ListMem(sus_list)
             
             case "create":
                 localfilename := args[1]
@@ -189,15 +189,15 @@ func commandLoop() {
             
             case "ls":
                 HyDFSfilename := args[1]
-                udp.ListServers(HyDFSfilename)
+                util.ListServers(HyDFSfilename)
             
             case "store":
-                udp.ListStore()
+                util.ListStore()
 
             case "append":
                 local_file := args[1]
                 hydfs_file := args[2]
-                tcp.AppendFile(local_file, hydfs_file)
+                hydfs.AppendFile(local_file, hydfs_file)
                 fmt.Println(local_file + "added to" + hydfs_file )
             
             case "multiappend":
@@ -211,13 +211,13 @@ func commandLoop() {
                         local_files = append(local_files, param)
                     }
                 }
-                tcp.MultiAppend(hydfs_file, vms, local_files)
+                hydfs.MultiAppend(hydfs_file, vms, local_files)
             
             case "getfromreplica":
                 VMaddress := args[1]
                 HyDFSfilename := args[2]
                 localfilename := args[3]
-                tcp.GetFromReplica(VMaddress, HyDFSfilename, localfilename)
+                hydfs.GetFromReplica(VMaddress, HyDFSfilename, localfilename)
             
             case "test1":
                 file1 := args[1]
@@ -233,7 +233,7 @@ func commandLoop() {
 
             case "merge":
                 hydfs_file := args[1]
-                tcp.Merge(hydfs_file)
+                hydfs.Merge(hydfs_file)
                 fmt.Println("Merging of " + hydfs_file + " complete")
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join,  leave")

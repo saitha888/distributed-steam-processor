@@ -1,8 +1,8 @@
 package scripts
  
 import (
-	"distributed_system/udp"
-	"distributed_system/tcp"
+	"distributed_system/global"
+	"distributed_system/hydfs"
 	"strconv"
 	"math/rand"
 	"time"
@@ -18,13 +18,13 @@ func TestCreate(local_filenames [5]string) {
 	for i := 0; i < 5; i++ {
 		local_file := "local-files/" + local_filenames[i]
 		hydfs_file := hydfs_filenames[i]
-		tcp.CreateFile(local_file, hydfs_file)
+		hydfs.CreateFile(local_file, hydfs_file)
 	}
 }
 
 func TestAppend() {
-	tcp.AppendFile("local-files/business_9.txt", "file_zebra")
-	tcp.AppendFile("local-files/business_20.txt", "file_zebra")
+	hydfs.AppendFile("local-files/business_9.txt", "file_zebra")
+	hydfs.AppendFile("local-files/business_20.txt", "file_zebra")
 }
 
 
@@ -32,7 +32,7 @@ func MergePerformance(num_clients string, append_size string) {
 	// create the 10 mb initial file
 	localfilename := "10mb_file.txt"
 	HyDFSfilename := "merge_performance"
-	tcp.CreateFile(localfilename, HyDFSfilename)
+	hydfs.CreateFile(localfilename, HyDFSfilename)
 
 	// populate client list
 	client_num, _ := strconv.Atoi(num_clients)
@@ -54,12 +54,12 @@ func MergePerformance(num_clients string, append_size string) {
 
 	// launch multi append specific number of times
 	for i := 0; i < iterations; i++ {
-		tcp.MultiAppend("merge_performance", clients, local_files)
+		hydfs.MultiAppend("merge_performance", clients, local_files)
 	}
 }
 
 func GetRandomClients(num_clients int) [] string{
-	membership_list := udp.GetMembershipList()
+	membership_list := global.Membership_list
 	rand.Seed(time.Now().UnixNano())
 
 	selected := make(map[int]bool)
@@ -96,7 +96,7 @@ func LoadFiles(folder_name string) {
 			if !file.IsDir() && strings.HasSuffix(file.Name(), ".txt") {
 				localFilename := datasetFolder + "/" + file.Name()
 				HyDFSfilename := file.Name()
-				tcp.CreateFile(localFilename, HyDFSfilename)
+				hydfs.CreateFile(localFilename, HyDFSfilename)
 			}
 		}
 	
@@ -127,9 +127,9 @@ func RunGets(append bool) {
 		hydfsFile := fmt.Sprintf("file_%d", fileIndex)
 		localFile := filepath.Join("random", fmt.Sprintf("file_copy_%d.txt", fileIndex))
 		if append && rand.Float64() < 0.1 {
-			tcp.AppendFile(localFile, hydfsFile) // 10% chance to append
+			hydfs.AppendFile(localFile, hydfsFile) // 10% chance to append
 		} else {
-			tcp.GetFile(hydfsFile, localFile) // 90% chance to get
+			hydfs.GetFile(hydfsFile, localFile) // 90% chance to get
 		}
 	}
 	stop1 := time.Since(start).String()
@@ -148,9 +148,9 @@ func RunGets(append bool) {
 		hydfsFile := fmt.Sprintf("file_%d", fileIndex)
 		localFile := filepath.Join("not-random", fmt.Sprintf("file_copy_%d.txt", fileIndex))
 		if append && rand.Float64() < 0.1 {
-			tcp.AppendFile(localFile, hydfsFile) // 10% chance to append
+			hydfs.AppendFile(localFile, hydfsFile) // 10% chance to append
 		} else {
-			tcp.GetFile(hydfsFile, localFile) // 90% chance to get
+			hydfs.GetFile(hydfsFile, localFile) // 90% chance to get
 		}
 	}
 	stop2 := time.Since(start2).String()
