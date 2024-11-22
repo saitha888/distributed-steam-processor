@@ -5,6 +5,7 @@ import (
     "net"
     "distributed_system/global"
     "distributed_system/util"
+    
 )
 
 //Function to leave the system
@@ -31,16 +32,18 @@ func LeaveList() {
 
 // Remove a machine from the membership list
 func RemoveNode(id_to_rem string) {
-    bytes := []byte(global.Node_id)
-	bytes[32] = '8'
-	
-	node_id := string(bytes)
+
 
     for index,node := range global.Membership_list {
         if id_to_rem == node.NodeID { // remove the node if it's found
             global.Membership_list = append(global.Membership_list[:index], global.Membership_list[index+1:]...)
         }
     }
+
+    bytes := []byte(global.Node_id)
+	bytes[32] = '8'
+	
+	node_id := string(bytes)
 
     bytes_remove := []byte(id_to_rem)
 	
