@@ -7,6 +7,7 @@ import (
     "distributed_system/global"
 	"distributed_system/util"
 	"distributed_system/membership"
+    "distributed_system/hydfs"
 )
 
 //starts udp server that listens for pings
@@ -66,7 +67,7 @@ func UdpServer() {
                         }
                     }
                 }
-                membership.NewJoin(recieved_node)
+                hydfs.HandleRingJoin(recieved_node)
             } else {
                 if recieved_node[:36] != global.Udp_address {
                     membership.ProcessJoinMessage(message)
