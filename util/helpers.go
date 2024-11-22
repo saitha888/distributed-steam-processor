@@ -324,6 +324,7 @@ func RemoveFromCache(filename string) {
             os.Remove(dir + "/" + filename)
         }
     }
+    delete(global.Cache_set, filename)
 }
 
 func GetFiles(conn net.Conn, data global.Message) {
