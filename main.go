@@ -84,8 +84,8 @@ func main() {
 	}
     // check whether it's a server (receiver) or client (sender)
     if len(os.Args) > 1 && os.Args[1] == "client" { // run client
-        grep := os.Args[2]
-        grep.TcpClient(grep)
+        grep_command := os.Args[2]
+        grep.TcpClient(grep_command)
     } else { 
 
         //run server
@@ -133,12 +133,12 @@ func commandLoop() {
                 }
                 pattern := args[1]
                 fmt.Println(pattern)
-                tcp.TcpClient(pattern)
+                grep.TcpClient(pattern)
 
             case "get":
                 hydfs_file := args[1]
                 local_file := args[2]
-                tcp.GetFile(hydfs_file, local_file)
+                hydfs.GetFile(hydfs_file, local_file)
                 fmt.Println(hydfs_file+ " retrieved and written to " + local_file)
 
             case "join":
@@ -147,20 +147,20 @@ func commandLoop() {
                 // Start pinging if joining the system
                 startPinging()
             case "list_ring":
-                go util.ListRing(global.Ring_map)
+                go hydfs.ListRing(global.Ring_map)
 
             case "list_mem_ids":
-                go util.ListMemRing(global.Membership_list)
+                go hydfs.ListMemRing(global.Membership_list)
             
             case "list_mem":
-                go util.ListMem(global.Membership_list)
+                go hydfs.ListMem(global.Membership_list)
         
             case "leave":
                 // Send a signal to stop the ping loop
                 if stopPing != nil {
                     close(stopPing) // Close the stopPing channel to stop the ping loop
                 }
-                go util.LeaveList()
+                go membership.LeaveList()
             case "enable_sus":
                 // Toggle suspicion flag
                 suspicionEnabled = true
@@ -179,12 +179,12 @@ func commandLoop() {
             
             case "list_sus":
                 sus_list := util.FindSusMachines()
-                go util.ListMem(sus_list)
+                go hydfs.ListMem(sus_list)
             
             case "create":
                 localfilename := args[1]
                 HyDFSfilename := args[2]
-                tcp.CreateFile(localfilename, HyDFSfilename)
+                hydfs.CreateFile(localfilename, HyDFSfilename)
                 fmt.Println(HyDFSfilename +" Created")
             
             case "ls":
