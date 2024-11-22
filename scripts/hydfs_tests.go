@@ -176,3 +176,4 @@ func RunGets(append bool) {
 
 	fmt.Println("Latency results written to cache_performance_output.txt")
 }
+

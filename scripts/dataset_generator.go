@@ -51,3 +51,4 @@ func copyFile(src, dst string) error {
 	_, err = io.Copy(destinationFile, sourceFile)
 	return err
 }
+
