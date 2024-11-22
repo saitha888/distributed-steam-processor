@@ -100,7 +100,7 @@ func HandleRingRemove(id_to_rem string) {
     if (id == node_id) {
         //if removed node is right before this node
         //this node becomes new origin for failed node, rename files
-        util.RenameFilesWithPrefix(id_to_remove[13:15], node_id[13:15])
+        RenameFilesWithPrefix(id_to_remove[13:15], node_id[13:15])
 
         //pull files of origin n-3
         nod := util.IteratorAtNMinusSteps(global.Ring_map, node_id, 3)
@@ -127,7 +127,7 @@ func HandleRingRemove(id_to_rem string) {
     if (id2 == node_id) {
         //if removed node is 2 nodes before this node
         //rename files of origin n-2 to n-1 
-        util.RenameFilesWithPrefix(util.IteratorAtNMinusSteps(global.Ring_map, node_id, 2)[13:15], util.IteratorAtNMinusSteps(global.Ring_map, node_id, 1)[13:15])
+        RenameFilesWithPrefix(util.IteratorAtNMinusSteps(global.Ring_map, node_id, 2)[13:15], util.IteratorAtNMinusSteps(global.Ring_map, node_id, 1)[13:15])
 
         //pull files of origin n-3
         nod := util.IteratorAtNMinusSteps(global.Ring_map, node_id, 3)
