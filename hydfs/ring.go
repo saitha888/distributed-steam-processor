@@ -12,6 +12,7 @@ import (
     "os"
     "io/ioutil"
     "log"
+    "regexp"
 )
 
 
@@ -320,4 +321,46 @@ func SelfRingJoin(ring_id string) {
             util.GetFiles(conn_pred,data)
         }
     }
+}
+
+// renameFilesWithPrefix renames files in the "filestore" directory that start with oldPrefix to start with newPrefix
+func RenameFilesWithPrefix(oldPrefix string, newPrefix string) {
+	dir := "file-store"
+
+	// Read the directory contents
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+        fmt.Println("cannot get to directory")
+	}
+
+	// Regular expression to match filenames starting with the oldPrefix followed by a dash
+	re := regexp.MustCompile(fmt.Sprintf(`^(%s)-(.*)`, oldPrefix))
+
+	// Iterate through all the files
+	for _, file := range files {
+		// Get the file name
+		oldName := file.Name()
+
+		// Use regex to check if the filename starts with oldPrefix and a dash
+		matches := re.FindStringSubmatch(oldName)
+		if matches == nil {
+			// If there's no match, skip the file
+			continue
+		}
+
+		// Create the new filename with newPrefix instead of oldPrefix
+		newName := fmt.Sprintf("%s-%s", newPrefix, matches[2])
+
+		// Construct full paths for renaming
+		oldPath := fmt.Sprintf("%s/%s", dir, oldName)
+		newPath := fmt.Sprintf("%s/%s", dir, newName)
+
+		// Rename the file
+		err = os.Rename(oldPath, newPath)
+		if err != nil {
+			log.Printf("Error renaming file %s to %s: %v", oldPath, newPath, err)
+		} else {
+			fmt.Printf("Renamed %s to %s\n", oldName, newName)
+		}
+	}
 }
