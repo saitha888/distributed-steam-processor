@@ -226,10 +226,10 @@ func commandLoop() {
                 file4 := args[4]
                 file5 := args[5]
                 filenames := [5]string{file1, file2, file3, file4, file5}
-                scripts.Test1(filenames)
+                scripts.TestCreate(filenames)
 
             case "test4":
-                scripts.Test4()
+                scripts.TestAppend()
 
             case "merge":
                 hydfs_file := args[1]
