@@ -1,13 +1,1 @@
-*
-!global/
-!grep/
-!hydfs/
-!membership/
-!scripts/
-!servers/
-!util/
-!.gitignore
-!go.mod
-!go.sum
-!main.go
-!README.md
+.env
