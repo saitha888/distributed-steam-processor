@@ -75,7 +75,7 @@ func IntroducerJoin() {
             }
 
             // change own node status to alive
-            index := util.FindNode(global.Node_id)
+            index := FindNode(global.Node_id)
             if index >= 0 {
                 util.ChangeStatus(index, "alive")
             }      
@@ -216,7 +216,7 @@ func SelfJoin(ring_id string) {
 // Handles anoher process joining the system
 func ProcessJoinMessage(message string) {
     joined_node := message[5:]
-    index := util.FindNode(joined_node)
+    index := FindNode(joined_node)
     if index >= 0 { // machine was found
         util.ChangeStatus(index, "alive")
     } else { // machine was not found

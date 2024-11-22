@@ -5,10 +5,7 @@ import (
 	"net"
     "os"
     "strings"
-    "time"
     "strconv"
-    "math/rand"
-    "log"
     "io/ioutil"
     "regexp"
     "encoding/json"
@@ -18,6 +15,22 @@ import (
     "crypto/sha256"
     "encoding/binary"
 )
+
+// Function to write content to a local file
+func WriteToFile(filename string, content string) error {
+    file, err := os.Create(filename)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+    _, err = file.WriteString(content)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
 
 func ConnectToMachine(port string) (*net.UDPConn, error){
     addr, err := net.ResolveUDPAddr("udp", ":" + port)
@@ -30,81 +43,6 @@ func ConnectToMachine(port string) (*net.UDPConn, error){
         fmt.Println("Error starting UDP server:", err)
     }
     return conn, nil
-}
-
-func GetTcpID() string {
-    bytes := []byte(global.Node_id)
-	bytes[32] = '8'
-	
-	tcp_node_id := string(bytes)
-    return tcp_node_id
-}
-
-// Function to randomly select an alive node in the system
-func SelectRandomNode() global.Node {
-    rand.Seed(time.Now().UnixNano())
-    var target_node global.Node
-    for {
-        random_index := rand.Intn(len(global.Membership_list))
-        selected_node := global.Membership_list[random_index]
-        if selected_node.NodeID != global.Node_id && selected_node.Status != "leave" { 
-            target_node = selected_node
-            break
-        }
-    }
-    return target_node
-}
-
-// Get the index of a machine in the list
-func FindNode(node_id string) int {
-    for index,node := range global.Membership_list { 
-        if node_id == node.NodeID {
-            return index
-        }
-    }
-    return -1
-}
-
-// renameFilesWithPrefix renames files in the "filestore" directory that start with oldPrefix to start with newPrefix
-func RenameFilesWithPrefix(oldPrefix string, newPrefix string) {
-	dir := "file-store"
-
-	// Read the directory contents
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-        fmt.Println("cannot get to directory")
-	}
-
-	// Regular expression to match filenames starting with the oldPrefix followed by a dash
-	re := regexp.MustCompile(fmt.Sprintf(`^(%s)-(.*)`, oldPrefix))
-
-	// Iterate through all the files
-	for _, file := range files {
-		// Get the file name
-		oldName := file.Name()
-
-		// Use regex to check if the filename starts with oldPrefix and a dash
-		matches := re.FindStringSubmatch(oldName)
-		if matches == nil {
-			// If there's no match, skip the file
-			continue
-		}
-
-		// Create the new filename with newPrefix instead of oldPrefix
-		newName := fmt.Sprintf("%s-%s", newPrefix, matches[2])
-
-		// Construct full paths for renaming
-		oldPath := fmt.Sprintf("%s/%s", dir, oldName)
-		newPath := fmt.Sprintf("%s/%s", dir, newName)
-
-		// Rename the file
-		err = os.Rename(oldPath, newPath)
-		if err != nil {
-			log.Printf("Error renaming file %s to %s: %v", oldPath, newPath, err)
-		} else {
-			fmt.Printf("Renamed %s to %s\n", oldName, newName)
-		}
-	}
 }
 
 // Function to append a string to a file
@@ -371,14 +309,6 @@ func GetHash(data string) int {
 // Change the status of a machine in the list
 func ChangeStatus(index int, message string){
     global.Membership_list[index].Status = message
-}
-
-func CheckStatus(node string) string {
-    index := FindNode(node)
-    if index >= 0 {
-        return global.Membership_list[index].Status
-    }
-    return "none"
 }
 
 // Get the 3 nodes before a node in the ring

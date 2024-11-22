@@ -42,7 +42,7 @@ func UdpServer() {
                 // get the node id and timestamp
                 message := "Node join detected for: " + recieved_node + " at " + time.Now().Format("15:04:05") + "\n"
                 util.AppendToFile(message, global.Membership_log)
-                index := util.FindNode(recieved_node)
+                index := membership.FindNode(recieved_node)
                 if index >= 0 { // node is already in membership list
                     util.ChangeStatus(index, "alive")
                 } else { // need to add new node
@@ -74,7 +74,7 @@ func UdpServer() {
             }
         } else if message[:5] == "leave" { // machine left
             left_node := message[6:]
-            index := util.FindNode(left_node)
+            index := membership.FindNode(left_node)
             if index >= 0 { // machine was found
                 util.ChangeStatus(index, "leave")
             }
@@ -85,7 +85,7 @@ func UdpServer() {
                 sus_node := message[10:]
                 message := "Node suspect detected for: " + sus_node + " at " + time.Now().Format("15:04:05") + "\n"
                 util.AppendToFile(message, global.Membership_log)
-                index := util.FindNode(sus_node)
+                index := membership.FindNode(sus_node)
                 if sus_node == global.Node_id {
                     fmt.Println("Node is currently suspected")
                     global.Inc_num += 1
@@ -103,7 +103,7 @@ func UdpServer() {
             inc_num, _ := strconv.Atoi(message[63:])
             message := "Suspected node cleared for: " + alive_node + " at " + time.Now().Format("15:04:05") + "\n"
             util.AppendToFile(message, global.Membership_log)
-            index := util.FindNode(alive_node)
+            index := membership.FindNode(alive_node)
             if index >= 0 {
                 util.ChangeStatus(index, "alive")
                 util.ChangeInc(index, inc_num)

@@ -10,8 +10,8 @@ import (
 
 // Function to randomly select a node from the system and ping it
 func PingClient(plus_s bool) {
-    target_node := util.SelectRandomNode()
-    index := util.FindNode(target_node.NodeID)
+    target_node := SelectRandomNode()
+    index := FindNode(target_node.NodeID)
     if index < 0 {
         return
     }
@@ -43,15 +43,15 @@ func PingClient(plus_s bool) {
                 util.SendMessage(node.NodeID, "fail", target_node.NodeID)
             }
         }
-        if plus_s && util.CheckStatus(target_node.NodeID) != " sus "  { // if there is suspicion and the node isn't already sus
+        if plus_s && CheckStatus(target_node.NodeID) != " sus "  { // if there is suspicion and the node isn't already sus
             message := "Node suspect detected for: " + target_node.NodeID + " from machine " + global.Udp_port + " at " + time.Now().Format("15:04:05") + "\n"
             util.AppendToFile(message, global.Membership_log)
             for _,node := range global.Membership_list { // let all machines know node is suspected
                 util.SendMessage(node.NodeID, "suspected",target_node.NodeID)
             }
             susTimeout(6*time.Second, target_node.NodeID, target_node.Inc) // wait 6 seconds to recieve update about node status
-            index := util.FindNode(target_node.NodeID)
-            if index < 0 || util.CheckStatus(target_node.NodeID) != "alive" { // if node was removed
+            index := FindNode(target_node.NodeID)
+            if index < 0 || CheckStatus(target_node.NodeID) != "alive" { // if node was removed
                 RemoveNode(target_node.NodeID)
                 for _, node := range(global.Membership_list) { // let all other nodes know node has failed
                     util.SendMessage(node.NodeID, "fail", target_node.NodeID)
@@ -67,7 +67,7 @@ func PingClient(plus_s bool) {
         recieved_node_id := ack[:56]
         recieved_inc_str := ack[57:]
         recieved_inc, _ := strconv.Atoi(ack[57:])
-        index := util.FindNode(recieved_node_id)
+        index := FindNode(recieved_node_id)
         if index >= 0 {
             if global.Membership_list[index].Status == " sus " || global.Membership_list[index].Inc < recieved_inc { // If the machine was suspected it is now cleared
                 message := "Node suspect cleared for: " + target_node.NodeID + " from machine " + global.Udp_port + " at " + time.Now().Format("15:04:05") + "\n"
@@ -96,7 +96,7 @@ func susTimeout(duration time.Duration, sus_id string, inc_num int) {
             return
 		default:
 			// Continue doing the work
-            index := util.FindNode(sus_id)
+            index := FindNode(sus_id)
             if index >= 0 && global.Membership_list[index].Inc > inc_num {
                 message := "Node suspect removed for: " + sus_id + "\n"
                 util.AppendToFile(message, global.Membership_log)
