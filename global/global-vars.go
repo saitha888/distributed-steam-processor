@@ -49,6 +49,7 @@ var Ring_id string = ""
 var Inc_num int = 0
 var Ring_map = treemap.NewWithIntComparator()
 var Membership_list []Node
+var Schedule = make(map[string][]string)
 var Enabled_sus = false
 var Cache_set = make(map[string]bool)
 var File_prefix string = Udp_address[13:15]

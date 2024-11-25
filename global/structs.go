@@ -12,3 +12,9 @@ type Node struct {
     Inc int // incarnation number
     RingID int // unique ring id (tcp port version)
 }
+
+type Stream struct {
+    src_file string
+    dest_file string
+    tuple []string
+}
