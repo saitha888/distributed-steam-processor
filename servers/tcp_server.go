@@ -329,6 +329,7 @@ func handleConnection(conn net.Conn) {
             return
         }
         global.Schedule = schedule
+        fmt.Println(global.Schedule)
     } else if message_type == "rainstorm_init" {
         var params map[string]string
         err = json.Unmarshal(json_data, &params)

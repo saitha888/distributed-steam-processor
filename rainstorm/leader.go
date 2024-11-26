@@ -14,6 +14,7 @@ var workers []string
 
 func InitiateJob(params map[string]string) {
 	CreateSchedule(params)
+	fmt.Println("schedule: ", global.Schedule)
 	SendSchedule()
 }
 
@@ -33,6 +34,7 @@ func CreateSchedule(params map[string]string) {
 	Populate_Stage(num_tasks, global.Stage{params["op_1"], 1})
 	// populating op_2 stage
 	Populate_Stage(num_tasks, global.Stage{params["op_2"], 2})
+	fmt.Println("worker to task: ", worker_tasks)
 }
 
 func Populate_Stage(num_tasks int, stage global.Stage) {
