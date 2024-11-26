@@ -22,8 +22,8 @@ func CreateSchedule(params map[string]string) {
 	// populate workers dictionary with empty task lists
 	// create worker queue
 	for _,node := range(global.Membership_list) {
-        worker_tasks[node.NodeID[:36]] = []string{}
-		workers = append(workers,node.NodeID[:36])
+        worker_tasks[util.GetTCPVersion(node.NodeID[:36])] = []string{}
+		workers = append(workers,util.GetTCPVersion(node.NodeID[:36]))
     }
 
 	// go through workers list and assign tasks, each stage should have num_tasks workers assigned
@@ -51,7 +51,7 @@ func Populate_Stage(num_tasks int, stage global.Stage) {
 
 func SendSchedule() {
 	for _,node := range global.Membership_list {
-		port := node.NodeID[:36]
+		port := util.GetTCPVersion(node.NodeID[:36])
 		conn, err := util.DialTCPClient(port)
 		defer conn.Close()
 	
