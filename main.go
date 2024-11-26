@@ -15,7 +15,7 @@ import (
     "time"
     "log"
     "distributed_system/scripts"
-    // "distributed_system/rainstorm"
+    "distributed_system/rainstorm"
 )
 
 
@@ -240,12 +240,16 @@ func commandLoop() {
                 fmt.Println("Merging of " + hydfs_file + " complete")
             
             case "rainstorm":
-            // RainStorm <op1 _exe> <op2 _exe> <hydfs_src_file> <hydfs_dest_filename> <num_tasks>
-                // op1 := args[1]
-                // op2 := args[2]
-                // src_file := args[3]
-                // dest_file := args[4]
-                // num_tasks := args[5]
+            //RainStorm <op1 _exe> <op2 _exe> <hydfs_src_file> <hydfs_dest_filename> <num_tasks>
+            params := map[string]string{
+                "op_1":      args[1],
+                "op_2":      args[2],
+                "src_file":  args[3],
+                "dest_file": args[4],
+                "num_tasks": args[5],
+            }
+            rainstorm.CallRainstorm(params)
+
 
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join,  leave")
