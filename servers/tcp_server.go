@@ -322,7 +322,7 @@ func handleConnection(conn net.Conn) {
             }
         } 
     } else if message_type == "rainstorm" {
-        var schedule map[global.Stage][]string 
+        var schedule map[string][]string 
         err = json.Unmarshal(json_data, &schedule)
         if err != nil {
             fmt.Println("Error unmarshaling JSON to struct:", err)

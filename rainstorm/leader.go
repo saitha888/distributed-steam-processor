@@ -29,21 +29,21 @@ func CreateSchedule(params map[string]string) {
 	// go through workers list and assign tasks, each stage should have num_tasks workers assigned
 	num_tasks, _ := strconv.Atoi(params["num_tasks"])
 	// populating source stage
-	Populate_Stage(num_tasks, global.Stage{"source", 0})
+	Populate_Stage(num_tasks, "0-source")
 	// populating op_1 stage
-	Populate_Stage(num_tasks, global.Stage{params["op_1"], 1})
+	Populate_Stage(num_tasks, "1-" + params["op_1"])
 	// populating op_2 stage
-	Populate_Stage(num_tasks, global.Stage{params["op_2"], 2})
+	Populate_Stage(num_tasks, "2-" + params["op_2"])
 	fmt.Println("worker to task: ", worker_tasks)
 }
 
-func Populate_Stage(num_tasks int, stage global.Stage) {
+func Populate_Stage(num_tasks int, stage string) {
 	global.Schedule[stage] = []string{}
 	for i := 0; i < num_tasks; i++ {
 		// add first worker in queue to schedule for task
         global.Schedule[stage] = append(global.Schedule[stage], workers[0])
 		// add task to workers task list
-		worker_tasks[workers[0]] = append(worker_tasks[workers[0]], stage.Name)
+		worker_tasks[workers[0]] = append(worker_tasks[workers[0]], stage)
 		// move worker to back of queue
 		workers = append(workers[1:], workers[0])
     }

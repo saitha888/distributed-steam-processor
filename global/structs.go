@@ -18,8 +18,3 @@ type Stream struct {
     dest_file string
     tuple []string
 }
-
-type Stage struct {
-    Name  string
-    Position int
-}
