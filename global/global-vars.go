@@ -34,15 +34,31 @@ var Udp_ports = []string{
     "fa24-cs425-1210.cs.illinois.edu:9080",
 }
 
+var Rainstorm_ports = []string{
+    "fa24-cs425-1201.cs.illinois.edu:7081", 
+    "fa24-cs425-1202.cs.illinois.edu:7082", 
+    "fa24-cs425-1203.cs.illinois.edu:7083", 
+    "fa24-cs425-1204.cs.illinois.edu:7084", 
+    "fa24-cs425-1205.cs.illinois.edu:7085", 
+    "fa24-cs425-1206.cs.illinois.edu:7086", 
+    "fa24-cs425-1207.cs.illinois.edu:7087", 
+    "fa24-cs425-1208.cs.illinois.edu:7088", 
+    "fa24-cs425-1209.cs.illinois.edu:7089",
+    "fa24-cs425-1210.cs.illinois.edu:7080",
+}
+
 
 var Tcp_port string = os.Getenv("TCP_PORT")
 var Udp_port string = os.Getenv("UDP_PORT")
+var Rainstorm_port string = os.Getenv("RAINSTORM_PORT")
 var Machine_number string = os.Getenv("MACHINE_NUMBER")
 var Membership_log string = os.Getenv("MEMBERSHIP_FILENAME")
 var Hydfs_log string = os.Getenv("HYDFS_FILENAME")
 var Udp_address string = os.Getenv("MACHINE_UDP_ADDRESS")
 var Tcp_address string = os.Getenv("MACHINE_TCP_ADDRESS")
+var Rainstorm_address string = os.Getenv("MACHINE_RAINSTORM_ADDRESS")
 var Introducer_address string = os.Getenv("INTRODUCER_ADDRESS")
+var Leader_address string = os.Getenv("LEADER_ADDRESS")
 
 var Node_id string = ""
 var Ring_id string = ""
@@ -53,3 +69,4 @@ var Schedule = make(map[string][]string)
 var Enabled_sus = false
 var Cache_set = make(map[string]bool)
 var File_prefix string = Udp_address[13:15]
+var Partitions [][]int

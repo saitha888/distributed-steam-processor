@@ -14,7 +14,14 @@ type Node struct {
 }
 
 type Stream struct {
-    src_file string
-    dest_file string
-    tuple []string
+    Src_file string
+    Dest_file string
+    Tuple []string
+}
+
+type SourceTask struct {
+    Start int
+    End int
+    Src_file string
+    Dest_file string
 }

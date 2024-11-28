@@ -92,6 +92,7 @@ func main() {
         //run server
         go servers.TcpServer()
         go servers.UdpServer()
+        go servers.RainstormServer()
         commandLoop()
 
         select {}
