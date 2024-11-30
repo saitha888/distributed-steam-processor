@@ -80,6 +80,9 @@ func handleRainstormConnection(conn net.Conn) {
 		var source_task global.SourceTask
 		err = json.Unmarshal(json_data, &source_task)
 		rainstorm.CompleteSourceTask(source_task.Src_file, source_task.Dest_file, source_task.Start, source_task.End, conn)
-
-	} 
+	} else if message_type == "stream" {
+		var stream global.Stream
+		err = json.Unmarshal(json_data, &stream)
+		rainstorm.CompleteTask(stream.Src_file, stream.Dest_file, stream.Tuple, stream.Stage, conn)
+	}
 }

@@ -39,6 +39,7 @@ func CompleteSourceTask(hydfs_file string, destination string, start_line int, e
 				Src_file: hydfs_file,
 				Dest_file: destination,
 				Tuple: []string{key, value},
+				Stage: 1,
 			}
 			msg := fmt.Sprintf("%d\n", line_num) // Add a newline for easier parsing
 			_, err := conn.Write([]byte(msg))   // Send the line number as plain text
@@ -58,21 +59,21 @@ func CompleteSourceTask(hydfs_file string, destination string, start_line int, e
 						break
 					}
 				}
-				conn, err := util.DialTCPClient(global.Schedule[keyToUse][partition])
+				next_stage_conn, err_s := util.DialTCPClient(global.Schedule[keyToUse][partition])
 				res := fmt.Sprintf("tuple %s,%s is being sent for next stage to: %s",rec.Tuple[0], rec.Tuple[1], global.Schedule[keyToUse][partition])
 				fmt.Println(res)
-				if err != nil {
-					fmt.Println("Error dialing tcp server", err)
+				if err_s != nil {
+					fmt.Println("Error dialing tcp server", err_s)
 				}
-				encoder  := json.NewEncoder(conn)
+				encoder  := json.NewEncoder(next_stage_conn)
 				errc := encoder.Encode(rec)
 				if errc != nil {
-					fmt.Println("Error encoding data in create", err)
+					fmt.Println("Error encoding data in create", errc)
 				}
 				buffer := make([]byte, 1024) // Create a buffer to hold the acknowledgment
-				n, err := conn.Read(buffer)
-				if err != nil {
-					fmt.Println("failed to receive acknowledgment: %w", err)
+				n, errr := next_stage_conn.Read(buffer)
+				if errr != nil {
+					fmt.Println("failed to receive acknowledgment: %w", errr)
 					return 
 				}
 				if string(buffer[:n]) != "ack" {
@@ -91,4 +92,16 @@ func CompleteSourceTask(hydfs_file string, destination string, start_line int, e
 	return
 }
 
+func CompleteTask(hydfs_file string, destination string, tuple []string, stage int, conn net.Conn) {
+	var stage_key string
+	prefix := strconv.Itoa(stage) + "-"
+	for key := range global.Schedule {
+		if strings.HasPrefix(key, prefix) {
+			stage_key = key
+			break
+		}
+	}
+	msg := fmt.Sprintf("tuple received for op_1 (%s): %s:%s", stage_key[2:], tuple[0], tuple[1])
+	fmt.Println(msg)
+}
 

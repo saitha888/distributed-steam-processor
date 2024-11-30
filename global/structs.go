@@ -17,6 +17,7 @@ type Stream struct {
     Src_file string
     Dest_file string
     Tuple []string
+    Stage int
 }
 
 type SourceTask struct {

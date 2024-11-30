@@ -69,7 +69,9 @@ func SendSchedule() {
 func GetPartitions(hydfs_file string, num_tasks int) {
 	// calculate num lines for each partition
 	num_lines := CountLines(hydfs_file)
+	fmt.Println("num lines: ", num_lines)
 	lines_per_task := num_lines / num_tasks
+	fmt.Println("num lines per task: ",lines_per_task)
 	extra_lines := num_lines % num_tasks
 
 	// make an empty structure to populate
@@ -132,7 +134,7 @@ func SendPartitions(src_file string, dest_file string, ports []string, num_tasks
 			// Listen for acknowledgements and process them
 			decoder := json.NewDecoder(conn)
 			for {
-				var line_number string
+				var line_number int
 				if err := decoder.Decode(&line_number); err != nil {
 					fmt.Println("Error receiving acknowledgment:", err)
 					break
@@ -140,7 +142,8 @@ func SendPartitions(src_file string, dest_file string, ports []string, num_tasks
 
 				// Process the acknowledgment immediately
 				fmt.Println("line number processed: ", line_number)
-				ProcessAcknowledgement(port, line_number)
+				line_num := strconv.Itoa(line_number)
+				ProcessAcknowledgement(port, line_num)
 			}
 		}(port, data)
 	}
@@ -160,5 +163,4 @@ func ProcessAcknowledgement(port string, line_number string) {
 	// update the start index based on what has already been handled
 	line_num, _ := strconv.Atoi(line_number)
 	global.Partitions[partition_index][0] = line_num + 1 
-	fmt.Println("new partitions: ", global.Partitions)
 }
