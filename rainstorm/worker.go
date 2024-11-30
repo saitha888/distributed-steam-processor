@@ -93,6 +93,12 @@ func CompleteSourceTask(hydfs_file string, destination string, start_line int, e
 }
 
 func CompleteTask(hydfs_file string, destination string, tuple []string, stage int, conn net.Conn) {
+	msg := fmt.Sprintf("ack") 
+	_, err := conn.Write([]byte(msg)) 
+	if err != nil {
+		fmt.Printf("Error sending ack", err)
+		continue
+	}
 	var stage_key string
 	prefix := strconv.Itoa(stage) + "-"
 	for key := range global.Schedule {
