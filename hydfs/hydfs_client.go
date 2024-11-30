@@ -77,9 +77,6 @@ func GetFile(hydfs_file string, local_file string) {
 
 	// Write only the FileContents to the local file
 	localfile, _ := os.Create(local_file)
-	if err != nil {
-        fmt.Println("Error creating local file in get", err)
-	}
 	defer localfile.Close()
 
 	_, err = localfile.WriteString(total_content)

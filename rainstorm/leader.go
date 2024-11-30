@@ -16,7 +16,8 @@ var workers []string
 func InitiateJob(params map[string]string) {
 	CreateSchedule(params)
 	SendSchedule()
-	SendPartitions(params["src_file"], params["dest_file"], global.Schedule["0-source"])
+	num_tasks, _ := strconv.Atoi(params["num_tasks"])
+	SendPartitions(params["src_file"], params["dest_file"], global.Schedule["0-source"],num_tasks )
 }
 
 func CreateSchedule(params map[string]string) {
@@ -90,12 +91,14 @@ func GetPartitions(hydfs_file string, num_tasks int) {
 
 }
 
-func SendPartitions(src_file string, dest_file string, ports []string) {
+func SendPartitions(src_file string, dest_file string, ports []string, num_tasks int) {
+	GetPartitions(src_file, num_tasks)
 	var wg sync.WaitGroup
 
 	// go through each port in the source stage
 	for i := 0; i < len(ports); i++ {
 		wg.Add(1)
+
 		partition := global.Partitions[i]
 
 		data := global.SourceTask{
