@@ -97,7 +97,6 @@ func CompleteTask(hydfs_file string, destination string, tuple []string, stage i
 	_, err := conn.Write([]byte(msg)) 
 	if err != nil {
 		fmt.Printf("Error sending ack", err)
-		continue
 	}
 	var stage_key string
 	prefix := strconv.Itoa(stage) + "-"
@@ -107,7 +106,7 @@ func CompleteTask(hydfs_file string, destination string, tuple []string, stage i
 			break
 		}
 	}
-	msg := fmt.Sprintf("tuple received for op_1 (%s): %s:%s", stage_key[2:], tuple[0], tuple[1])
-	fmt.Println(msg)
+	ret := fmt.Sprintf("tuple received for op_1 (%s): %s:%s", stage_key[2:], tuple[0], tuple[1])
+	fmt.Println(ret)
 }
 
