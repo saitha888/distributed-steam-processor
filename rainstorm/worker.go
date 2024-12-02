@@ -172,12 +172,9 @@ func SendSinkBatch() {
 	file_lock := flock.New("counts.txt")
 
 	// Acquire the lock
-	locked, err := file_lock.TryLock()
+	err := file_lock.Lock()
 	if err != nil {
 		fmt.Println("error acquiring lock: %w", err)
-	}
-	if !locked {
-		fmt.Println("file is locked by another process")
 	}
 	defer file_lock.Unlock() // Ensure the lock is released
 

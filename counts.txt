@@ -1,4 +1,0 @@
-word1 1
-word1 2
-word2 1
-word2 2

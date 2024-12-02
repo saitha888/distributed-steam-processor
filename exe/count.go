@@ -14,13 +14,9 @@ func PerformTask(word string) {
 	fileLock := flock.New("counts.txt")
 
 	// Acquire the lock
-	locked, err := fileLock.TryLock()
+	err := fileLock.Lock()
 	if err != nil {
 		fmt.Println("Error acquiring lock:", err)
-		return
-	}
-	if !locked {
-		fmt.Println("File is locked by another process")
 		return
 	}
 	defer fileLock.Unlock() // Ensure the lock is released
