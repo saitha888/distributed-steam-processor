@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 	"github.com/gofrs/flock"
+	"os/exec"
 )
 
 func CompleteSourceTask(hydfs_file string, destination string, start_line int, end_line int, conn net.Conn) {
@@ -157,8 +158,7 @@ func FindStageKey(stage int) string {
 			break
 		}
 	}
-	ret := fmt.Sprintf("tuple received for op_1 (%s): %s:%s", stage_key[2:], tuple[0], tuple[1])
-	fmt.Println(ret)
+	return stage_key
 }
 
 func SendSinkBatch() {
