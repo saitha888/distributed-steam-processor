@@ -12,6 +12,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"os/exec"
 )
 var i = 1
 func CompleteSourceTask(hydfs_file string, destination string, start_line int, end_line int, conn net.Conn) {
@@ -106,6 +107,14 @@ func CompleteTask(hydfs_file string, destination string, tuple []string, stage i
 			break
 		}
 	}
-	ret := fmt.Sprintf("tuple received for op_1 (%s): %s:%s", stage_key[2:], tuple[0], tuple[1])
+	// Run the executable on the tuple
+	executable := "./exe" + stage_key[2:]// Path to the executable
+	cmd := exec.Command(executable, tuple[0], tuple[1])
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Printf("Error running executable: %v\n", err)
+		return
+	}
+	ret := fmt.Sprintf("tuple received for op_1 (%s): %s", stage_key[2:], output)
 	fmt.Println(ret)
 }
