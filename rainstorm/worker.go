@@ -12,13 +12,13 @@ import (
 	"net"
 	"strings"
 	"sync"
-	"os/exec"
+	"github.com/gofrs/flock"
 )
-var i = 1
+
 func CompleteSourceTask(hydfs_file string, destination string, start_line int, end_line int, conn net.Conn) {
 	file, err := os.Open("file-store/"+ hydfs_file)
 	if err != nil {
-		local_filename := "local_file-"+ strconv.Itoa(i)
+		local_filename := "local_file-"+ strconv.Itoa(1)
 		hydfs.GetFile(hydfs_file,local_filename)
 		file_import, err2 := os.Open(local_filename)
 		if err2 != nil {
@@ -157,5 +157,31 @@ func FindStageKey(stage int) string {
 			break
 		}
 	}
-	return stage_key
+	ret := fmt.Sprintf("tuple received for op_1 (%s): %s:%s", stage_key[2:], tuple[0], tuple[1])
+	fmt.Println(ret)
+}
+
+func SendSinkBatch() {
+	// Create a file lock
+	file_lock := flock.New("counts.txt")
+
+	// Acquire the lock
+	locked, err := file_lock.TryLock()
+	if err != nil {
+		fmt.Println("error acquiring lock: %w", err)
+	}
+	if !locked {
+		fmt.Println("file is locked by another process")
+	}
+	defer file_lock.Unlock() // Ensure the lock is released
+
+	// Send an append request to the destination file of the current contents
+	hydfs.AppendFile("counts.txt", global.Schedule["dest_file"][0])
+
+	//  Empty the file
+	file, err := os.OpenFile("counts.txt", os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println("error opening file for truncating: %w", err)
+	}
+	defer file.Close()
 }

@@ -70,3 +70,4 @@ var Enabled_sus = false
 var Cache_set = make(map[string]bool)
 var File_prefix string = Udp_address[13:15]
 var Partitions [][]int
+var Tasks = make(map[int]string)

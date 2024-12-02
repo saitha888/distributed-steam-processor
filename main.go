@@ -257,6 +257,7 @@ func commandLoop() {
                 "dest_file": args[4],
                 "num_tasks": args[5],
             }
+            hydfs.CreateFile("counts.txt", params["dest_file"])
             rainstorm.CallRainstorm(params)
 
 
