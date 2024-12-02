@@ -36,6 +36,7 @@ func CreateSchedule(params map[string]string) {
 	Populate_Stage(num_tasks, "1-" + params["op_1"])
 	// populating op_2 stage
 	Populate_Stage(num_tasks, "2-" + params["op_2"])
+	global.Schedule["dest_file"] = []string{params["dest_file"]}
 }
 
 func Populate_Stage(num_tasks int, stage string) {

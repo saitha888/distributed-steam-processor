@@ -151,3 +151,12 @@ func DialTCPClient(target_port string) (net.Conn, error) {
 	}
 	return conn, nil
 }
+
+func Contains(slice []string, value string) bool {
+	for _, v := range slice {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
