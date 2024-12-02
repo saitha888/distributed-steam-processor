@@ -99,7 +99,7 @@ func CompleteTask(hydfs_file string, destination string, tuple []string, stage i
 	if err != nil {
 		fmt.Printf("Error sending ack", err)
 	}
-	if len(tuple) >=1 && tuple[1] != "1" {
+	if len(tuple) > 1 && tuple[1] != "1" {
 		stage_key := FindStageKey(stage)
 		// Run the executable on the tuple
 		executable := "./exe/" + stage_key[2:]// Path to the executable
@@ -116,7 +116,7 @@ func CompleteTask(hydfs_file string, destination string, tuple []string, stage i
 			// Start a goroutine for sending the tuple
 			go func(line string) {
 				next_stage := FindStageKey(stage+1)
-				fmt.Println("next stage: ", next_stage)
+				// fmt.Println("next stage: ", next_stage)
 				tuple_parts := strings.Split(strings.Trim(strings.TrimSpace(line), "()"), ",")
 				record := global.Stream{
 					Src_file: hydfs_file,
