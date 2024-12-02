@@ -99,7 +99,7 @@ func CompleteTask(hydfs_file string, destination string, tuple []string, stage i
 	if err != nil {
 		fmt.Printf("Error sending ack", err)
 	}
-	if tuple[1] != "1" {
+	if len(tuple) >=1 && tuple[1] != "1" {
 		stage_key := FindStageKey(stage)
 		// Run the executable on the tuple
 		executable := "./exe/" + stage_key[2:]// Path to the executable
@@ -143,7 +143,7 @@ func CompleteTask(hydfs_file string, destination string, tuple []string, stage i
 		// ret := fmt.Sprintf("tuples returned for op_1 (%s): %s", stage_key[2:], output)
 		// fmt.Println(ret)
 		}
-	} else {
+	} else if len(tuple) >= 1 {
 		fmt.Println("received tuple from split stage", tuple[0])
 	}
 }
