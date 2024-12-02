@@ -76,7 +76,7 @@ func GetWordCount(contents string, word string) int {
 		}
 	}
 
-	return -1 // Return -1 if the word is not found
+	return 0 // Return -1 if the word is not found
 }
 
 
