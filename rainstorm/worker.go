@@ -107,6 +107,7 @@ func CompleteTask(hydfs_file string, destination string, tuple []string, stage i
 		if stage == 2 {
 			fmt.Println("acknowledgement")
 			executable := "./exe/" + stage_key[2:] + " " + tuple[0] + " " + tuple[1]
+			fmt.Println("command being run:", executable)
 			_ = exec.Command(executable)
 			return
 		}

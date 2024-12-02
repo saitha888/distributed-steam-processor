@@ -16,12 +16,14 @@ import (
 func RainstormServer() {
 	// check if machine is assigned to op2 task
 	if _, exists := global.Tasks[2]; exists {
+		fmt.Println("SINK MACHINE")
 		// send batch message to destination file every 100 ms
 		ticker := time.NewTicker(100 * time.Millisecond)
 		defer ticker.Stop()
 
 		go func() {
 			for range ticker.C {
+				fmt.Println("sending batch")
 				rainstorm.SendSinkBatch()
 			}
 		}()
@@ -87,7 +89,7 @@ func handleRainstormConnection(conn net.Conn) {
 		}
 		// set schedule
 		global.Schedule = schedule
-
+		fmt.Println("schedule: ", global.Schedule)
 		// set tasks of machine
 		for stage, machines := range global.Schedule {
 			if stage == "dest_file" {
@@ -98,6 +100,8 @@ func handleRainstormConnection(conn net.Conn) {
 				global.Tasks[stage_num] = stage[2:]
 			}
 		}
+
+		fmt.Println("tasks for this worker: ", global.Tasks)
 	} else if message_type == "rainstorm_init" {
 		var params map[string]string
 		err = json.Unmarshal(json_data, &params)

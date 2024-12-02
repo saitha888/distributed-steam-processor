@@ -82,5 +82,6 @@ func GetWordCount(contents string, word string) int {
 
 func main() {
 	word := os.Args[1]
+	fmt.Println("got message in count exe to count for: ", word)
 	PerformTask(word)
 }
