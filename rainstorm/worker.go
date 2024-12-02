@@ -104,12 +104,14 @@ func CompleteTask(hydfs_file string, destination string, tuple []string, stage i
 		stage_key := FindStageKey(stage)
 		// Run the executable on the tuple
 		next_stage := FindStageKey(stage+1)
-		executable := "./exe/" + stage_key[2:]// Path to the executable
-		cmd := exec.Command(executable, tuple[0], tuple[1])
+		executable := "./exe/" + stage_key[2:]
 		if stage == 2 {
-			fmt.Println("acknowledgement")
+			cmd := exec.Command("sh", "-c", executable+" "+tuple[0]+" "+tuple[1])
+			output, _ := cmd.Output()
+			fmt.Println("acknowledgement: ", string(output))
 			return
 		}
+		cmd := exec.Command(executable, tuple[0], tuple[1])
 		output, err := cmd.Output()
 		if err != nil {
 			fmt.Printf("Error running executable: %v\n", err)
