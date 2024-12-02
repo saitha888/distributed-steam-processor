@@ -116,6 +116,7 @@ func CompleteTask(hydfs_file string, destination string, tuple []string, stage i
 			// Start a goroutine for sending the tuple
 			go func(line string) {
 				next_stage := FindStageKey(stage+1)
+				fmt.Println("next stage: ", next_stage)
 				tuple_parts := strings.Split(strings.Trim(strings.TrimSpace(line), "()"), ",")
 				record := global.Stream{
 					Src_file: hydfs_file,
