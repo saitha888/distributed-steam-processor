@@ -9,25 +9,25 @@ import (
 	"time"
 	"distributed_system/util"
 	"strconv"
+	"os"
 )
 
 
 //starts tcp server that listens for grep commands
 func RainstormServer() {
-	fmt.Println("in the rainstorm server")
 	// check if machine is assigned to op2 task
 	// send batch message to destination file every 100 ms
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(1000 * time.Millisecond)
 	defer ticker.Stop()
 
 	go func() {
 		for range ticker.C {
-			_, exists := global.Tasks[2];
-			fmt.Println("exists var value: ", exists)
-			if exists {
-				fmt.Println("SINK MACHINE")
-				fmt.Println("sending batch")
-				rainstorm.SendSinkBatch()
+			if global.IsSinkMachine {
+				file_info, _ := os.Stat("counts.txt")
+				if file_info.Size() != 0 {
+					fmt.Println("sending batch")
+					rainstorm.SendSinkBatch()
+				}
 			}
 		}
 	}()
@@ -105,6 +105,12 @@ func handleRainstormConnection(conn net.Conn) {
 		}
 
 		fmt.Println("tasks for this worker: ", global.Tasks)
+		_, exists := global.Tasks[2];
+		if exists {
+			fmt.Println("SINK MACHINE")
+			global.IsSinkMachine = true
+		}
+
 	} else if message_type == "rainstorm_init" {
 		var params map[string]string
 		err = json.Unmarshal(json_data, &params)
