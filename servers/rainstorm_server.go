@@ -14,20 +14,23 @@ import (
 
 //starts tcp server that listens for grep commands
 func RainstormServer() {
+	fmt.Println("in the rainstorm server")
 	// check if machine is assigned to op2 task
-	if _, exists := global.Tasks[2]; exists {
-		fmt.Println("SINK MACHINE")
-		// send batch message to destination file every 100 ms
-		ticker := time.NewTicker(100 * time.Millisecond)
-		defer ticker.Stop()
+	// send batch message to destination file every 100 ms
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
 
-		go func() {
-			for range ticker.C {
+	go func() {
+		for range ticker.C {
+			_, exists := global.Tasks[2];
+			fmt.Println("exists var value: ", exists)
+			if exists {
+				fmt.Println("SINK MACHINE")
 				fmt.Println("sending batch")
 				rainstorm.SendSinkBatch()
 			}
-		}()
-	}
+		}
+	}()
 	
 
     // listen for connection from other machine 
