@@ -50,6 +50,14 @@ func main() {
     }
     defer file.Close()
 
+    // clear the counts file 
+    file, err = os.OpenFile("counts.txt", os.O_WRONLY|os.O_TRUNC, 0644)
+    if err != nil {
+        fmt.Println("Error opening file: ", err)
+        return
+    }
+    defer file.Close()
+
     // create/clear file store
     if _, err := os.Stat("file-store"); os.IsNotExist(err) {
 		err := os.Mkdir("file-store", 0755)

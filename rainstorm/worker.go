@@ -109,4 +109,3 @@ func CompleteTask(hydfs_file string, destination string, tuple []string, stage i
 	ret := fmt.Sprintf("tuple received for op_1 (%s): %s:%s", stage_key[2:], tuple[0], tuple[1])
 	fmt.Println(ret)
 }
-
