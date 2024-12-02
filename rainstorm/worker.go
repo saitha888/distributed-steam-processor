@@ -14,11 +14,11 @@ import (
 	"sync"
 	"github.com/gofrs/flock"
 )
-var i = 1
+
 func CompleteSourceTask(hydfs_file string, destination string, start_line int, end_line int, conn net.Conn) {
 	file, err := os.Open("file-store/"+ hydfs_file)
 	if err != nil {
-		local_filename := "local_file-"+ strconv.Itoa(i)
+		local_filename := "local_file-"+ strconv.Itoa(1)
 		hydfs.GetFile(hydfs_file,local_filename)
 		file_import, err2 := os.Open(local_filename)
 		if err2 != nil {
