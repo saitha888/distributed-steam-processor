@@ -99,48 +99,51 @@ func CompleteTask(hydfs_file string, destination string, tuple []string, stage i
 	if err != nil {
 		fmt.Printf("Error sending ack", err)
 	}
-	stage_key := FindStageKey(stage)
-	// Run the executable on the tuple
-	executable := "./exe" + stage_key[2:]// Path to the executable
-	cmd := exec.Command(executable, tuple[0], tuple[1])
-	output, err := cmd.Output()
-	if err != nil {
-		fmt.Printf("Error running executable: %v\n", err)
-		return
-	}
-	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
-	var wg sync.WaitGroup
-	for _, line := range lines {
-		wg.Add(1)
-		// Start a goroutine for sending the tuple
-		go func(line string) {
-			next_stage := FindStageKey(stage+1)
-			tuple_parts := strings.Split(strings.Trim(strings.TrimSpace(line), "()"), ",")
-			record := global.Stream{
-				Src_file: hydfs_file,
-				Dest_file: destination,
-				Tuple: tuple_parts,
-				Stage: stage+1,
-			}
-			key := strings.TrimSpace(tuple_parts[0])
-		
-			// Calculate the partition using the hash of the word
-			partition := util.GetHash(key) % len(global.Schedule[next_stage])
-
-			next_stage_conn, err := util.DialTCPClient(global.Schedule[next_stage][partition])
-			res := fmt.Sprintf("Tuple %s is being sent for next stage to: %s", line, global.Schedule[next_stage][partition])
-			fmt.Println(res)
-			if err != nil {
-				fmt.Printf("Error dialing TCP server for tuple %s: %v\n", line, err)
-			}
-			encoder  := json.NewEncoder(next_stage_conn)
-			errc := encoder.Encode(record)
-			if errc != nil {
-				fmt.Println("Error encoding data in create", errc)
-			}
-		}(line)
-	// ret := fmt.Sprintf("tuples returned for op_1 (%s): %s", stage_key[2:], output)
-	// fmt.Println(ret)
+	if tuple[1] != "1" {
+		stage_key := FindStageKey(stage)
+		// Run the executable on the tuple
+		executable := "./exe" + stage_key[2:]// Path to the executable
+		cmd := exec.Command(executable, tuple[0], tuple[1])
+		output, err := cmd.Output()
+		if err != nil {
+			fmt.Printf("Error running executable: %v\n", err)
+			return
+		}
+		lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+		var wg sync.WaitGroup
+		for _, line := range lines {
+			wg.Add(1)
+			// Start a goroutine for sending the tuple
+			go func(line string) {
+				next_stage := FindStageKey(stage+1)
+				tuple_parts := strings.Split(strings.Trim(strings.TrimSpace(line), "()"), ",")
+				record := global.Stream{
+					Src_file: hydfs_file,
+					Dest_file: destination,
+					Tuple: tuple_parts,
+					Stage: stage+1,
+				}
+				key := strings.TrimSpace(tuple_parts[0])
+			
+				// Calculate the partition using the hash of the word
+				partition := util.GetHash(key) % len(global.Schedule[next_stage])
+				next_stage_conn, err := util.DialTCPClient(global.Schedule[next_stage][partition])
+				res := fmt.Sprintf("Tuple %s is being sent for next stage to: %s", line, global.Schedule[next_stage][partition])
+				fmt.Println(res)
+				if err != nil {
+					fmt.Printf("Error dialing TCP server for tuple %s: %v\n", line, err)
+				}
+				encoder  := json.NewEncoder(next_stage_conn)
+				errc := encoder.Encode(record)
+				if errc != nil {
+					fmt.Println("Error encoding data in create", errc)
+				}
+			}(line)
+		// ret := fmt.Sprintf("tuples returned for op_1 (%s): %s", stage_key[2:], output)
+		// fmt.Println(ret)
+		}
+	} else {
+		fmt.Println("received tuple from split stage", tuple[0])
 	}
 }
 
