@@ -77,9 +77,6 @@ func GetFile(hydfs_file string, local_file string) {
 
 	// Write only the FileContents to the local file
 	localfile, _ := os.Create(local_file)
-	if err != nil {
-        fmt.Println("Error creating local file in get", err)
-	}
 	defer localfile.Close()
 
 	_, err = localfile.WriteString(total_content)
@@ -144,7 +141,7 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 }
 
 func AppendFile(local_file string, hydfs_file string) {
-
+    fmt.Println("Received an append message for: ", hydfs_file)
     replicas := GetFileServers(util.GetHash(hydfs_file))
     machine_num, err := strconv.Atoi(os.Getenv("MACHINE_NUMBER"))
     if err != nil {

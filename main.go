@@ -15,6 +15,7 @@ import (
     "time"
     "log"
     "distributed_system/scripts"
+    "distributed_system/rainstorm"
 )
 
 
@@ -43,6 +44,14 @@ func main() {
 
     // clear the hydfs logging file 
     file, err = os.OpenFile(global.Hydfs_log, os.O_WRONLY|os.O_TRUNC, 0644)
+    if err != nil {
+        fmt.Println("Error opening file: ", err)
+        return
+    }
+    defer file.Close()
+
+    // clear the counts file 
+    file, err = os.OpenFile("counts.txt", os.O_WRONLY|os.O_TRUNC, 0644)
     if err != nil {
         fmt.Println("Error opening file: ", err)
         return
@@ -91,6 +100,7 @@ func main() {
         //run server
         go servers.TcpServer()
         go servers.UdpServer()
+        go servers.RainstormServer()
         commandLoop()
 
         select {}
@@ -237,6 +247,20 @@ func commandLoop() {
                 hydfs_file := args[1]
                 hydfs.Merge(hydfs_file)
                 fmt.Println("Merging of " + hydfs_file + " complete")
+            
+            case "rainstorm":
+            //RainStorm <op1 _exe> <op2 _exe> <hydfs_src_file> <hydfs_dest_filename> <num_tasks>
+            params := map[string]string{
+                "op_1":      args[1],
+                "op_2":      args[2],
+                "src_file":  args[3],
+                "dest_file": args[4],
+                "num_tasks": args[5],
+            }
+            hydfs.CreateFile("counts.txt", params["dest_file"])
+            rainstorm.CallRainstorm(params)
+
+
             default:
                 fmt.Println("Unknown command. Available commands: list_mem, list_self, join,  leave")
             }

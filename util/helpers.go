@@ -141,3 +141,22 @@ func MembershiplistToString() string{
 func ChangeInc(index int, message int){
     global.Membership_list[index].Inc = message
 }
+
+// Function to resolve and dial a TCP connection to a given address
+func DialTCPClient(target_port string) (net.Conn, error) {
+	conn, err := net.Dial("tcp", target_port)
+	if err != nil {
+		fmt.Println("Error dialing TCP connection:", err)
+		return nil, err
+	}
+	return conn, nil
+}
+
+func Contains(slice []string, value string) bool {
+	for _, v := range slice {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
