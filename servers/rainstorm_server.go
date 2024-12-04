@@ -9,6 +9,7 @@ import (
 	"time"
 	"distributed_system/util"
 	"strconv"
+	"os"
 )
 
 
@@ -87,7 +88,6 @@ func handleRainstormConnection(conn net.Conn) {
 		}
 		// set schedule
 		global.Schedule = schedule
-		fmt.Println("schedule: ", global.Schedule)
 		// set tasks of machine
 		for stage, machines := range global.Schedule {
 			if stage == "dest_file" {
@@ -99,10 +99,8 @@ func handleRainstormConnection(conn net.Conn) {
 			}
 		}
 
-		fmt.Println("tasks for this worker: ", global.Tasks)
 		_, exists := global.Tasks[2];
 		if exists {
-			fmt.Println("SINK MACHINE")
 			global.IsSinkMachine = true
 		}
 
@@ -113,6 +111,15 @@ func handleRainstormConnection(conn net.Conn) {
 			fmt.Println("Error unmarshaling JSON to struct:", err)
 			return
 		}
+		// clear the counts file 
+		file, err := os.OpenFile("counts.txt", os.O_WRONLY|os.O_TRUNC, 0644)
+		if err != nil {
+			fmt.Println("Error opening file: ", err)
+			return
+		}
+		defer file.Close()
+		global.IsSinkMachine = false
+		global.LastSentLine = 0
 		rainstorm.InitiateJob(params)
 	} else if message_type == "source" {
 		var source_task global.SourceTask

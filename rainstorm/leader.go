@@ -80,7 +80,7 @@ func GetPartitions(hydfs_file string, num_tasks int) {
 	// make an empty structure to populate
 	partitions := make([][]int, num_tasks)
 
-	start := 0
+	start := 1
 
 	for i := 0; i < num_tasks; i++ {
 		end := start + lines_per_task - 1
@@ -98,6 +98,7 @@ func GetPartitions(hydfs_file string, num_tasks int) {
 
 func SendPartitions(src_file string, dest_file string, ports []string, num_tasks int) {
 	GetPartitions(src_file, num_tasks)
+	fmt.Println("partitions: ", global.Partitions)
 	var wg sync.WaitGroup
 
 	// go through each port in the source stage
