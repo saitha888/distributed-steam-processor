@@ -1,5 +1,4 @@
 .env
 file-store/
 cache/
-local-files/
 local*
