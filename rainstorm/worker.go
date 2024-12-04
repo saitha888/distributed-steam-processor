@@ -187,7 +187,7 @@ func SendSinkBatch() {
 	defer src.Close()
 
 	// create the batch file to send
-	dest, err := os.Create("temp.file")
+	dest, err := os.Create("temp.txt")
 	if err != nil {
 		fmt.Println("Error creating destination file:", err)
 		return
@@ -197,7 +197,7 @@ func SendSinkBatch() {
 	scanner := bufio.NewScanner(src)
 	writer := bufio.NewWriter(dest)
 
-	curr_line := 1
+	curr_line := 0
 	last_line := 0
 
 	// get the contents to write to the file
