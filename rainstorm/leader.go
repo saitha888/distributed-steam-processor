@@ -24,8 +24,10 @@ func CreateSchedule(params map[string]string) {
 	// populate workers dictionary with empty task lists
 	// create worker queue
 	for _,node := range(global.Membership_list) {
-        worker_tasks[GetRainstormVersion(node.NodeID[:36])] = []string{}
-		workers = append(workers,GetRainstormVersion(node.NodeID[:36]))
+		if node.NodeID[:36] != global.Leader_address {
+			worker_tasks[GetRainstormVersion(node.NodeID[:36])] = []string{}
+			workers = append(workers,GetRainstormVersion(node.NodeID[:36]))
+		}
     }
 
 	// go through workers list and assign tasks, each stage should have num_tasks workers assigned

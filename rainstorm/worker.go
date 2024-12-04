@@ -178,13 +178,59 @@ func SendSinkBatch() {
 	}
 	defer file_lock.Unlock() // Ensure the lock is released
 
-	// Send an append request to the destination file of the current contents
-	hydfs.AppendFile("counts.txt", global.Schedule["dest_file"][0])
-
-	//  Empty the file
-	file, err := os.OpenFile("counts.txt", os.O_TRUNC|os.O_WRONLY, 0644)
+	// open the counts file
+	src, err := os.Open("counts.txt")
 	if err != nil {
-		fmt.Println("error opening file for truncating: %w", err)
+		fmt.Println("Error opening source file:", err)
+		return
 	}
-	defer file.Close()
+	defer src.Close()
+
+	// create the batch file to send
+	dest, err := os.Create("temp.file")
+	if err != nil {
+		fmt.Println("Error creating destination file:", err)
+		return
+	}
+	defer dest.Close()
+
+	scanner := bufio.NewScanner(src)
+	writer := bufio.NewWriter(dest)
+
+	curr_line := 1
+	last_line := 0
+
+	// get the contents to write to the file
+	for scanner.Scan() {
+		// Skip lines until the starting line number
+		if curr_line >= global.LastSentLine {
+			// Write the current line to the destination file
+			_, err := writer.WriteString(scanner.Text() + "\n")
+			if err != nil {
+				fmt.Println("Error writing to destination file:", err)
+				return
+			}
+			last_line = curr_line
+		}
+		curr_line++
+	}
+
+	// write to the file
+	if err := writer.Flush(); err != nil {
+		fmt.Println("Error flushing writer:", err)
+		return
+	}
+
+	// update the last line sent
+	global.LastSentLine = last_line + 1
+
+	// Send an append request to the destination file of the current contents
+	hydfs.AppendFile("temp.txt", global.Schedule["dest_file"][0])
+
+	//  Delete the temp file
+	err = os.Remove("temp.txt")
+	if err != nil {
+		fmt.Println("Error deleting file:", err)
+		return
+	}
 }

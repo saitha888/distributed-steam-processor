@@ -4,11 +4,20 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"unicode"
 )
 
 func parseAndTransform(key string, value string) []string {
-	// Split the value (file content) into words
-	words := strings.Fields(value)
+	// Remove punctuation by filtering non-letter and non-digit characters
+	cleanedValue := strings.Map(func(r rune) rune {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsSpace(r) {
+			return r
+		}
+		return -1
+	}, value)
+	cleanedValue = strings.ToLower(cleanedValue)
+	// Split the cleaned value into words
+	words := strings.Fields(cleanedValue)
 	var wordTuples []string
 
 	// Create tuples <word, 1>
