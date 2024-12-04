@@ -14,12 +14,19 @@ func PerformTask(word string) {
 	fileLock := flock.New("counts.txt")
 
 	// Acquire the lock
-	err := fileLock.Lock()
-	if err != nil {
-		fmt.Println("Error acquiring lock:", err)
-		return
+	for {
+		err := fileLock.Lock()
+		if err == nil {
+			// Lock acquired
+			fmt.Println("Lock acquired successfully!")
+			defer fileLock.Unlock() // Ensure the lock is released
+			break
+		}
+
+		// Lock not acquired, retry after a short delay
+		fmt.Println("Lock not available, retrying...")
+		time.Sleep(250 * time.Millisecond) // Adjust the delay as needed
 	}
-	defer fileLock.Unlock() // Ensure the lock is released
 
 	// Read the file
 	data, err := ioutil.ReadFile("counts.txt")
