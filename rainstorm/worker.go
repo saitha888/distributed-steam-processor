@@ -198,13 +198,15 @@ func SendSinkBatch() {
 	writer := bufio.NewWriter(dest)
 
 	curr_line := 0
-	last_line := 0
+	last_line := -1
 
 	// get the contents to write to the file
 	for scanner.Scan() {
 		// Skip lines until the starting line number
 		if curr_line >= global.LastSentLine {
-			// Write the current line to the destination file
+			fmt.Println("curr line: ", curr_line)
+			fmt.Println("last sent line: ", global.LastSentLine)
+			// Write the current line to the temp file
 			_, err := writer.WriteString(scanner.Text() + "\n")
 			if err != nil {
 				fmt.Println("Error writing to destination file:", err)
@@ -222,10 +224,15 @@ func SendSinkBatch() {
 	}
 
 	// update the last line sent
-	global.LastSentLine = last_line + 1
+	if last_line != -1 {
+		global.LastSentLine = last_line + 1
+	}
 
-	// Send an append request to the destination file of the current contents
-	hydfs.AppendFile("temp.txt", global.Schedule["dest_file"][0])
+	file_info, _ := os.Stat("temp.txt")
+	if file_info.Size() != 0 { // only send if there was an update
+		// Send an append request to the destination file of the current contents
+		hydfs.AppendFile("temp.txt", global.Schedule["dest_file"][0])
+	}
 
 	//  Delete the temp file
 	err = os.Remove("temp.txt")

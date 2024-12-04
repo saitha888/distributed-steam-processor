@@ -9,7 +9,6 @@ import (
 	"time"
 	"distributed_system/util"
 	"strconv"
-	"os"
 )
 
 
@@ -23,11 +22,7 @@ func RainstormServer() {
 	go func() {
 		for range ticker.C {
 			if global.IsSinkMachine {
-				file_info, _ := os.Stat("counts.txt")
-				if file_info.Size() != 0 {
-					fmt.Println("sending batch")
-					rainstorm.SendSinkBatch()
-				}
+				rainstorm.SendSinkBatch()
 			}
 		}
 	}()
