@@ -38,7 +38,7 @@ func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 				Key: key,
 				Value: value,
 				Stage: 1,
-				Src: global.Tcp_address,
+				Src: global.Rainstorm_address,
 			}
 			wg.Add(1)
 			// Start a goroutine for sending the tuple
