@@ -26,3 +26,14 @@ type SourceTask struct {
     Src_file string
     Dest_file string
 }
+
+type Tuple struct {
+    key string
+    value string
+    src string
+}
+
+type Batch struct {
+    dest string
+    tuples []Tuple
+}

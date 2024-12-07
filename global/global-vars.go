@@ -73,3 +73,4 @@ var Partitions [][]int
 var Tasks = make(map[int]string)
 var IsSinkMachine = false
 var LastSentLine = 0
+var Batches []Batch
