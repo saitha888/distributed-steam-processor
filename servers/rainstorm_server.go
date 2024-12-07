@@ -56,7 +56,7 @@ func handleRainstormConnection(conn net.Conn) {
         message_type = "rainstorm_init"
     } else if _, ok := data["Start"]; ok {
 		message_type = "source"
-	} else if _,ok := data["Dest_file"]; ok {
+	} else if _,ok := data["Key"]; ok {
 		message_type = "stream"
 	} 
 
