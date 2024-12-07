@@ -27,7 +27,6 @@ func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 		file = file_import
 	}
 	defer file.Close()
-	var wg sync.WaitGroup
 	scanner := bufio.NewScanner(file)
 	line_num := 0
 
@@ -42,31 +41,26 @@ func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 				Stage: 1,
 				Src: global.Rainstorm_address,
 			}
-			wg.Add(1)
-			// Start a goroutine for sending the tuple
-			go func(rec global.Tuple) {
-				defer wg.Done() // Decrement the counter when goroutine completes
-				partition := util.GetHash(rec.Key) % len(global.Schedule[0]) // find the destination the tuple should go to 
-				dest_address := global.Schedule[1][partition]["Port"] // add to the batch
-				global.BatchesMutex.Lock()
-				if _, exists := global.Batches[dest_address]; exists {
-					global.Batches[dest_address] = append(global.Batches[dest_address], record)
-				} else {
-					global.Batches[dest_address] = []global.Tuple{record}
-				}
-				global.BatchesMutex.Unlock()
-				// next_stage_conn, err_s := util.DialTCPClient(global.Schedule[1][partition]["Port"])
-				// res := fmt.Sprintf("tuple %s,%s is being sent for next stage to: %s",rec.Key, rec.Value, global.Schedule[1][partition])
-				// fmt.Println(res)
-				// if err_s != nil {
-				// 	fmt.Println("Error dialing tcp server", err_s)
-				// }
-				// encoder  := json.NewEncoder(next_stage_conn)
-				// errc := encoder.Encode(rec)
-				// if errc != nil {
-				// 	fmt.Println("Error encoding data in create", errc)
-				// }
-			}(record)
+			partition := util.GetHash(record.Key) % len(global.Schedule[0]) // find the destination the tuple should go to 
+			dest_address := global.Schedule[1][partition]["Port"] // add to the batch
+			global.BatchesMutex.Lock()
+			if _, exists := global.Batches[dest_address]; exists {
+				global.Batches[dest_address] = append(global.Batches[dest_address], record)
+			} else {
+				global.Batches[dest_address] = []global.Tuple{record}
+			}
+			global.BatchesMutex.Unlock()
+			// next_stage_conn, err_s := util.DialTCPClient(global.Schedule[1][partition]["Port"])
+			// res := fmt.Sprintf("tuple %s,%s is being sent for next stage to: %s",rec.Key, rec.Value, global.Schedule[1][partition])
+			// fmt.Println(res)
+			// if err_s != nil {
+			// 	fmt.Println("Error dialing tcp server", err_s)
+			// }
+			// encoder  := json.NewEncoder(next_stage_conn)
+			// errc := encoder.Encode(rec)
+			// if errc != nil {
+			// 	fmt.Println("Error encoding data in create", errc)
+			// }
 		}
 		if line_num > end_line {
 			break
