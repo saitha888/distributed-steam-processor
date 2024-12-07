@@ -13,24 +13,17 @@ type Node struct {
     RingID int // unique ring id (tcp port version)
 }
 
-type Stream struct {
-    Src_file string
-    Dest_file string
-    Tuple []string
-    Stage int
-}
-
 type SourceTask struct {
     Start int
     End int
     Src_file string
-    Dest_file string
 }
 
 type Tuple struct {
-    key string
-    value string
-    src string
+    Key string
+    Value string
+    Src string
+    Stage int
 }
 
 type Batch struct {

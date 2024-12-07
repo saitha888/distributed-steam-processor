@@ -6,29 +6,12 @@ import (
 	"distributed_system/global"
 	"encoding/json"
 	"distributed_system/rainstorm"
-	"time"
-	"distributed_system/util"
-	"strconv"
 	"os"
 )
 
 
 //starts tcp server that listens for grep commands
 func RainstormServer() {
-	// check if machine is assigned to op2 task
-	// send batch message to destination file every 100 ms
-	ticker := time.NewTicker(1000 * time.Millisecond)
-	defer ticker.Stop()
-
-	go func() {
-		for range ticker.C {
-			if global.IsSinkMachine {
-				rainstorm.SendSinkBatch()
-			}
-		}
-	}()
-	
-
     // listen for connection from other machine 
     ln, err := net.Listen("tcp", ":" + global.Rainstorm_port)
     if err != nil {
@@ -48,8 +31,6 @@ func RainstormServer() {
         // Handle the connection in a go routine
         go handleRainstormConnection(conn)
     }
-
-
 }
 
 //handler of any incoming connection from other machines
@@ -69,7 +50,7 @@ func handleRainstormConnection(conn net.Conn) {
 
     message_type := ""
 
-	if _, ok := data["0-source"]; ok {
+	if _, ok := data["1"]; ok {
 		message_type = "schedule"
 	} else if _, ok := data["op_1"]; ok {
         message_type = "rainstorm_init"
@@ -80,7 +61,7 @@ func handleRainstormConnection(conn net.Conn) {
 	} 
 
 	if message_type == "schedule" {
-		var schedule map[string][]string 
+		var schedule map[int][]map[string]string
 		err = json.Unmarshal(json_data, &schedule)
 		if err != nil {
 			fmt.Println("Error unmarshaling JSON to struct:", err)
@@ -88,22 +69,6 @@ func handleRainstormConnection(conn net.Conn) {
 		}
 		// set schedule
 		global.Schedule = schedule
-		// set tasks of machine
-		for stage, machines := range global.Schedule {
-			if stage == "dest_file" {
-				continue
-			}
-			if util.Contains(machines, global.Rainstorm_address) {
-				stage_num, _ := strconv.Atoi(stage[:1])
-				global.Tasks[stage_num] = stage[2:]
-			}
-		}
-
-		_, exists := global.Tasks[2];
-		if exists {
-			global.IsSinkMachine = true
-		}
-
 	} else if message_type == "rainstorm_init" {
 		var params map[string]string
 		err = json.Unmarshal(json_data, &params)
@@ -118,16 +83,16 @@ func handleRainstormConnection(conn net.Conn) {
 			return
 		}
 		defer file.Close()
-		global.IsSinkMachine = false
-		global.LastSentLine = 0
+		// global.IsSinkMachine = false
+		// global.LastSentLine = 0
 		rainstorm.InitiateJob(params)
 	} else if message_type == "source" {
 		var source_task global.SourceTask
 		err = json.Unmarshal(json_data, &source_task)
-		rainstorm.CompleteSourceTask(source_task.Src_file, source_task.Dest_file, source_task.Start, source_task.End, conn)
+		rainstorm.CompleteSourceTask(source_task.Src_file, source_task.Start, source_task.End)
 	} else if message_type == "stream" {
-		var stream global.Stream
+		var stream global.Tuple
 		err = json.Unmarshal(json_data, &stream)
-		rainstorm.CompleteTask(stream.Src_file, stream.Dest_file, stream.Tuple, stream.Stage, conn)
+		rainstorm.CompleteTask(stream.Key, stream.Value, stream.Src, stream.Stage)
 	}
 }
