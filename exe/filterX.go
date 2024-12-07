@@ -8,9 +8,11 @@ import (
 
 func filterByPatternX(key string, value string, pattern string) string {
 	result := ""
+	value = strings.ReplaceAll(value, "\n", "")
+	value = strings.ReplaceAll(value, "\"", "")
 
 	if strings.Contains(value, pattern) {
-		result = fmt.Sprintf("%s %s", key, value)
+		result = fmt.Sprintf("%s\n%s", key, value)
 	}
 
 	return result

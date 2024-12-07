@@ -107,7 +107,7 @@ func CompleteTask(tuples []global.Tuple) {
 				output, _ = cmd.CombinedOutput()
 			}	
 			
-			ret_tuple := strings.Split(strings.TrimSpace(string(output)), " ")
+			ret_tuple := strings.Split(strings.TrimSpace(string(output)), "\n")
 			fmt.Println("ret tuple: ", ret_tuple)
 			if ret_tuple == nil || len(ret_tuple) != 2 {
 				continue
