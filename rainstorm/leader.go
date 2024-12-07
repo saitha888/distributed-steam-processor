@@ -3,6 +3,7 @@ package rainstorm
 import (
 	"distributed_system/util"
 	"distributed_system/global"
+	"distributed_system/hydfs"
 	"strconv"
 	"encoding/json"
 	"fmt"
@@ -51,6 +52,7 @@ func Populate_Stage(num_tasks int, stage int, op string, pattern string, dest_fi
 			"Log_filename":  op + "-" + strconv.Itoa(i) + "-log",
 			"Dest_filename": dest_file,
 		}
+		hydfs.CreateFile("empty.txt",task["Log_filename"])
         global.Schedule[stage] = append(global.Schedule[stage], task)
 		// add task to workers task list
 		worker_tasks[workers[0]] = append(worker_tasks[workers[0]], task)
