@@ -105,8 +105,8 @@ func CompleteTask(tuples []global.Tuple) {
 				cmd := exec.Command(command, key, value)
 				output, _ = cmd.CombinedOutput()
 			}	
-			
 			ret_tuple := strings.Split(string(output), " ")
+			fmt.Println("ret tuple: ", ret_tuple)
 			if _, exists := global.Schedule[curr_stage + 1]; exists {
 				new_tuple := global.Tuple{
 					ID : unique_id,

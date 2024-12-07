@@ -120,10 +120,10 @@ func handleRainstormConnection(conn net.Conn) {
         output, err := cmd.CombinedOutput()
         if err != nil {
             fmt.Println(err)
-            return
+            output = []byte("0")
         }
         encoder := json.NewEncoder(conn)
-        err = encoder.Encode(string(output))
+        _ = encoder.Encode(string(output))
 		fmt.Println("sending this output back: " + string(output))
 	}
 }
