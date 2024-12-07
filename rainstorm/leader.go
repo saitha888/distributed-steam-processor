@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"net"
 )
 
@@ -99,11 +98,9 @@ func GetPartitions(hydfs_file string, num_tasks int) {
 func SendPartitions(src_file string, dest_file string, ports []string, num_tasks int) {
 	GetPartitions(src_file, num_tasks)
 	fmt.Println("partitions: ", global.Partitions)
-	var wg sync.WaitGroup
 
 	// go through each port in the source stage
 	for i := 0; i < len(ports); i++ {
-		wg.Add(1)
 
 		partition := global.Partitions[i]
 
@@ -117,41 +114,36 @@ func SendPartitions(src_file string, dest_file string, ports []string, num_tasks
 		port := ports[i]
 		fmt.Println("sending this interval to port " + port + ": ", partition)
 		// start a go routine to send all the tasks concurrently
-		go func(port string, data global.SourceTask) {
-			defer wg.Done() // Decrement the wait group counter when done
+		conn, err := net.Dial("tcp", port)
+		if err != nil {
+			fmt.Println("Error connecting to port:", err)
+			return
+		}
+		defer conn.Close()
 
-			conn, err := net.Dial("tcp", port)
-			if err != nil {
-				fmt.Println("Error connecting to port:", err)
-				return
+		// Send the data
+		encoder := json.NewEncoder(conn)
+		err = encoder.Encode(data)
+		if err != nil {
+			fmt.Println("Error encoding structure to JSON:", err)
+			return
+		}
+
+		// Listen for acknowledgements and process them
+		decoder := json.NewDecoder(conn)
+		for {
+			var line_number int
+			if err := decoder.Decode(&line_number); err != nil {
+				fmt.Println("Error receiving acknowledgment:", err)
+				break
 			}
-			defer conn.Close()
 
-			// Send the data
-			encoder := json.NewEncoder(conn)
-			err = encoder.Encode(data)
-			if err != nil {
-				fmt.Println("Error encoding structure to JSON:", err)
-				return
-			}
-
-			// Listen for acknowledgements and process them
-			decoder := json.NewDecoder(conn)
-			for {
-				var line_number int
-				if err := decoder.Decode(&line_number); err != nil {
-					fmt.Println("Error receiving acknowledgment:", err)
-					break
-				}
-
-				// Process the acknowledgment immediately
-				fmt.Println("line number processed: ", line_number)
-				line_num := strconv.Itoa(line_number)
-				ProcessAcknowledgement(port, line_num)
-			}
-		}(port, data)
+			// Process the acknowledgment immediately
+			fmt.Println("line number processed: ", line_number)
+			line_num := strconv.Itoa(line_number)
+			ProcessAcknowledgement(port, line_num)
+		}
 	}
-	wg.Wait()
 }	
 
 func ProcessAcknowledgement(port string, line_number string) {

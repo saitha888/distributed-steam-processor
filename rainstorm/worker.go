@@ -28,7 +28,6 @@ func CompleteSourceTask(hydfs_file string, destination string, start_line int, e
 		file = file_import
 	}
 	defer file.Close()
-	var wg sync.WaitGroup
 	scanner := bufio.NewScanner(file)
 	line_num := 0
 
@@ -49,39 +48,35 @@ func CompleteSourceTask(hydfs_file string, destination string, start_line int, e
 				fmt.Printf("Error sending line number for line %d: %v\n", line_num, err)
 				continue
 			}
-			wg.Add(1)
-			// Start a goroutine for sending the tuple
-			go func(rec global.Stream) {
-				defer wg.Done() // Decrement the counter when goroutine completes
-				partition := util.GetHash(rec.Tuple[0]) % len(global.Schedule["0-source"])
-				var keyToUse string
-				for key := range global.Schedule {
-					if strings.HasPrefix(key, "1-") {
-						keyToUse = key
-						break
-					}
+			partition := util.GetHash(record.Tuple[0]) % len(global.Schedule["0-source"])
+			var keyToUse string
+			for key := range global.Schedule {
+				if strings.HasPrefix(key, "1-") {
+					keyToUse = key
+					break
 				}
-				next_stage_conn, err_s := util.DialTCPClient(global.Schedule[keyToUse][partition])
-				res := fmt.Sprintf("tuple %s,%s is being sent for next stage to: %s",rec.Tuple[0], rec.Tuple[1], global.Schedule[keyToUse][partition])
-				fmt.Println(res)
-				if err_s != nil {
-					fmt.Println("Error dialing tcp server", err_s)
-				}
-				encoder  := json.NewEncoder(next_stage_conn)
-				errc := encoder.Encode(rec)
-				if errc != nil {
-					fmt.Println("Error encoding data in create", errc)
-				}
-				buffer := make([]byte, 1024) // Create a buffer to hold the acknowledgment
-				n, errr := next_stage_conn.Read(buffer)
-				if errr != nil {
-					fmt.Println("failed to receive acknowledgment: %w", errr)
-					return 
-				}
-				if string(buffer[:n]) != "ack" {
-					return
-				}
-			}(record)	
+			}
+			next_stage_conn, err_s := util.DialTCPClient(global.Schedule[keyToUse][partition])
+			res := fmt.Sprintf("tuple %s,%s is being sent for next stage to: %s",record.Tuple[0], record.Tuple[1], global.Schedule[keyToUse][partition])
+			fmt.Println(res)
+			if err_s != nil {
+				fmt.Println("Error dialing tcp server", err_s)
+			}
+			encoder  := json.NewEncoder(next_stage_conn)
+			errc := encoder.Encode(record)
+			if errc != nil {
+				fmt.Println("Error encoding data in create", errc)
+			}
+			buffer := make([]byte, 1024) // Create a buffer to hold the acknowledgment
+			n, errr := next_stage_conn.Read(buffer)
+			if errr != nil {
+				fmt.Println("failed to receive acknowledgment: %w", errr)
+				return 
+			}
+			if string(buffer[:n]) != "ack" {
+				return
+			}
+
 		}
 		if line_num > end_line {
 			break
