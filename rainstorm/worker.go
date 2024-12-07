@@ -107,7 +107,7 @@ func CompleteTask(tuples []global.Tuple) {
 				output, _ = cmd.CombinedOutput()
 			}	
 			
-			ret_tuple := strings.Split(strings.TrimSpace(string(output)), "\n")
+			ret_tuple := strings.SplitN(strings.TrimSpace(string(output)), " ", 2)
 			fmt.Println("ret tuple: ", ret_tuple)
 			if ret_tuple == nil || len(ret_tuple) != 2 {
 				continue
@@ -121,7 +121,11 @@ func CompleteTask(tuples []global.Tuple) {
 					Stage : curr_stage + 1,
 				}
 				log := fmt.Sprintf("%s \n", id)
-				append_to_send[curr_stage] += log
+				if _, exists := append_to_send[curr_stage]; exists {
+					append_to_send[curr_stage] += log
+				} else {
+					append_to_send[curr_stage] = log
+				}
 				fmt.Println("append to send: " + append_to_send[curr_stage])
 	
 				dest_address := global.Schedule[new_tuple.Stage][util.GetHash(ret_tuple[0]) % 3]["Port"]

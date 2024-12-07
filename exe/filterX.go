@@ -12,7 +12,7 @@ func filterByPatternX(key string, value string, pattern string) string {
 	value = strings.ReplaceAll(value, "\"", "")
 
 	if strings.Contains(value, pattern) {
-		result = fmt.Sprintf("%s\n%s", key, value)
+		result = fmt.Sprintf("%s %s", key, value)
 	}
 
 	return result
