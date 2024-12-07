@@ -77,18 +77,20 @@ func CompleteTask(tuples []global.Tuple) {
 		curr_stage := tuple.Stage 
 
 		log_name := GetAppendLog(curr_stage)
-		append_file := ""
+		fmt.Println("curr log name: ", log_name)
+		append_content := ""
 		if _, ok := task_to_log[log_name]; ok {
-			append_file = task_to_log[log_name]
+			append_content = task_to_log[log_name]
+			fmt.Println("file contents if in map: " + append_content)
 		} else {
-			append_file = hydfs.GetFileInVariable(log_name)
-			task_to_log[log_name] = append_file
+			append_content = hydfs.GetFileInVariable(log_name)
+			task_to_log[log_name] = append_content
+			fmt.Println("file contents if in else: " + append_content)
 		}
 		
 		unique_id := strconv.Itoa(util.GetHash(key+value))
-		
 		// find the unique id in the append only file, check its state
-		lines := GetMatchingLines(append_file, unique_id)
+		lines := GetMatchingLines(log_name, unique_id)
 
 		if lines <= 1 { // if it isn't there 
 			// process it with the executable

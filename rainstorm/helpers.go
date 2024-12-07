@@ -113,13 +113,8 @@ func GetMatchingLines(filename string, pattern string) int {
 
 	dest_port := GetRainstormVersion(ports[0][:36])
 
-	num_lines := SendLineCommand(dest_port, pattern, filename)
-	return num_lines
-}
-
-func SendLineCommand(port string, pattern string, filename string) int {
-    // connect to the port
-    conn, err := net.Dial("tcp", port)
+	// connect to the port
+    conn, err := net.Dial("tcp", dest_port)
     if err != nil {
         fmt.Println(err)
         return 0
@@ -127,8 +122,8 @@ func SendLineCommand(port string, pattern string, filename string) int {
     defer conn.Close()
 
 	message := make(map[string]string)
-	message["grep"] = "grep -c " + pattern + " file-store/" + filename
-	fmt.Println("sending this grep message: " + message["grep"] + " to port: " + port)
+	message["grep"] = "grep -c " + pattern + " file-store/" + dest_port[13:15] + "-" + filename
+	fmt.Println("sending this grep message: " + message["grep"] + " to port: " + dest_port)
 
 	// Encode the structure into JSON
 	encoder := json.NewEncoder(conn)
@@ -148,7 +143,7 @@ func SendLineCommand(port string, pattern string, filename string) int {
     line_count_str := strings.TrimSpace(response)
     line_count, err := strconv.Atoi(line_count_str)
     if err != nil {
-        fmt.Printf("Error converting line count from %s to int: %v\n", port, err)
+        fmt.Printf("Error converting line count from %s to int: %v\n", dest_port, err)
         return 0
     }
     return line_count
@@ -157,7 +152,9 @@ func SendLineCommand(port string, pattern string, filename string) int {
 func GetAppendLog(stage int) string {
 	for _, task := range global.Schedule[stage] {
 		// Check if the "port" matches the RainstormAddress
+		fmt.Println("currently on this task: ", task)
 		if task["Port"] == global.Rainstorm_address {
+			fmt.Println("returning this filename: " + task["Log_filename"])
 			return task["Log_filename"]
 		}
 	}
