@@ -1,0 +1,14 @@
+Message received to create file 07-src at 16:44:44.267
+07-src created at 16:44:44.267
+Message received to create file 05-source-1-log at 16:44:59.242
+05-source-1-log created at 16:44:59.243
+Message received to create file 07-split-1-log at 16:44:59.254
+07-split-1-log created at 16:44:59.254
+Message received to create file 07-count-0-log at 16:44:59.262
+07-count-0-log created at 16:44:59.262
+Message received to retrieve file src at 16:44:59.278
+File src sent back to client at 16:44:59.279
+Message received to retrieve file src at 16:44:59.298
+File src sent back to client at 16:44:59.299
+Message received to retrieve file count-0-log at 16:44:59.438
+File count-0-log sent back to client at 16:44:59.439
