@@ -25,8 +25,3 @@ type Tuple struct {
     Src string
     Stage int
 }
-
-type Batch struct {
-    dest string
-    tuples []Tuple
-}

@@ -7,11 +7,20 @@ import (
 	"encoding/json"
 	"distributed_system/rainstorm"
 	"os"
+	"time"
 )
 
 
 //starts tcp server that listens for grep commands
 func RainstormServer() {
+	ticker := time.NewTicker(1000 * time.Millisecond)
+	defer ticker.Stop()
+
+	go func() {
+		for range ticker.C {
+			rainstorm.SendBatches()
+		}
+	}()
     // listen for connection from other machine 
     ln, err := net.Listen("tcp", ":" + global.Rainstorm_port)
     if err != nil {
@@ -56,9 +65,9 @@ func handleRainstormConnection(conn net.Conn) {
         message_type = "rainstorm_init"
     } else if _, ok := data["Start"]; ok {
 		message_type = "source"
-	} else if _,ok := data["Key"]; ok {
-		message_type = "stream"
-	} 
+	} else if _,ok := data["tuples"]; ok {
+		message_type = "tuples"
+	}
 
 	if message_type == "schedule" {
 		var schedule map[int][]map[string]string
@@ -83,16 +92,14 @@ func handleRainstormConnection(conn net.Conn) {
 			return
 		}
 		defer file.Close()
-		// global.IsSinkMachine = false
-		// global.LastSentLine = 0
 		rainstorm.InitiateJob(params)
 	} else if message_type == "source" {
 		var source_task global.SourceTask
 		err = json.Unmarshal(json_data, &source_task)
 		rainstorm.CompleteSourceTask(source_task.Src_file, source_task.Start, source_task.End)
-	} else if message_type == "stream" {
-		var stream global.Tuple
-		err = json.Unmarshal(json_data, &stream)
-		rainstorm.CompleteTask(stream.Key, stream.Value, stream.Src, stream.Stage)
+	} else if message_type == "tuples" {
+		var tuples map[string][]global.Tuple
+		_ = json.Unmarshal([]byte(json_data), &tuples)
+		rainstorm.CompleteTask(tuples["tuples"])
 	}
 }

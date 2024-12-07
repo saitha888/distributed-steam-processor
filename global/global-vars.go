@@ -4,6 +4,7 @@ import (
 	"os"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/joho/godotenv"
+    "sync"
 )
 
 var err = godotenv.Load(".env")
@@ -70,4 +71,7 @@ var Enabled_sus = false
 var Cache_set = make(map[string]bool)
 var File_prefix string = Udp_address[13:15]
 var Partitions [][]int
-var Batches []Batch
+var Batches = make(map[string][]Tuple) // destination to list of tuples
+var BatchesMutex sync.Mutex
+
+

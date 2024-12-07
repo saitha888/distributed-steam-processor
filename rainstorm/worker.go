@@ -13,6 +13,8 @@ import (
 	// "github.com/gofrs/flock"
 )
 
+var mu sync.Mutex 
+
 func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 	file, err := os.Open("file-store/"+ hydfs_file)
 	if err != nil {
@@ -44,19 +46,27 @@ func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 			// Start a goroutine for sending the tuple
 			go func(rec global.Tuple) {
 				defer wg.Done() // Decrement the counter when goroutine completes
-				partition := util.GetHash(rec.Key) % len(global.Schedule[0])
-				next_stage_conn, err_s := util.DialTCPClient(global.Schedule[1][partition]["Port"])
-				res := fmt.Sprintf("tuple %s,%s is being sent for next stage to: %s",rec.Key, rec.Value, global.Schedule[1][partition])
-				fmt.Println(res)
-				if err_s != nil {
-					fmt.Println("Error dialing tcp server", err_s)
+				partition := util.GetHash(rec.Key) % len(global.Schedule[0]) // find the destination the tuple should go to 
+				dest_address := global.Schedule[1][partition]["Port"] // add to the batch
+				global.BatchesMutex.Lock()
+				if _, exists := global.Batches[dest_address]; exists {
+					global.Batches[dest_address] = append(global.Batches[dest_address], record)
+				} else {
+					global.Batches[dest_address] = []global.Tuple{record}
 				}
-				encoder  := json.NewEncoder(next_stage_conn)
-				errc := encoder.Encode(rec)
-				if errc != nil {
-					fmt.Println("Error encoding data in create", errc)
-				}
-			}(record)	
+				global.BatchesMutex.Unlock()
+				// next_stage_conn, err_s := util.DialTCPClient(global.Schedule[1][partition]["Port"])
+				// res := fmt.Sprintf("tuple %s,%s is being sent for next stage to: %s",rec.Key, rec.Value, global.Schedule[1][partition])
+				// fmt.Println(res)
+				// if err_s != nil {
+				// 	fmt.Println("Error dialing tcp server", err_s)
+				// }
+				// encoder  := json.NewEncoder(next_stage_conn)
+				// errc := encoder.Encode(rec)
+				// if errc != nil {
+				// 	fmt.Println("Error encoding data in create", errc)
+				// }
+			}(record)
 		}
 		if line_num > end_line {
 			break
@@ -69,9 +79,13 @@ func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 	return
 }
 
-func CompleteTask(key string, value string, src_port string, stage int) {
-	fmt.Println("Reached stage 1")
-	// op := global.Schedule[stage][0]["Op"]
+func CompleteTask(tuples []global.Tuple) {
+	fmt.Println("got to task 1: ", tuples)
+	// curr_stage := tuples[0]["stage"]
+	// next_stage := curr_stage + 1
+	// fmt.Println("Reached stage ", next_stage)
+	// op := global.Schedule[curr_stage][0]["Op"]
+	
 	// executable := "./exe/" + op
 	// tuples := ""
 	// if stage == 1 {
@@ -81,9 +95,37 @@ func CompleteTask(key string, value string, src_port string, stage int) {
 	// 	output, _  := exec.Command(executable, key, value).Output()
 	// 	tuples = string(output)
 	// }
-	// tuple := strings.Split(strings.TrimSpace(tuples), " ")
-
+	// new_tuple := strings.Split(strings.TrimSpace(tuples), " ")
+	// record := Global.Tuple {
+	// 	Key : new_tuple[0],
+	// 	Value: new_tuple[1],
+	// 	Stage: next_stage,
+	// 	Src: global.Rainstorm_address,
+	// }
 }
+
+func SendBatches() {
+	global.BatchesMutex.Lock()
+	for destination, tuples := range global.Batches {
+		// Simulate sending tuples to the destination
+		conn, err := util.DialTCPClient(destination)
+		if err != nil {
+			fmt.Println("Error dialing tcp server", err)
+		}
+		message := make(map[string][]global.Tuple)
+
+		// Add a dummy key with a list of tuples as the value
+		message["tuples"] = tuples
+		encoder  := json.NewEncoder(conn)
+		err = encoder.Encode(message)
+
+		// Clear the list for the current destination
+		global.Batches[destination] = nil
+	}
+	global.BatchesMutex.Unlock()
+}
+
+
 
 // func SendSinkBatch() {
 // 	// Create a file lock
