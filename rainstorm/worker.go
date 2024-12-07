@@ -4,12 +4,14 @@ import (
 	"distributed_system/util"
 	"distributed_system/global"
 	"distributed_system/hydfs"
-	"encoding/json"
 	"strconv"
 	"fmt"
 	"os"
 	"bufio"
 	"sync"
+	"strings"
+	"os/exec"
+
 	// "github.com/gofrs/flock"
 )
 
@@ -35,7 +37,9 @@ func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 		if line_num >= start_line && line_num <= end_line {
 			key := fmt.Sprintf("%s:%d", hydfs_file, line_num)
 			value := scanner.Text()
+			line_id := strconv.Itoa(line_num)
 			record := global.Tuple{
+				ID: line_id,
 				Key: key,
 				Value: value,
 				Stage: 1,
@@ -50,17 +54,6 @@ func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 				global.Batches[dest_address] = []global.Tuple{record}
 			}
 			global.BatchesMutex.Unlock()
-			// next_stage_conn, err_s := util.DialTCPClient(global.Schedule[1][partition]["Port"])
-			// res := fmt.Sprintf("tuple %s,%s is being sent for next stage to: %s",rec.Key, rec.Value, global.Schedule[1][partition])
-			// fmt.Println(res)
-			// if err_s != nil {
-			// 	fmt.Println("Error dialing tcp server", err_s)
-			// }
-			// encoder  := json.NewEncoder(next_stage_conn)
-			// errc := encoder.Encode(rec)
-			// if errc != nil {
-			// 	fmt.Println("Error encoding data in create", errc)
-			// }
 		}
 		if line_num > end_line {
 			break
@@ -74,54 +67,95 @@ func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 }
 
 func CompleteTask(tuples []global.Tuple) {
-	fmt.Println("got to task 1: ", tuples)
-	// curr_stage := tuples[0]["stage"]
-	// next_stage := curr_stage + 1
-	// fmt.Println("Reached stage ", next_stage)
-	// op := global.Schedule[curr_stage][0]["Op"]
+	task_to_log := make(map[string]string)
+	append_to_send := make(map[int]string)
+	dest_string := ""
+	for _, tuple := range tuples {
+		id := tuple.ID
+		key := tuple.Key 
+		value := tuple.Value 
+		curr_stage := tuple.Stage 
+
+		log_name := GetAppendLog(curr_stage)
+		append_file := ""
+		if _, ok := task_to_log[log_name]; ok {
+			append_file = task_to_log[log_name]
+		} else {
+			append_file = hydfs.GetFileInVariable(log_name)
+			task_to_log[log_name] = append_file
+		}
+		
+		unique_id := strconv.Itoa(util.GetHash(key+value))
+		
+		// find the unique id in the append only file, check its state
+		lines := GetMatchingLines(append_file, unique_id)
+
+		if lines <= 1 { // if it isn't there 
+			// process it with the executable
+			// add the tuples to the batch global variable
+			op := GetOperation(curr_stage)
+			command := "./exe/" + op
+			output := []byte{}
+			if curr_stage == 1 {
+				cmd := exec.Command(command, key, value, global.Schedule[curr_stage][0]["Pattern"])
+				output, _ = cmd.CombinedOutput()
+			} else {
+				cmd := exec.Command(command, key, value)
+				output, _ = cmd.CombinedOutput()
+			}	
+			
+			ret_tuple := strings.Split(string(output), " ")
+			if _, exists := global.Schedule[curr_stage + 1]; exists {
+				new_tuple := global.Tuple{
+					ID : unique_id,
+					Key : ret_tuple[0],
+					Value : ret_tuple[1],
+					Src : global.Rainstorm_address,
+					Stage : curr_stage + 1,
+				}
+				log := fmt.Sprintf("%s \n", id)
+				append_to_send[curr_stage] += log
 	
-	// executable := "./exe/" + op
-	// tuples := ""
-	// if stage == 1 {
-	// 	output, _ := exec.Command(executable, key, value, global.Schedule[0][0]["pattern"]).Output()
-	// 	tuples = string(output)
-	// } else {
-	// 	output, _  := exec.Command(executable, key, value).Output()
-	// 	tuples = string(output)
-	// }
-	// new_tuple := strings.Split(strings.TrimSpace(tuples), " ")
-	// record := Global.Tuple {
-	// 	Key : new_tuple[0],
-	// 	Value: new_tuple[1],
-	// 	Stage: next_stage,
-	// 	Src: global.Rainstorm_address,
-	// }
-}
-
-func SendBatches() {
-	global.BatchesMutex.Lock()
-	for destination, tuples := range global.Batches {
-		if len(tuples) == 0 {
-			continue
+				dest_address := global.Schedule[new_tuple.Stage][util.GetHash(ret_tuple[0]) % 3]["Port"]
+	
+				//send batches to next stage
+				global.BatchesMutex.Lock()
+				if _, exists := global.Batches[dest_address]; exists {
+					global.Batches[dest_address] = append(global.Batches[dest_address], new_tuple)
+				} else {
+					global.Batches[dest_address] = []global.Tuple{new_tuple}
+				}
+				global.BatchesMutex.Unlock()
+	
+				//send ack back to sender machine
+				global.AckBatchesMutex.Lock()
+				ack := global.Ack{
+					ID : id,
+					Stage : curr_stage - 1,
+				}
+				if _, exists := global.AckBatches[dest_address]; exists {
+					global.AckBatches[dest_address] = append(global.AckBatches[dest_address], ack)
+				} else {
+					global.AckBatches[dest_address] = []global.Ack{ack}
+				}
+				global.AckBatchesMutex.Unlock()
+			} else {
+				output := fmt.Sprintf("%s, %s\n", ret_tuple[0], ret_tuple[1])
+				dest_string += output
+			}
 		}
-		// Simulate sending tuples to the destination
-		conn, err := util.DialTCPClient(destination)
-		if err != nil {
-			fmt.Println("Error dialing tcp server", err)
-		}
-		message := make(map[string][]global.Tuple)
-
-		// Add a dummy key with a list of tuples as the value
-		message["tuples"] = tuples
-		encoder  := json.NewEncoder(conn)
-		err = encoder.Encode(message)
-
-		// Clear the list for the current destination
-		global.Batches[destination] = nil
 	}
-	global.BatchesMutex.Unlock()
+	if len(dest_string) >= 0 {
+		global.DestMutex.Lock()
+		hydfs.AppendStringToFile(dest_string, global.Schedule[0][0]["Dest_filename"])
+		global.DestMutex.Unlock()
+	}
+	for stage,log := range append_to_send {
+		global.AppendMutex.Lock()
+		hydfs.AppendStringToFile(log, GetAppendLog(stage))
+		global.AppendMutex.Unlock()
+	}
 }
-
 
 
 // func SendSinkBatch() {
@@ -142,6 +176,7 @@ func SendBatches() {
 // 		return
 // 	}
 // 	defer src.Close()
+// 	src.Close()
 
 // 	// create the batch file to send
 // 	dest, err := os.Create("temp.txt")
