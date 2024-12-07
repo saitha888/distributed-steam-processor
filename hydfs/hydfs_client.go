@@ -203,6 +203,7 @@ func AppendStringToFile(string_to_append string, hydfs_file string) {
         Filename:  replica_num + "-" + hydfs_file,
         FileContents: string_to_append,
     }
+    fmt.Println("sending this append message to port: " + port, data)
     encoder := json.NewEncoder(conn)
     err = encoder.Encode(data)
     if err != nil {

@@ -74,6 +74,7 @@ func CompleteTask(tuples []global.Tuple) {
 		id := tuple.ID
 		key := tuple.Key 
 		value := tuple.Value 
+		src := tuple.Src
 		curr_stage := tuple.Stage 
 
 		log_name := GetAppendLog(curr_stage)
@@ -88,7 +89,7 @@ func CompleteTask(tuples []global.Tuple) {
 			fmt.Println("file contents if in else: " + append_content)
 		}
 		
-		unique_id := strconv.Itoa(util.GetHash(key+value))
+		unique_id := strconv.Itoa(util.GetUniqueNodeID(key+value))
 		// find the unique id in the append only file, check its state
 		lines := GetMatchingLines(log_name, unique_id)
 
@@ -106,7 +107,7 @@ func CompleteTask(tuples []global.Tuple) {
 				output, _ = cmd.CombinedOutput()
 			}	
 			
-			ret_tuple := strings.Split(string(output), " ")
+			ret_tuple := strings.Split(strings.TrimSpace(string(output)), " ")
 			fmt.Println("ret tuple: ", ret_tuple)
 			if ret_tuple == nil || len(ret_tuple) != 2 {
 				continue
@@ -121,6 +122,7 @@ func CompleteTask(tuples []global.Tuple) {
 				}
 				log := fmt.Sprintf("%s \n", id)
 				append_to_send[curr_stage] += log
+				fmt.Println("append to send: " + append_to_send[curr_stage])
 	
 				dest_address := global.Schedule[new_tuple.Stage][util.GetHash(ret_tuple[0]) % 3]["Port"]
 	
@@ -139,10 +141,10 @@ func CompleteTask(tuples []global.Tuple) {
 					ID : id,
 					Stage : curr_stage - 1,
 				}
-				if _, exists := global.AckBatches[dest_address]; exists {
-					global.AckBatches[dest_address] = append(global.AckBatches[dest_address], ack)
+				if _, exists := global.AckBatches[src]; exists {
+					global.AckBatches[src] = append(global.AckBatches[src], ack)
 				} else {
-					global.AckBatches[dest_address] = []global.Ack{ack}
+					global.AckBatches[src] = []global.Ack{ack}
 				}
 				global.AckBatchesMutex.Unlock()
 			} else {
@@ -159,6 +161,7 @@ func CompleteTask(tuples []global.Tuple) {
 	for stage,log := range append_to_send {
 		global.AppendMutex.Lock()
 		hydfs.AppendStringToFile(log, GetAppendLog(stage))
+		fmt.Println("sending log: " + log + " to file: " + GetAppendLog(stage))
 		global.AppendMutex.Unlock()
 	}
 }
