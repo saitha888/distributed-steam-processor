@@ -20,6 +20,7 @@ func RainstormServer() {
 	go func() {
 		for range ticker.C {
 			rainstorm.SendBatches()
+			rainstorm.SendAckBatches()
 		}
 	}()
     // listen for connection from other machine 
@@ -114,6 +115,7 @@ func handleRainstormConnection(conn net.Conn) {
 		var params map[string]string
 		_ = json.Unmarshal(json_data, &params)
 		command := params["grep"]
+		fmt.Println("running this grep command: ", command)
 		cmd := exec.Command("sh", "-c", command)
         output, err := cmd.CombinedOutput()
         if err != nil {
@@ -122,5 +124,6 @@ func handleRainstormConnection(conn net.Conn) {
         }
         encoder := json.NewEncoder(conn)
         err = encoder.Encode(string(output))
+		fmt.Println("sending this output back: " + string(output))
 	}
 }

@@ -128,6 +128,7 @@ func SendLineCommand(port string, pattern string, filename string) int {
 
 	message := make(map[string]string)
 	message["grep"] = "grep -c " + pattern + " file-store/" + filename
+	fmt.Println("sending this grep message: " + message["grep"] + " to port: " + port)
 
 	// Encode the structure into JSON
 	encoder := json.NewEncoder(conn)
@@ -143,6 +144,7 @@ func SendLineCommand(port string, pattern string, filename string) int {
         fmt.Println("error sending grep command")
     }
 
+	fmt.Println("received this response from machine: " + response)
     line_count_str := strings.TrimSpace(response)
     line_count, err := strconv.Atoi(line_count_str)
     if err != nil {
