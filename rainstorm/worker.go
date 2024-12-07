@@ -107,6 +107,9 @@ func CompleteTask(tuples []global.Tuple) {
 func SendBatches() {
 	global.BatchesMutex.Lock()
 	for destination, tuples := range global.Batches {
+		if len(tuples) == 0 {
+			continue
+		}
 		// Simulate sending tuples to the destination
 		conn, err := util.DialTCPClient(destination)
 		if err != nil {
