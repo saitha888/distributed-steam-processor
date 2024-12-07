@@ -108,7 +108,7 @@ func CompleteTask(tuples []global.Tuple) {
 			
 			ret_tuple := strings.Split(string(output), " ")
 			fmt.Println("ret tuple: ", ret_tuple)
-			if ret_tuple == nil || len(ret_tuple) == 0 {
+			if ret_tuple == nil || len(ret_tuple) != 2 {
 				continue
 			}
 			if _, exists := global.Schedule[curr_stage + 1]; exists {
