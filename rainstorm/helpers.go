@@ -51,6 +51,9 @@ func GetRainstormVersion(id string) string {
 func CallRainstorm(params map[string]string) {
 	leader_port := os.Getenv("LEADER_ADDRESS")
 	conn, err := util.DialTCPClient(leader_port)
+	if err != nil {
+		return
+	}
 	defer conn.Close()
 
 	// send the rainstorm parameters to the machine
@@ -71,6 +74,7 @@ func SendBatches() {
 		conn, err := util.DialTCPClient(destination)
 		if err != nil {
 			fmt.Println("Error dialing tcp server", err)
+			continue
 		}
 		message := make(map[string][]global.Tuple)
 

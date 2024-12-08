@@ -60,20 +60,12 @@ func Populate_Stage(num_tasks int, stage int, op string, pattern string, dest_fi
 func SendSchedule(deleted_port string) {
 	for _,node := range global.Membership_list {
 		// connect to node in membership list
-		if node.Status != " sus " {
-			port := GetRainstormVersion(node.NodeID[:36])
-			conn, err := util.DialTCPClient(port)
-			defer conn.Close()
-		
-			// send the rainstorm schedule to the machine
-			encoder  := json.NewEncoder(conn)
-			err = encoder.Encode(global.Schedule)
-			if err != nil {
-				fmt.Println("Error encoding data in send schedule", err)
-			}
-		}
 		port := GetRainstormVersion(node.NodeID[:36])
 		conn, err := util.DialTCPClient(port)
+		if err != nil {
+			fmt.Println("Error dialing client in send schedule", err)
+			continue
+		}
 		defer conn.Close()
 	
 		// send the rainstorm schedule to the machine
@@ -81,6 +73,7 @@ func SendSchedule(deleted_port string) {
 		err = encoder.Encode(global.Schedule)
 		if err != nil {
 			fmt.Println("Error encoding data in send schedule", err)
+			continue
 		}
 	}
 }
