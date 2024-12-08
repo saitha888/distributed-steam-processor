@@ -87,7 +87,6 @@ func SendBatches() {
 func SendAckBatches() {
 	global.AckBatchesMutex.Lock()
 	for destination, acks := range global.AckBatches {
-		fmt.Println("sending acks back to ", destination)
 		if len(acks) == 0 {
 			continue
 		}
