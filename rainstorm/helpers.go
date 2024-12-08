@@ -150,6 +150,8 @@ func GetAppendLog(stage int) string {
 }
 
 func GetAppendLogAck(stage int, src string) string {
+	fmt.Println("Stage: " + stage)
+	fmt.Println("Src: " + src)
 	for _, task := range global.Schedule[stage] {
 		// Check if the "port" matches the RainstormAddress
 		fmt.Println("currently on this task: ", task)
