@@ -53,7 +53,10 @@ func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 			} else {
 				global.Batches[dest_address] = []global.Tuple{record}
 			}
-			global.BatchesMutex.Unlock()
+			global.AppendMutex.Lock()
+			log := fmt.Sprintf("%s | %s | %s | %s processed\n", record.ID, record.Key, record.Value, record.Stage)
+			hydfs.AppendStringToFile(log, GetAppendLog(0))
+			global.AppendMutex.Unlock()
 		}
 		if line_num > end_line {
 			break
@@ -116,7 +119,7 @@ func CompleteTask(tuples []global.Tuple) {
 				Stage : curr_stage + 1,
 			}
 
-			log := fmt.Sprintf("%s %s %s %s processed\n", new_tuple.ID, new_tuple.Key, new_tuple.Value, new_tuple.Stage)
+			log := fmt.Sprintf("%s | %s | %s | %s processed\n", new_tuple.ID, new_tuple.Key, new_tuple.Value, new_tuple.Stage)
 			if _, exists := append_to_send[curr_stage]; exists {
 				append_to_send[curr_stage] += log
 			} else {

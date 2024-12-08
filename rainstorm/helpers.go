@@ -148,16 +148,16 @@ func ResendTuples(hydfs_filename string) {
 	}
 	defer file.Close()
 
-	word_counts := make(map[string][]string) // unique_id to lines that include it 
+	word_counts := make(map[string][][]string) // unique_id maps to list of tuples with it
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		words := strings.Split(line, " ")
+		words := strings.Split(line, "|")
 		if len(words) > 0 {
 			unique_id := words[0]
-			word_counts[unique_id] = append(word_counts[unique_id] , line)
+			word_counts[unique_id] = append(word_counts[unique_id] , words)
 		}
 	}
 
@@ -166,21 +166,21 @@ func ResendTuples(hydfs_filename string) {
 	}
 
 	// Find words with less than 2 counts
-	var incomplete []string
+	var incomplete [][]string
 	for _, lines := range word_counts {
-		if len(lines) < 2 {
+		if len(lines) == 1 {
 			incomplete = append(incomplete, lines[0])
 		}
 	}
 
-	for _,line := range incomplete {
-		line_values := strings.Split(line, " ")
-		stage, _ := strconv.Atoi(line_values[3])
+	for _, line := range incomplete {
+
+		stage, _ := strconv.Atoi(line[3])
 		// make the new tuple
 		tuple := global.Tuple {
-			ID: line_values[0],
-			Key:   line_values[1],
-			Value: line_values[2],
+			ID: line[0],
+			Key:   line[1],
+			Value: line[2],
 			Src:   global.Rainstorm_address,
 			Stage: stage,
 		}
