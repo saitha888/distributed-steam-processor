@@ -109,10 +109,29 @@ func GetMatchingLines(hydfs_filename string, pattern string) int {
 
 	hydfs.GetFile(hydfs_filename, localfilename)
 
+	file, err := os.Open(localfilename)
+	if err != nil {
+		fmt.Printf("Error opening file %s: %v\n", localfilename, err)
+	}
+	defer file.Close() // Ensure the file is closed when done
+
+	// Create a scanner to read the file line by line
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		// Print each line to the terminal
+		fmt.Println(scanner.Text())
+	}
+
 	// grep the file
-	command := "grep -c " + pattern + " " + localfilename
+	pattern = strings.TrimSpace(pattern)
+	fmt.Println("pattern: " + pattern)
+	command := "grep -c \"" + pattern + "\" " + localfilename
 	cmd := exec.Command("sh", "-c", command)
 	output, err := cmd.CombinedOutput()
+
+	if _, err := os.Stat(localfilename); os.IsNotExist(err) {
+		fmt.Println("File does not exist:", localfilename)
+	}	
 
 	// delete the local file
 	_ = os.Remove(localfilename)
