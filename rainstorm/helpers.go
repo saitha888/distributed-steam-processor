@@ -120,7 +120,7 @@ func GetMatchingLines(hydfs_filename string, pattern string) int {
 	}	
 
 	// delete the local file
-	// _ = os.Remove(localfilename)
+	_ = os.Remove(localfilename)
 	
 	if err != nil { // couldn't find pattern
 		return 0
