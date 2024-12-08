@@ -87,7 +87,11 @@ func SendBatches() {
 func SendAckBatches() {
 	global.AckBatchesMutex.Lock()
 	for filename, contents := range global.AckBatches {
+		if contents == "" {
+			continue
+		}
 		hydfs.AppendStringToFile(contents,filename)
+		global.AckBatches[filename] = ""
 	}
 	global.AckBatchesMutex.Unlock()
 }
@@ -108,7 +112,6 @@ func GetMatchingLines(filename string, pattern string) int {
 
 	message := make(map[string]string)
 	message["grep"] = "grep -c " + pattern + " file-store/" + dest_port[13:15] + "-" + filename
-	fmt.Println("sending this grep message: " + message["grep"] + " to port: " + dest_port)
 
 	// Encode the structure into JSON
 	encoder := json.NewEncoder(conn)
