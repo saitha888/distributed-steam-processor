@@ -114,7 +114,7 @@ func CompleteTask(tuples []global.Tuple) {
 				continue
 			}
 
-			log := fmt.Sprintf("%s processed \n", unique_id)
+			log := fmt.Sprintf("%s, %s, %s processed \n", unique_id, ret_tuple[0], ret_tuple[1])
 			if _, exists := append_to_send[curr_stage]; exists {
 				append_to_send[curr_stage] += log
 			} else {
@@ -153,7 +153,7 @@ func CompleteTask(tuples []global.Tuple) {
 			if _, exists := global.AckBatches[filename]; exists {
 				global.AckBatches[filename] += strconv.Itoa(curr_stage) + " " + ret_tuple[0] + ret_tuple[1] +" "+ id + " ack\n"
 			} else {
-				global.AckBatches[filename] = id + " ack\n"
+				global.AckBatches[filename] = strconv.Itoa(curr_stage) + " " + ret_tuple[0] + ret_tuple[1] +" "+ id + " ack\n"
 			}
 			global.AckBatchesMutex.Unlock()
 		}
