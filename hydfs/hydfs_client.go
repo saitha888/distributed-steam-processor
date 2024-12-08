@@ -187,26 +187,24 @@ func AppendStringToFile(string_to_append string, hydfs_file string) {
     replicas := GetFileServers(util.GetHash(hydfs_file))
     
     replica_num := replicas[0][13:15]
-
     // connect to port to write file contents into replica
-    for _, port := range replicas {
-        port = port[:36]
-        conn, err := net.Dial("tcp", port)
-        if err != nil {
-            fmt.Println(err)
-            return
-        }
-        data := global.Message{
-            Action:    "append",
-            Filename:  replica_num + "-" + hydfs_file,
-            FileContents: string_to_append,
-        }
-        encoder := json.NewEncoder(conn)
-        err = encoder.Encode(data)
-        if err != nil {
-            fmt.Println("Error encoding data in create", err)
-        } 
+    replica := replicas[0]
+    port := replica[:36]
+    conn, err := net.Dial("tcp", port)
+    if err != nil {
+        fmt.Println(err)
+        return
     }
+    data := global.Message{
+        Action:    "append",
+        Filename:  replica_num + "-" + hydfs_file,
+        FileContents: string_to_append,
+    }
+    encoder := json.NewEncoder(conn)
+    err = encoder.Encode(data)
+    if err != nil {
+        fmt.Println("Error encoding data in create", err)
+    } 
 }
 
 func AppendStringToDest(string_to_append string, hydfs_file string) {
