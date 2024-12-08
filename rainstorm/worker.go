@@ -125,7 +125,7 @@ func CompleteTask(tuples []global.Tuple) {
 
 			dest_address := ""
 			if _, exists := global.Schedule[curr_stage+1]; exists {
-				dest_address = global.Schedule[new_tuple.Stage][util.GetHash(ret_tuple[0]) % 3]["Port"]
+				dest_address = global.Schedule[new_tuple.Stage][util.GetHash(ret_tuple[0]) % len(global.Schedule[0])]["Port"]
 			} else {
 				dest_address = global.Leader_address
 			}
