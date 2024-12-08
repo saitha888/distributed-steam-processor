@@ -37,9 +37,9 @@ func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 		if line_num >= start_line && line_num <= end_line {
 			key := fmt.Sprintf("%s:%d", hydfs_file, line_num)
 			value := scanner.Text()
-			line_id := strconv.Itoa(line_num)
+			unique_id := strconv.Itoa(util.GetUniqueNodeID(key+value))
 			record := global.Tuple{
-				ID: line_id,
+				ID: unique_id,
 				Key: key,
 				Value: value,
 				Stage: 1,
@@ -114,7 +114,7 @@ func CompleteTask(tuples []global.Tuple) {
 				continue
 			}
 
-			log := fmt.Sprintf("%s processed\n", id)
+			log := fmt.Sprintf("%s processed \n", unique_id)
 			if _, exists := append_to_send[curr_stage]; exists {
 				append_to_send[curr_stage] += log
 			} else {
@@ -151,7 +151,7 @@ func CompleteTask(tuples []global.Tuple) {
 			filename := GetAppendLogAck(curr_stage - 1, src)
 			fmt.Println("FILENAME FOR ACK IS: " + filename)
 			if _, exists := global.AckBatches[filename]; exists {
-				global.AckBatches[filename] += id + " ack\n"
+				global.AckBatches[filename] += strconv.Itoa(curr_stage) + " " + ret_tuple[0] + ret_tuple[1] +" "+ id + " ack\n"
 			} else {
 				global.AckBatches[filename] = id + " ack\n"
 			}
