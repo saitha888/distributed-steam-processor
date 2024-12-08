@@ -82,6 +82,14 @@ func handleRainstormConnection(conn net.Conn) {
 		}
 		// set schedule
 		global.Schedule = schedule
+		for _, tasks := range global.Schedule {
+			for _, task := range tasks {
+				// Check if the "port" matches the RainstormAddress
+				if task["Port"] == global.Rainstorm_address {
+					rainstorm.ResendTuples(task["Log_filename"])
+				}
+			}
+		}
 	} else if message_type == "rainstorm_init" {
 		var params map[string]string
 		err = json.Unmarshal(json_data, &params)

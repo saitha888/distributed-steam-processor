@@ -108,12 +108,6 @@ func CompleteTask(tuples []global.Tuple) {
 				continue
 			}
 
-			log := fmt.Sprintf("%s processed \n", unique_id)
-			if _, exists := append_to_send[curr_stage]; exists {
-				append_to_send[curr_stage] += log
-			} else {
-				append_to_send[curr_stage] = log
-			}
 			new_tuple := global.Tuple{
 				ID : unique_id,
 				Key : ret_tuple[0],
@@ -121,6 +115,14 @@ func CompleteTask(tuples []global.Tuple) {
 				Src : global.Rainstorm_address,
 				Stage : curr_stage + 1,
 			}
+
+			log := fmt.Sprintf("%s %s %s %s processed\n", new_tuple.ID, new_tuple.Key, new_tuple.Value, new_tuple.Stage)
+			if _, exists := append_to_send[curr_stage]; exists {
+				append_to_send[curr_stage] += log
+			} else {
+				append_to_send[curr_stage] = log
+			}
+
 			dest_address := ""
 			if _, exists := global.Schedule[curr_stage+1]; exists {
 				dest_address = global.Schedule[new_tuple.Stage][util.GetHash(ret_tuple[0]) % 3]["Port"]

@@ -112,7 +112,7 @@ func GetMatchingLines(hydfs_filename string, pattern string) int {
 	command := "grep -c " + pattern + localfilename
 	cmd := exec.Command("sh", "-c", command)
 	output, err := cmd.CombinedOutput()
-	
+
 	// delete the local file
 	_ = os.Remove(localfilename)
 	
@@ -126,7 +126,7 @@ func GetMatchingLines(hydfs_filename string, pattern string) int {
 	return line_count
 }
 
-func GetTupleResends(hydfs_filename string) []global.Tuple {
+func ResendTuples(hydfs_filename string) {
 	// get the hydfs file and place it in local file
 	file_hash := util.GetHash(hydfs_filename)
 	ports := hydfs.GetFileServers(file_hash)
@@ -140,7 +140,6 @@ func GetTupleResends(hydfs_filename string) []global.Tuple {
 	file, err := os.Open(localfilename)
 	if err != nil {
 		fmt.Printf("Error opening file: %v\n", err)
-		return []global.Tuple{}
 	}
 	defer file.Close()
 
@@ -151,12 +150,12 @@ func GetTupleResends(hydfs_filename string) []global.Tuple {
 		line := scanner.Text()
 
 		// Split the line into words
-		words := strings.Fields(line)
+		words := strings.Split(line, " ")
 		if len(words) > 0 {
 			// Get the first word
-			firstWord := words[0]
+			unique_id := words[0]
 			// Increment the count for the first word
-			wordCounts[firstWord] = append(wordCounts[firstWord] , line)
+			wordCounts[unique_id] = append(wordCounts[unique_id] , line)
 		}
 	}
 
@@ -173,10 +172,10 @@ func GetTupleResends(hydfs_filename string) []global.Tuple {
 		}
 	}
 
-	var output []global.Tuple
 	for _,line := range lessThanTwo {
 		line_values := strings.Split(line, " ")
 		stage, _ := strconv.Atoi(line_values[3])
+		// make the new tuple
 		tuple := global.Tuple {
 			ID: line_values[0],
 			Key:   line_values[1],
@@ -184,14 +183,27 @@ func GetTupleResends(hydfs_filename string) []global.Tuple {
 			Src:   global.Rainstorm_address,
 			Stage: stage,
 		}
-		output = append(output,tuple)
+
+		// get the destination address
+		dest_address := ""
+		if _, exists := global.Schedule[tuple.Stage]; exists {
+			dest_address = global.Schedule[tuple.Stage][util.GetHash(tuple.Key) % 3]["Port"]
+		} else {
+			dest_address = global.Leader_address
+		}
+
+		// add to the batch
+		global.BatchesMutex.Lock()
+		if _, exists := global.Batches[dest_address]; exists {
+			global.Batches[dest_address] = append(global.Batches[dest_address], tuple)
+		} else {
+			global.Batches[dest_address] = []global.Tuple{tuple}
+		}
+		global.BatchesMutex.Unlock()
 	}
 	
 	// delete the local file
 	_ = os.Remove(localfilename)
-
-	return output
-
 }
 
 func GetAppendLog(stage int) string {
