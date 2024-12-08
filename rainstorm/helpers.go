@@ -112,13 +112,14 @@ func GetMatchingLines(hydfs_filename string, pattern string) int {
 	command := "grep -c " + pattern + localfilename
 	cmd := exec.Command("sh", "-c", command)
 	output, err := cmd.CombinedOutput()
-
+	
+	// delete the local file
+	_ = os.Remove(localfilename)
+	
 	if err != nil { // couldn't find pattern
 		return 0
 	}
 
-	// delete the local file
-	_ = os.Remove(localfilename)
 
 	// return the line count
 	line_count, _ := strconv.Atoi(string(output))
