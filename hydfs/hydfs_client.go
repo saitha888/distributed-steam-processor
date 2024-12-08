@@ -400,6 +400,9 @@ func MergeLocally(hydfs_file string) error {
 			if err != nil {
 				return fmt.Errorf("failed to merge chunk %s: %v", path, err)
 			}
+            if err := os.Remove(path); err != nil {
+				return fmt.Errorf("failed to delete chunk %s: %v", path, err)
+			}
 		}
 		return nil
 	})
