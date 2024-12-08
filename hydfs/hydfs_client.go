@@ -65,7 +65,6 @@ func GetFile(hydfs_file string, local_file string) {
     total_content := ""
     for {
         err = decoder.Decode(&response)
-        fmt.Println(response.Filename)
         if err != nil {
             if err == io.EOF {
                 fmt.Println("All files received")
@@ -144,7 +143,6 @@ func CreateFile(localfilename string, HyDFSfilename string) {
 }
 
 func AppendFile(local_file string, hydfs_file string) {
-    fmt.Println("Received an append message for: ", hydfs_file)
     replicas := GetFileServers(util.GetHash(hydfs_file))
     machine_num, err := strconv.Atoi(os.Getenv("MACHINE_NUMBER"))
     if err != nil {
@@ -510,7 +508,6 @@ func GetFileInVariable(hydfs_file string) string{
     total_content := ""
     for {
         err = decoder.Decode(&response)
-        fmt.Println(response.Filename)
         if err != nil {
             if err == io.EOF {
                 fmt.Println("All files received")

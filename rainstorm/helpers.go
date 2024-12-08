@@ -132,15 +132,15 @@ func GetMatchingLines(hydfs_filename string, pattern string) int {
 }
 
 func ResendTuples(hydfs_filename string) {
-	// get the hydfs file and place it in local file
-	file_hash := util.GetHash(hydfs_filename)
-	ports := hydfs.GetFileServers(file_hash)
-	dest_port := ports[0][:36]
+	// // get the hydfs file and place it in local file
+	// file_hash := util.GetHash(hydfs_filename)
+	// ports := hydfs.GetFileServers(file_hash)
+	// dest_port := ports[0][:36]
 	localfilename := "temp-file-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	_, _ = os.Create(localfilename)
 
-	hydfs.GetFromReplica(dest_port, hydfs_filename, localfilename)
+	hydfs.GetFile(hydfs_filename, localfilename)
 
 	file, err := os.Open(localfilename)
 	if err != nil {
@@ -239,7 +239,7 @@ func GetOperation(stage int) string {
 
 func MergeLogs() {
 	for i, _ := range global.Schedule {
-		for j, _ := range global.Schedule {
+		for j, _ := range global.Schedule[0] {
 			hydfs.MergeLocally(global.Schedule[i][j]["Log_filename"])
 		}
 	}

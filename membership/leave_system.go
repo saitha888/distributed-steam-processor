@@ -43,6 +43,7 @@ func RemoveNode(id_to_rem string) {
 
     //remove node from ring and update file storing
     hydfs.HandleRingRemove(id_to_rem)
+    
     conn, _ := util.DialTCPClient(global.Leader_address)
     defer conn.Close()
     message := map[string]string{"reschedule": id_to_rem}
