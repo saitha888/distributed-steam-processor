@@ -121,6 +121,14 @@ func GetHash(data string) int {
 	return (int)(ring_hash)
 }
 
+// Get the deterministic hash of a string
+func GetUniqueNodeID(data string) int {
+	hash := sha256.Sum256([]byte(data))
+    truncated_hash := binary.BigEndian.Uint64(hash[:8])
+    ring_hash := truncated_hash
+	return (int)(ring_hash)
+}
+
 // Change the status of a machine in the list
 func ChangeStatus(index int, message string){
     global.Membership_list[index].Status = message
@@ -159,4 +167,18 @@ func Contains(slice []string, value string) bool {
 		}
 	}
 	return false
+}
+
+func DisplaySchedule() {
+	for stage, tasks := range global.Schedule {
+		var ports []string
+		for _, task := range tasks {
+			if port, exists := task["Port"]; exists {
+				ports = append(ports, port)
+			}
+		}
+
+		// Print the stage and its ports
+		fmt.Printf("Stage %d: %s\n", stage, strings.Join(ports, ", "))
+	}
 }

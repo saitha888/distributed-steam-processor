@@ -30,10 +30,6 @@ func parseAndTransform(key string, value string) []string {
 
 func main() {
 	// Ensure correct number of arguments
-	if len(os.Args) != 3 {
-		fmt.Fprintln(os.Stderr, "Usage: go run main.go <key> <value>")
-		os.Exit(1)
-	}
 
 	key := os.Args[1]   // First argument: key (e.g., filename:linenumber)
 	value := os.Args[2] // Second argument: value (e.g., file content)

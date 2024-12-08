@@ -249,16 +249,23 @@ func commandLoop() {
                 fmt.Println("Merging of " + hydfs_file + " complete")
             
             case "rainstorm":
-            //RainStorm <op1 _exe> <op2 _exe> <hydfs_src_file> <hydfs_dest_filename> <num_tasks>
-            params := map[string]string{
-                "op_1":      args[1],
-                "op_2":      args[2],
-                "src_file":  args[3],
-                "dest_file": args[4],
-                "num_tasks": args[5],
-            }
-            hydfs.CreateFile("counts.txt", params["dest_file"])
-            rainstorm.CallRainstorm(params)
+                //RainStorm <op1 _exe> <op2 _exe> <hydfs_src_file> <hydfs_dest_filename> <num_tasks>
+                params := map[string]string{
+                    "op_1":      args[1],
+                    "pattern":    args[2],
+                    "op_2":      args[3],
+                    "src_file":  args[4],
+                    "dest_file": args[5],
+                    "num_tasks": args[6],
+                }
+                hydfs.CreateFile("counts.txt", params["dest_file"])
+                rainstorm.CallRainstorm(params)
+
+            case "schedule":
+                util.DisplaySchedule()
+            
+            case "merge-logs":
+                rainstorm.MergeLogs()
 
 
             default:
