@@ -139,35 +139,5 @@ func SendPartitions(src_file string, dest_file string, Tasks []map[string]string
 			fmt.Println("Error encoding structure to JSON:", err)
 			return
 		}
-
-		// Listen for acknowledgements and process them
-		decoder := json.NewDecoder(conn)
-		for {
-			var line_number int
-			if err := decoder.Decode(&line_number); err != nil {
-				fmt.Println("Error receiving acknowledgment:", err)
-				break
-			}
-
-			// Process the acknowledgment immediately
-			fmt.Println("line number processed: ", line_number)
-			// line_num := strconv.Itoa(line_number)
-		}
 	}
 }	
-
-// func ProcessAcknowledgement(port string, line_number string) {
-// 	// get the partition that the port is handling
-// 	schedule_ports := global.Schedule[0]
-// 	partition_index := -1
-// 	for index,curr_port := range schedule_ports {
-// 		if curr_port == port {
-// 			partition_index = index 
-// 			break
-// 		}
-// 	}
-// 	// update the start index based on what has already been handled
-// 	line_num, _ := strconv.Atoi(line_number)
-// 	global.Partitions[partition_index][0] = line_num + 1 
-// }
-

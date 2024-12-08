@@ -112,7 +112,7 @@ func CompleteTask(tuples []global.Tuple) {
 			if ret_tuple == nil || len(ret_tuple) != 2 {
 				continue
 			}
-			if _, exists := global.Schedule[curr_stage + 1]; exists {
+			if _, exists := global.Schedule[curr_stage+1]; exists {
 				new_tuple := global.Tuple{
 					ID : unique_id,
 					Key : ret_tuple[0],
@@ -139,25 +139,25 @@ func CompleteTask(tuples []global.Tuple) {
 				}
 				global.BatchesMutex.Unlock()
 	
-				//send ack back to sender machine
-				global.AckBatchesMutex.Lock()
-				ack := global.Ack{
-					ID : id,
-					Stage : curr_stage - 1,
-				}
-				if _, exists := global.AckBatches[src]; exists {
-					global.AckBatches[src] = append(global.AckBatches[src], ack)
-				} else {
-					global.AckBatches[src] = []global.Ack{ack}
-				}
-				global.AckBatchesMutex.Unlock()
 			} else {
 				output := fmt.Sprintf("%s, %s\n", ret_tuple[0], ret_tuple[1])
 				dest_string += output
 			}
+			//send ack back to sender machine
+			global.AckBatchesMutex.Lock()
+			ack := global.Ack{
+				ID : id,
+				Stage : curr_stage - 1,
+			}
+			if _, exists := global.AckBatches[src]; exists {
+				global.AckBatches[src] = append(global.AckBatches[src], ack)
+			} else {
+				global.AckBatches[src] = []global.Ack{ack}
+			}
+			global.AckBatchesMutex.Unlock()
 		}
 	}
-	if len(dest_string) >= 0 {
+	if len(dest_string) > 0 {
 		global.DestMutex.Lock()
 		hydfs.AppendStringToFile(dest_string, global.Schedule[0][0]["Dest_filename"])
 		global.DestMutex.Unlock()
