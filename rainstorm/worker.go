@@ -148,12 +148,12 @@ func CompleteTask(tuples []global.Tuple) {
 			}
 			//send ack back to sender machine
 			global.AckBatchesMutex.Lock()
-			filename := GetAppendLogAck(curr_stage, src)
+			filename := GetAppendLogAck(curr_stage - 1, src)
 			fmt.Println("FILENAME FOR ACK IS: " + filename)
 			if _, exists := global.AckBatches[filename]; exists {
-				global.AckBatches[filename] += id + "ack\n"
+				global.AckBatches[filename] += id + " ack\n"
 			} else {
-				global.AckBatches[filename] = id + "ack\n"
+				global.AckBatches[filename] = id + " ack\n"
 			}
 			global.AckBatchesMutex.Unlock()
 		}
