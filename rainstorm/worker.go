@@ -138,6 +138,8 @@ func CompleteTask(tuples []global.Tuple) {
 				global.Batches[dest_address] = []global.Tuple{new_tuple}
 			}
 			global.BatchesMutex.Unlock()
+		} else {
+			fmt.Println("already in append only log", log_name, unique_id)
 		}
 		//send ack back to sender machine
 		global.AckBatchesMutex.Lock()

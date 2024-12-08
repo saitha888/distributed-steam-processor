@@ -103,17 +103,14 @@ func SendAckBatches() {
 
 func GetMatchingLines(hydfs_filename string, pattern string) int {
 	// get the hydfs file and place it in local file
-	file_hash := util.GetHash(hydfs_filename)
-	ports := hydfs.GetFileServers(file_hash)
-	dest_port := ports[0][:36]
 	localfilename := "temp-file-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	_, _ = os.Create(localfilename)
 
-	hydfs.GetFromReplica(dest_port, hydfs_filename, localfilename)
+	hydfs.GetFile(hydfs_filename, localfilename)
 
 	// grep the file
-	command := "grep -c " + pattern + localfilename
+	command := "grep -c " + pattern + " " + localfilename
 	cmd := exec.Command("sh", "-c", command)
 	output, err := cmd.CombinedOutput()
 
@@ -123,7 +120,6 @@ func GetMatchingLines(hydfs_filename string, pattern string) int {
 	if err != nil { // couldn't find pattern
 		return 0
 	}
-
 
 	// return the line count
 	line_count, _ := strconv.Atoi(string(output))
