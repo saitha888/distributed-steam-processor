@@ -154,7 +154,7 @@ func CompleteTask(tuples []global.Tuple) {
 	}
 	if len(dest_string) > 0 {
 		global.DestMutex.Lock()
-		hydfs.AppendStringToFile(dest_string, global.Schedule[0][0]["Dest_filename"])
+		hydfs.AppendStringToDest(dest_string, global.Schedule[0][0]["Dest_filename"])
 		global.DestMutex.Unlock()
 	}
 	for stage,log := range append_to_send {

@@ -126,8 +126,7 @@ func GetMatchingLines(filename string, pattern string) int {
     if err != nil {
         fmt.Println("error sending grep command")
     }
-
-	fmt.Println("received this response from machine: " + response)
+	
     line_count_str := strings.TrimSpace(response)
     line_count, err := strconv.Atoi(line_count_str)
     if err != nil {

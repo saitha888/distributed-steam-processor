@@ -210,6 +210,36 @@ func AppendStringToFile(string_to_append string, hydfs_file string) {
     RemoveFromCache(hydfs_file)
 }
 
+func AppendStringToDest(string_to_append string, hydfs_file string) {
+    replicas := GetFileServers(util.GetHash(hydfs_file))
+    machine_num, err := strconv.Atoi(os.Getenv("MACHINE_NUMBER"))
+    if err != nil {
+        return
+    }
+    replica := replicas[machine_num % 3]
+    replica_num := replicas[0][13:15]
+
+    // connect to port to write file contents into replica
+
+    port := replica[:36]
+    conn, err := net.Dial("tcp", port)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    data := global.Message{
+        Action:    "append",
+        Filename:  replica_num + "-" + hydfs_file,
+        FileContents: string_to_append,
+    }
+    encoder := json.NewEncoder(conn)
+    err = encoder.Encode(data)
+    if err != nil {
+        fmt.Println("Error encoding data in create", err)
+    } 
+    RemoveFromCache(hydfs_file)
+}
+
 
 
 func GetFromReplica(VMaddress string, HyDFSfilename string, localfilename string){
