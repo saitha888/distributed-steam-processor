@@ -76,7 +76,6 @@ func CompleteTask(tuples []global.Tuple) {
 		src := tuple.Src
 		curr_stage := tuple.Stage 
 		log_name := GetAppendLog(curr_stage)
-		fmt.Println(log_name)
 		append_content := ""
 		if _, ok := task_to_log[log_name]; ok {
 			append_content = task_to_log[log_name]
@@ -145,15 +144,12 @@ func CompleteTask(tuples []global.Tuple) {
 		//send ack back to sender machine
 		global.AckBatchesMutex.Lock()
 		filename := GetAppendLogAck(curr_stage - 1, src)
-		fmt.Println("log filename for acking", filename)
 		if _, exists := global.AckBatches[filename]; exists {
 			global.AckBatches[filename] += id + " ack\n"
-			mes := fmt.Sprintf("sending %s ack back to %s", id, filename)
-			fmt.Println(mes)
+
 		} else {
 			global.AckBatches[filename] = id + " ack\n"
-			mes := fmt.Sprintf("sending %s ack back to %s", id, filename)
-			fmt.Println(mes)
+
 		}
 		global.AckBatchesMutex.Unlock()
 	}
