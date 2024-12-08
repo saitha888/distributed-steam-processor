@@ -72,7 +72,7 @@ var Cache_set = make(map[string]bool)
 var File_prefix string = Udp_address[13:15]
 var Partitions [][]int
 var Batches = make(map[string][]Tuple) // destination to list of tuples
-var AckBatches = make(map[string][]Ack) // destination to list of tuple ids
+var AckBatches = make(map[string]string) // destination to list of tuple ids
 var BatchesMutex sync.Mutex
 var AckBatchesMutex sync.Mutex
 var AppendMutex sync.Mutex

@@ -181,13 +181,11 @@ func AppendFile(local_file string, hydfs_file string) {
     RemoveFromCache(hydfs_file)
 }
 
+
 func AppendStringToFile(string_to_append string, hydfs_file string) {
     replicas := GetFileServers(util.GetHash(hydfs_file))
-    machine_num, err := strconv.Atoi(os.Getenv("MACHINE_NUMBER"))
-    if err != nil {
-        return
-    }
-    replica := replicas[machine_num % 3]
+    
+    replica := replicas[0]
     replica_num := replicas[0][13:15]
 
     // connect to port to write file contents into replica

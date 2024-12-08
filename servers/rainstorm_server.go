@@ -69,8 +69,6 @@ func handleRainstormConnection(conn net.Conn) {
 		message_type = "source"
 	} else if _,ok := data["tuples"]; ok {
 		message_type = "tuples"
-	} else if _,ok := data["acks"]; ok {
-		message_type = "acks"
 	} else if _,ok := data["grep"]; ok {
 		message_type = "grep"
 	}
@@ -107,10 +105,6 @@ func handleRainstormConnection(conn net.Conn) {
 		var tuples map[string][]global.Tuple
 		_ = json.Unmarshal([]byte(json_data), &tuples)
 		rainstorm.CompleteTask(tuples["tuples"])
-	} else if message_type == "acks" {
-		var acks map[string][]global.Ack
-		_ = json.Unmarshal([]byte(json_data), &acks)
-		rainstorm.ProcessAcks(acks["acks"])
 	} else if message_type == "grep" {
 		var params map[string]string
 		_ = json.Unmarshal(json_data, &params)

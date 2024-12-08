@@ -113,12 +113,14 @@ func CompleteTask(tuples []global.Tuple) {
 			if ret_tuple == nil || len(ret_tuple) != 2 {
 				continue
 			}
+
 			log := fmt.Sprintf("%s processed\n", id)
 			if _, exists := append_to_send[curr_stage]; exists {
 				append_to_send[curr_stage] += log
 			} else {
 				append_to_send[curr_stage] = log
 			}
+
 			fmt.Println("append to send: " + append_to_send[curr_stage])
 			if _, exists := global.Schedule[curr_stage+1]; exists {
 				new_tuple := global.Tuple{
@@ -129,7 +131,6 @@ func CompleteTask(tuples []global.Tuple) {
 					Stage : curr_stage + 1,
 				}
 
-	
 				dest_address := global.Schedule[new_tuple.Stage][util.GetHash(ret_tuple[0]) % 3]["Port"]
 	
 				//send batches to next stage
@@ -147,14 +148,11 @@ func CompleteTask(tuples []global.Tuple) {
 			}
 			//send ack back to sender machine
 			global.AckBatchesMutex.Lock()
-			ack := global.Ack{
-				ID : id,
-				Stage : curr_stage - 1,
-			}
-			if _, exists := global.AckBatches[src]; exists {
-				global.AckBatches[src] = append(global.AckBatches[src], ack)
+			filename := GetAppendLogAck(curr_stage, src)
+			if _, exists := global.AckBatches[filename]; exists {
+				global.AckBatches[filename] += id + "\n"
 			} else {
-				global.AckBatches[src] = []global.Ack{ack}
+				global.AckBatches[filename] = id + "\n"
 			}
 			global.AckBatchesMutex.Unlock()
 		}

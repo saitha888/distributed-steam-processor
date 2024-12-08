@@ -26,8 +26,3 @@ type Tuple struct {
 	Src   string
 	Stage int
 }
-
-type Ack struct {
-	ID string
-	Stage int
-}
