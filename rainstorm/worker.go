@@ -162,6 +162,8 @@ func CompleteTask(tuples []global.Tuple) {
 		hydfs.AppendStringToFile(dest_string, global.Schedule[0][0]["Dest_filename"])
 		global.DestMutex.Unlock()
 	}
+	fmt.Println("ALL APPENDS TO SEND IN WORKER:\n")
+	fmt.Println(append_to_send)
 	for stage,log := range append_to_send {
 		global.AppendMutex.Lock()
 		hydfs.AppendStringToFile(log, GetAppendLog(stage))

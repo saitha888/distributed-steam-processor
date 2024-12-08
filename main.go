@@ -263,6 +263,9 @@ func commandLoop() {
 
             case "schedule":
                 util.DisplaySchedule()
+            
+            case "merge-logs":
+                rainstorm.MergeLogs()
 
 
             default:

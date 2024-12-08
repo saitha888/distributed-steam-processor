@@ -177,7 +177,7 @@ func ProcessAcks(acks []global.Ack) {
 	for _, ack := range acks {
 		id := ack.ID
 		stage := ack.Stage
-
+		fmt.Println("CALLING APPEND IN PROCESS ACKS\n")
 		append_file := ""
 		if _, ok := stage_to_file[stage]; ok {
 			append_file = stage_to_file[stage]
@@ -186,14 +186,23 @@ func ProcessAcks(acks []global.Ack) {
 			stage_to_file[stage] = append_file
 			file_to_content[append_file] = ""
 		}
-		file_to_content[append_file] += id + "ack\n"
+		file_to_content[append_file] += id + " ack\n"
 		msg := fmt.Sprintf("%s appended to %s", id, append_file)
 		fmt.Println(msg)
-	}
-
+	}	
+	fmt.Println("ALL APPENDS MAP:\n")
+	fmt.Println(file_to_content)
 	for file, content := range file_to_content {
 		global.AppendMutex.Lock()
 		hydfs.AppendStringToFile(content, file)
 		global.AppendMutex.Unlock()
+	}
+}
+
+func MergeLogs() {
+	for i, _ := range global.Schedule {
+		for j, _ := range global.Schedule {
+			hydfs.Merge(global.Schedule[i][j]["Log_filename"])
+		}
 	}
 }
