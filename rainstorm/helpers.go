@@ -140,9 +140,7 @@ func GetMatchingLines(filename string, pattern string) int {
 func GetAppendLog(stage int) string {
 	for _, task := range global.Schedule[stage] {
 		// Check if the "port" matches the RainstormAddress
-		fmt.Println("currently on this task: ", task)
 		if task["Port"] == global.Rainstorm_address {
-			fmt.Println("returning this filename: " + task["Log_filename"])
 			return task["Log_filename"]
 		}
 	}
@@ -150,13 +148,9 @@ func GetAppendLog(stage int) string {
 }
 
 func GetAppendLogAck(stage int, src string) string {
-	fmt.Println("Stage: ", stage)
-	fmt.Println("Src: ", src)
 	for _, task := range global.Schedule[stage] {
 		// Check if the "port" matches the RainstormAddress
-		fmt.Println("currently on this task: ", task)
 		if task["Port"] == src {
-			fmt.Println("returning this filename: " + task["Log_filename"])
 			return task["Log_filename"]
 		}
 	}
@@ -171,34 +165,6 @@ func GetOperation(stage int) string {
 	}
 	return ""
 }
-
-// func ProcessAcks(acks []map[string]string) {
-// 	stage_to_file := make(map[int]string)
-// 	file_to_content := make(map[string]string)
-// 	for _, ack := range acks {
-// 		id := ack["ID"]
-// 		stage := ack.Stage
-// 		fmt.Println("CALLING APPEND IN PROCESS ACKS\n")
-// 		append_file := ""
-// 		if _, ok := stage_to_file[stage]; ok {
-// 			append_file = stage_to_file[stage]
-// 		} else {
-// 			append_file := GetAppendLog(stage)
-// 			stage_to_file[stage] = append_file
-// 			file_to_content[append_file] = ""
-// 		}
-// 		file_to_content[append_file] += id + " ack\n"
-// 		msg := fmt.Sprintf("%s appended to %s", id, append_file)
-// 		fmt.Println(msg)
-// 	}	
-// 	fmt.Println("ALL APPENDS MAP:\n")
-// 	fmt.Println(file_to_content)
-// 	for file, content := range file_to_content {
-// 		global.AppendMutex.Lock()
-// 		hydfs.AppendStringToFile(content, file)
-// 		global.AppendMutex.Unlock()
-// 	}
-// }
 
 func MergeLogs() {
 	for i, _ := range global.Schedule {

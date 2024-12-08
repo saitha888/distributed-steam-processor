@@ -52,7 +52,6 @@ func Populate_Stage(num_tasks int, stage int, op string, pattern string, dest_fi
 			"Log_filename":  op + "-" + strconv.Itoa(i) + "-log",
 			"Dest_filename": dest_file,
 		}
-		fmt.Println("task getting populated: ", task)
 		hydfs.CreateFile("empty.txt",task["Log_filename"])
         global.Schedule[stage] = append(global.Schedule[stage], task)
 		// add task to workers task list
@@ -81,9 +80,7 @@ func SendSchedule() {
 func GetPartitions(hydfs_file string, num_tasks int) {
 	// calculate num lines for each partition
 	num_lines := CountLines(hydfs_file)
-	fmt.Println("num lines: ", num_lines)
 	lines_per_task := num_lines / num_tasks
-	fmt.Println("num lines per task: ",lines_per_task)
 	extra_lines := num_lines % num_tasks
 
 	// make an empty structure to populate
@@ -107,7 +104,6 @@ func GetPartitions(hydfs_file string, num_tasks int) {
 
 func SendPartitions(src_file string, dest_file string, Tasks []map[string]string, num_tasks int) {
 	GetPartitions(src_file, num_tasks)
-	fmt.Println("partitions: ", global.Partitions)
 	var wg sync.WaitGroup
 
 	// go through each port in the source stage
@@ -123,7 +119,6 @@ func SendPartitions(src_file string, dest_file string, Tasks []map[string]string
 		}
 
 		port := Tasks[i]["Port"]
-		fmt.Println("sending this interval to port " + port + ": ", partition)
 		// start a go routine to send all the tasks concurrently
 		conn, err := net.Dial("tcp", port)
 		if err != nil {

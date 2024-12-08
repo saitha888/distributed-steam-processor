@@ -78,15 +78,12 @@ func CompleteTask(tuples []global.Tuple) {
 		curr_stage := tuple.Stage 
 
 		log_name := GetAppendLog(curr_stage)
-		fmt.Println("curr log name: ", log_name)
 		append_content := ""
 		if _, ok := task_to_log[log_name]; ok {
 			append_content = task_to_log[log_name]
-			fmt.Println("file contents if in map: " + append_content)
 		} else {
 			append_content = hydfs.GetFileInVariable(log_name)
 			task_to_log[log_name] = append_content
-			fmt.Println("file contents if in else: " + append_content)
 		}
 		
 		unique_id := strconv.Itoa(util.GetUniqueNodeID(key+value))
@@ -109,19 +106,17 @@ func CompleteTask(tuples []global.Tuple) {
 
 			
 			ret_tuple := strings.SplitN(strings.TrimSpace(string(output)), " ", 2)
-			fmt.Println("ret tuple: ", ret_tuple)
 			if ret_tuple == nil || len(ret_tuple) != 2 {
 				continue
 			}
 
-			log := fmt.Sprintf("%s, %s, %s processed \n", unique_id, ret_tuple[0], ret_tuple[1])
+			log := fmt.Sprintf("%s processed \n", unique_id)
 			if _, exists := append_to_send[curr_stage]; exists {
 				append_to_send[curr_stage] += log
 			} else {
 				append_to_send[curr_stage] = log
 			}
 
-			fmt.Println("append to send: " + append_to_send[curr_stage])
 			if _, exists := global.Schedule[curr_stage+1]; exists {
 				new_tuple := global.Tuple{
 					ID : unique_id,
@@ -149,11 +144,10 @@ func CompleteTask(tuples []global.Tuple) {
 			//send ack back to sender machine
 			global.AckBatchesMutex.Lock()
 			filename := GetAppendLogAck(curr_stage - 1, src)
-			fmt.Println("FILENAME FOR ACK IS: " + filename)
 			if _, exists := global.AckBatches[filename]; exists {
-				global.AckBatches[filename] += strconv.Itoa(curr_stage) + " " + ret_tuple[0] + ret_tuple[1] +" "+ id + " ack\n"
+				global.AckBatches[filename] += id + " ack\n"
 			} else {
-				global.AckBatches[filename] = strconv.Itoa(curr_stage) + " " + ret_tuple[0] + ret_tuple[1] +" "+ id + " ack\n"
+				global.AckBatches[filename] = id + " ack\n"
 			}
 			global.AckBatchesMutex.Unlock()
 		}
@@ -163,89 +157,9 @@ func CompleteTask(tuples []global.Tuple) {
 		hydfs.AppendStringToFile(dest_string, global.Schedule[0][0]["Dest_filename"])
 		global.DestMutex.Unlock()
 	}
-	fmt.Println("ALL APPENDS TO SEND IN WORKER:\n")
-	fmt.Println(append_to_send)
 	for stage,log := range append_to_send {
 		global.AppendMutex.Lock()
 		hydfs.AppendStringToFile(log, GetAppendLog(stage))
-		fmt.Println("sending log: " + log + " to file: " + GetAppendLog(stage))
 		global.AppendMutex.Unlock()
 	}
 }
-
-
-// func SendSinkBatch() {
-// 	// Create a file lock
-// 	file_lock := flock.New("counts.txt")
-
-// 	// Acquire the lock
-// 	err := file_lock.Lock()
-// 	if err != nil {
-// 		fmt.Println("error acquiring lock: %w", err)
-// 	}
-// 	defer file_lock.Unlock() // Ensure the lock is released
-
-// 	// open the counts file
-// 	src, err := os.Open("counts.txt")
-// 	if err != nil {
-// 		fmt.Println("Error opening source file:", err)
-// 		return
-// 	}
-// 	defer src.Close()
-// 	src.Close()
-
-// 	// create the batch file to send
-// 	dest, err := os.Create("temp.txt")
-// 	if err != nil {
-// 		fmt.Println("Error creating destination file:", err)
-// 		return
-// 	}
-// 	defer dest.Close()
-
-// 	scanner := bufio.NewScanner(src)
-// 	writer := bufio.NewWriter(dest)
-
-// 	curr_line := 0
-// 	last_line := -1
-
-// 	// get the contents to write to the file
-// 	for scanner.Scan() {
-// 		// Skip lines until the starting line number
-// 		if curr_line >= global.LastSentLine {
-// 			fmt.Println("curr line: ", curr_line)
-// 			fmt.Println("last sent line: ", global.LastSentLine)
-// 			// Write the current line to the temp file
-// 			_, err := writer.WriteString(scanner.Text() + "\n")
-// 			if err != nil {
-// 				fmt.Println("Error writing to destination file:", err)
-// 				return
-// 			}
-// 			last_line = curr_line
-// 		}
-// 		curr_line++
-// 	}
-
-// 	// write to the file
-// 	if err := writer.Flush(); err != nil {
-// 		fmt.Println("Error flushing writer:", err)
-// 		return
-// 	}
-
-// 	// update the last line sent
-// 	if last_line != -1 {
-// 		global.LastSentLine = last_line + 1
-// 	}
-
-// 	file_info, _ := os.Stat("temp.txt")
-// 	if file_info.Size() != 0 { // only send if there was an update
-// 		// Send an append request to the destination file of the current contents
-// 		hydfs.AppendFile("temp.txt", global.Schedule["dest_file"][0])
-// 	}
-
-// 	//  Delete the temp file
-// 	err = os.Remove("temp.txt")
-// 	if err != nil {
-// 		fmt.Println("Error deleting file:", err)
-// 		return
-// 	}
-// }

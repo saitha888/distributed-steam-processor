@@ -109,7 +109,6 @@ func handleRainstormConnection(conn net.Conn) {
 		var params map[string]string
 		_ = json.Unmarshal(json_data, &params)
 		command := params["grep"]
-		fmt.Println("running this grep command: ", command)
 		cmd := exec.Command("sh", "-c", command)
         output, err := cmd.CombinedOutput()
         if err != nil {
@@ -118,6 +117,5 @@ func handleRainstormConnection(conn net.Conn) {
         }
         encoder := json.NewEncoder(conn)
         _ = encoder.Encode(string(output))
-		fmt.Println("sending this output back: " + string(output))
 	}
 }
