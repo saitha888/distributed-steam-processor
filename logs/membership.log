@@ -1,0 +1,36 @@
+Node join detected for: fa24-cs425-1206.cs.illinois.edu:9086_2024-12-08_12:59:41 at 12:59:41
+
+Node join detected for: fa24-cs425-1204.cs.illinois.edu:9084_2024-12-08_12:59:44 at 12:59:44
+
+Node join detected for: fa24-cs425-1209.cs.illinois.edu:9089_2024-12-08_12:59:47 at 12:59:47
+
+Node join detected for: fa24-cs425-1203.cs.illinois.edu:9083_2024-12-08_12:59:48 at 12:59:48
+
+Node join detected for: fa24-cs425-1207.cs.illinois.edu:9087_2024-12-08_12:59:52 at 12:59:52
+
+Node join detected for: fa24-cs425-1202.cs.illinois.edu:9082_2024-12-08_12:59:54 at 12:59:54
+
+Node join detected for: fa24-cs425-1208.cs.illinois.edu:9088_2024-12-08_12:59:57 at 12:59:57
+
+Node join detected for: fa24-cs425-1201.cs.illinois.edu:9081_2024-12-08_13:00:00 at 13:00:00
+
+Node suspect detected for: fa24-cs425-1208.cs.illinois.edu:9088_2024-12-08_12:59:57 at 13:00:02
+
+Node failure message recieved for: fa24-cs425-1208.cs.illinois.edu:9088_2024-12-08_12:59:57 at 13:00:08
+
+Node join detected for: fa24-cs425-1208.cs.illinois.edu:9088_2024-12-08_13:00:11 at 13:00:11
+
+Node suspect detected for: fa24-cs425-1207.cs.illinois.edu:9087_2024-12-08_12:59:52 at 13:00:24
+
+Suspected node cleared for: fa24-cs425-1207.cs.illinois.edu:9087_2024-12-08_12:59:52 at 13:00:25
+
+Node suspect detected for: fa24-cs425-1208.cs.illinois.edu:9088_2024-12-08_13:00:11 at 13:01:05
+
+Node suspect cleared for: fa24-cs425-1208.cs.illinois.edu:9088_2024-12-08_13:00:11 from machine 9085 at 13:01:07
+
+Suspected node cleared for: fa24-cs425-1208.cs.illinois.edu:9088_2024-12-08_13:00:11 at 13:01:07
+
+Node suspect detected for: fa24-cs425-1209.cs.illinois.edu:9089_2024-12-08_12:59:47 at 13:03:23
+
+Suspected node cleared for: fa24-cs425-1209.cs.illinois.edu:9089_2024-12-08_12:59:47 at 13:03:23
+

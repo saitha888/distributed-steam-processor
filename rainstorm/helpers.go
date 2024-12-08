@@ -103,29 +103,17 @@ func SendAckBatches() {
 
 func GetMatchingLines(hydfs_filename string, pattern string) int {
 	// get the hydfs file and place it in local file
-	localfilename := "temp-file-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
+	localfilename := "./temp-file-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	_, _ = os.Create(localfilename)
 
 	hydfs.GetFile(hydfs_filename, localfilename)
 
-	file, err := os.Open(localfilename)
-	if err != nil {
-		fmt.Printf("Error opening file %s: %v\n", localfilename, err)
-	}
-	defer file.Close() // Ensure the file is closed when done
-
-	// Create a scanner to read the file line by line
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		// Print each line to the terminal
-		fmt.Println(scanner.Text())
-	}
-
 	// grep the file
 	pattern = strings.TrimSpace(pattern)
+	fmt.Println("local file name: " + localfilename)
 	fmt.Println("pattern: " + pattern)
-	command := "grep -c \"" + pattern + "\" " + localfilename
+	command := "grep -c " + pattern + " " + localfilename
 	cmd := exec.Command("sh", "-c", command)
 	output, err := cmd.CombinedOutput()
 
@@ -134,14 +122,14 @@ func GetMatchingLines(hydfs_filename string, pattern string) int {
 	}	
 
 	// delete the local file
-	_ = os.Remove(localfilename)
+	// _ = os.Remove(localfilename)
 	
 	if err != nil { // couldn't find pattern
 		return 0
 	}
 
 	// return the line count
-	line_count, _ := strconv.Atoi(string(output))
+	line_count, _ := strconv.Atoi(strings.TrimSpace(string(output)))
 	return line_count
 }
 
