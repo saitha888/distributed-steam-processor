@@ -5,6 +5,7 @@ import (
     "distributed_system/global"
     "distributed_system/util"
     "distributed_system/hydfs"
+    "encoding/json"
 
 )
 
@@ -42,4 +43,12 @@ func RemoveNode(id_to_rem string) {
 
     //remove node from ring and update file storing
     hydfs.HandleRingRemove(id_to_rem)
+    conn, _ := util.DialTCPClient(global.Leader_address)
+    defer conn.Close()
+    message := map[string]string{"reschedule": id_to_rem}
+    encoder := json.NewEncoder(conn)
+    err := encoder.Encode(message)
+    if err != nil {
+        fmt.Println("Error encoding data in create", err)
+    } 
 }

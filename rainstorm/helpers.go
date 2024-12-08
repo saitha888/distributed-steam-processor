@@ -143,36 +143,32 @@ func ResendTuples(hydfs_filename string) {
 	}
 	defer file.Close()
 
-	wordCounts := make(map[string][]string)
+	word_counts := make(map[string][]string) // unique_id to lines that include it 
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		// Split the line into words
 		words := strings.Split(line, " ")
 		if len(words) > 0 {
-			// Get the first word
 			unique_id := words[0]
-			// Increment the count for the first word
-			wordCounts[unique_id] = append(wordCounts[unique_id] , line)
+			word_counts[unique_id] = append(word_counts[unique_id] , line)
 		}
 	}
 
-	// Check for scanner errors
 	if err := scanner.Err(); err != nil {
 		fmt.Printf("Error reading file: %v\n", err)
 	}
 
 	// Find words with less than 2 counts
-	var lessThanTwo []string
-	for _, lines := range wordCounts {
+	var incomplete []string
+	for _, lines := range word_counts {
 		if len(lines) < 2 {
-			lessThanTwo = append(lessThanTwo, lines[0])
+			incomplete = append(incomplete, lines[0])
 		}
 	}
 
-	for _,line := range lessThanTwo {
+	for _,line := range incomplete {
 		line_values := strings.Split(line, " ")
 		stage, _ := strconv.Atoi(line_values[3])
 		// make the new tuple
@@ -183,7 +179,6 @@ func ResendTuples(hydfs_filename string) {
 			Src:   global.Rainstorm_address,
 			Stage: stage,
 		}
-
 		// get the destination address
 		dest_address := ""
 		if _, exists := global.Schedule[tuple.Stage]; exists {
@@ -191,6 +186,8 @@ func ResendTuples(hydfs_filename string) {
 		} else {
 			dest_address = global.Leader_address
 		}
+		fmt.Println("tuple to resend: ", tuple)
+		fmt.Println("to port: " + dest_address)
 
 		// add to the batch
 		global.BatchesMutex.Lock()

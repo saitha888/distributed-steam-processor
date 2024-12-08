@@ -77,5 +77,6 @@ var BatchesMutex sync.Mutex
 var AckBatchesMutex sync.Mutex
 var AppendMutex sync.Mutex
 var DestMutex sync.Mutex
+var ScheduleMutex sync.Mutex
 
 

@@ -8,7 +8,6 @@ import (
 	"distributed_system/rainstorm"
 	"os"
 	"time"
-	"os/exec"
 )
 
 
@@ -71,6 +70,8 @@ func handleRainstormConnection(conn net.Conn) {
 		message_type = "tuples"
 	} else if _,ok := data["grep"]; ok {
 		message_type = "grep"
+	} else if _, ok := data["reschedule"]; ok {
+		message_type = "reschedule"
 	}
 
 	if message_type == "schedule" {
@@ -117,17 +118,10 @@ func handleRainstormConnection(conn net.Conn) {
 		} else {
 			rainstorm.CompleteTask(tuples["tuples"])
 		}
-	} else if message_type == "grep" {
-		var params map[string]string
-		_ = json.Unmarshal(json_data, &params)
-		command := params["grep"]
-		cmd := exec.Command("sh", "-c", command)
-        output, err := cmd.CombinedOutput()
-        if err != nil {
-            fmt.Println(err)
-            output = []byte("0")
-        }
-        encoder := json.NewEncoder(conn)
-        _ = encoder.Encode(string(output))
+	} else if message_type == "reschedule" {
+		var message map[string]string
+		_ = json.Unmarshal([]byte(json_data), &message)
+		failed_port := message["reschedule"]
+		rainstorm.Reschedule(failed_port)
 	}
 }

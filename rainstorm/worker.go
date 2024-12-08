@@ -88,7 +88,7 @@ func CompleteTask(tuples []global.Tuple) {
 		// find the unique id in the append only file, check its state
 		lines := GetMatchingLines(log_name, unique_id)
 
-		if lines <= 1 { // if it isn't there 
+		if lines < 1 { // if it isn't there 
 			// process it with the executable
 			// add the tuples to the batch global variable
 			op := GetOperation(curr_stage)

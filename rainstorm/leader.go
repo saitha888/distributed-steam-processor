@@ -11,7 +11,6 @@ import (
 	"sync"
 )
 
-var worker_tasks = make(map[string][]map[string]string)
 var workers []string
 
 func InitiateJob(params map[string]string) {
@@ -26,7 +25,6 @@ func CreateSchedule(params map[string]string) {
 	// create worker queue
 	for _,node := range(global.Membership_list) {
 		if node.NodeID[:36] != global.Introducer_address {
-			worker_tasks[GetRainstormVersion(node.NodeID[:36])] = []map[string]string{}
 			workers = append(workers,GetRainstormVersion(node.NodeID[:36]))
 		}
     }
@@ -54,8 +52,6 @@ func Populate_Stage(num_tasks int, stage int, op string, pattern string, dest_fi
 		}
 		hydfs.CreateFile("empty.txt",task["Log_filename"])
         global.Schedule[stage] = append(global.Schedule[stage], task)
-		// add task to workers task list
-		worker_tasks[workers[0]] = append(worker_tasks[workers[0]], task)
 		// move worker to back of queue
 		workers = append(workers[1:], workers[0])
     }
@@ -163,4 +159,21 @@ func WriteToDest(tuples []global.Tuple) {
 		hydfs.AppendStringToDest(dest_string, global.Schedule[0][0]["Dest_filename"])
 		global.DestMutex.Unlock()
 	}
+}
+
+func Reschedule(addr string) {
+	global.ScheduleMutex.Lock()
+	rainstorm_addr := GetRainstormVersion(addr)
+	for _, tasks := range global.Schedule {
+		for _, task := range tasks {
+			if task["Port"] == rainstorm_addr {
+				//reassign port
+				reassign_port := workers[0]
+				task["Port"] = reassign_port
+				workers = append(workers[1:], workers[0])
+			}
+		}
+	}
+	SendSchedule()
+	global.ScheduleMutex.Unlock()
 }
