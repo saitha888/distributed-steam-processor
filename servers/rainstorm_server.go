@@ -13,7 +13,7 @@ import (
 
 //starts tcp server that listens for grep commands
 func RainstormServer() {
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(300 * time.Millisecond)
 	defer ticker.Stop()
 
 	go func() {

@@ -153,5 +153,6 @@ func CompleteTask(tuples []global.Tuple) {
 		global.AppendMutex.Lock()
 		hydfs.AppendStringToFile(log, GetAppendLog(stage))
 		global.AppendMutex.Unlock()
+		hydfs.Merge(GetAppendLog(stage))
 	}
 }
