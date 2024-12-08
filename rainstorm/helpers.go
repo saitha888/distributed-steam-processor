@@ -8,9 +8,10 @@ import (
 	"distributed_system/global"
 	"encoding/json"
 	"distributed_system/util"
-	"net"
 	"strings"
 	"strconv"
+	"time"
+	"os/exec"
 )
 
 func CountLines(file_path string) int {
@@ -96,44 +97,100 @@ func SendAckBatches() {
 	global.AckBatchesMutex.Unlock()
 }
 
-func GetMatchingLines(filename string, pattern string) int {
-	file_hash := util.GetHash(filename)
+func GetMatchingLines(hydfs_filename string, pattern string) int {
+	// get the hydfs file and place it in local file
+	file_hash := util.GetHash(hydfs_filename)
 	ports := hydfs.GetFileServers(file_hash)
+	dest_port := ports[0][:36]
+	localfilename := "temp-file-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
 
-	dest_port := GetRainstormVersion(ports[0][:36])
+	_, _ = os.Create(localfilename)
 
-	// connect to the port
-    conn, err := net.Dial("tcp", dest_port)
-    if err != nil {
-        fmt.Println(err)
-        return 0
-    }
-    defer conn.Close()
+	hydfs.GetFromReplica(dest_port, hydfs_filename, localfilename)
 
-	message := make(map[string]string)
-	message["grep"] = "grep -c " + pattern + " file-store/" + dest_port[13:15] + "-" + filename
+	// grep the file
+	command := "grep -c " + pattern + localfilename
+	cmd := exec.Command("sh", "-c", command)
+	output, err := cmd.CombinedOutput()
 
-	// Encode the structure into JSON
-	encoder := json.NewEncoder(conn)
-	err = encoder.Encode(message)
-	if err != nil {
-		fmt.Println("Error encoding structure in get to json", err)
+	if err != nil { // couldn't find pattern
+		return 0
 	}
 
-    var response string
-    decoder := json.NewDecoder(conn)
-    err = decoder.Decode(&response)
-    if err != nil {
-        fmt.Println("error sending grep command")
-    }
+	// delete the local file
+	_ = os.Remove(localfilename)
+
+	// return the line count
+	line_count, _ := strconv.Atoi(string(output))
+	return line_count
+}
+
+func GetTupleResends(hydfs_filename string) []global.Tuple {
+	// get the hydfs file and place it in local file
+	file_hash := util.GetHash(hydfs_filename)
+	ports := hydfs.GetFileServers(file_hash)
+	dest_port := ports[0][:36]
+	localfilename := "temp-file-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
+
+	_, _ = os.Create(localfilename)
+
+	hydfs.GetFromReplica(dest_port, hydfs_filename, localfilename)
+
+	file, err := os.Open(localfilename)
+	if err != nil {
+		fmt.Printf("Error opening file: %v\n", err)
+		return []global.Tuple{}
+	}
+	defer file.Close()
+
+	wordCounts := make(map[string][]string)
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Split the line into words
+		words := strings.Fields(line)
+		if len(words) > 0 {
+			// Get the first word
+			firstWord := words[0]
+			// Increment the count for the first word
+			wordCounts[firstWord] = append(wordCounts[firstWord] , line)
+		}
+	}
+
+	// Check for scanner errors
+	if err := scanner.Err(); err != nil {
+		fmt.Printf("Error reading file: %v\n", err)
+	}
+
+	// Find words with less than 2 counts
+	var lessThanTwo []string
+	for _, lines := range wordCounts {
+		if len(lines) < 2 {
+			lessThanTwo = append(lessThanTwo, lines[0])
+		}
+	}
+
+	var output []global.Tuple
+	for _,line := range lessThanTwo {
+		line_values := strings.Split(line, " ")
+		stage, _ := strconv.Atoi(line_values[3])
+		tuple := global.Tuple {
+			ID: line_values[0],
+			Key:   line_values[1],
+			Value: line_values[2],
+			Src:   global.Rainstorm_address,
+			Stage: stage,
+		}
+		output = append(output,tuple)
+	}
 	
-    line_count_str := strings.TrimSpace(response)
-    line_count, err := strconv.Atoi(line_count_str)
-    if err != nil {
-        fmt.Printf("Error converting line count from %s to int: %v\n", dest_port, err)
-        return 0
-    }
-    return line_count
+	// delete the local file
+	_ = os.Remove(localfilename)
+
+	return output
+
 }
 
 func GetAppendLog(stage int) string {

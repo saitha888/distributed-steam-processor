@@ -69,14 +69,12 @@ func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 func CompleteTask(tuples []global.Tuple) {
 	task_to_log := make(map[string]string)
 	append_to_send := make(map[int]string)
-	dest_string := ""
 	for _, tuple := range tuples {
 		id := tuple.ID
 		key := tuple.Key 
 		value := tuple.Value 
 		src := tuple.Src
 		curr_stage := tuple.Stage 
-
 		log_name := GetAppendLog(curr_stage)
 		append_content := ""
 		if _, ok := task_to_log[log_name]; ok {
@@ -116,46 +114,38 @@ func CompleteTask(tuples []global.Tuple) {
 			} else {
 				append_to_send[curr_stage] = log
 			}
-
+			new_tuple := global.Tuple{
+				ID : unique_id,
+				Key : ret_tuple[0],
+				Value : ret_tuple[1],
+				Src : global.Rainstorm_address,
+				Stage : curr_stage + 1,
+			}
+			dest_address := ""
 			if _, exists := global.Schedule[curr_stage+1]; exists {
-				new_tuple := global.Tuple{
-					ID : unique_id,
-					Key : ret_tuple[0],
-					Value : ret_tuple[1],
-					Src : global.Rainstorm_address,
-					Stage : curr_stage + 1,
-				}
+				dest_address = global.Schedule[new_tuple.Stage][util.GetHash(ret_tuple[0]) % 3]["Port"]
+			} else {
+				dest_address = global.Leader_address
+			}
 
-				dest_address := global.Schedule[new_tuple.Stage][util.GetHash(ret_tuple[0]) % 3]["Port"]
-	
-				//send batches to next stage
-				global.BatchesMutex.Lock()
-				if _, exists := global.Batches[dest_address]; exists {
-					global.Batches[dest_address] = append(global.Batches[dest_address], new_tuple)
-				} else {
-					global.Batches[dest_address] = []global.Tuple{new_tuple}
-				}
-				global.BatchesMutex.Unlock()
-	
+			//send batches to next stage
+			global.BatchesMutex.Lock()
+			if _, exists := global.Batches[dest_address]; exists {
+				global.Batches[dest_address] = append(global.Batches[dest_address], new_tuple)
 			} else {
-				output := fmt.Sprintf("%s, %s\n", ret_tuple[0], ret_tuple[1])
-				dest_string += output
+				global.Batches[dest_address] = []global.Tuple{new_tuple}
 			}
-			//send ack back to sender machine
-			global.AckBatchesMutex.Lock()
-			filename := GetAppendLogAck(curr_stage - 1, src)
-			if _, exists := global.AckBatches[filename]; exists {
-				global.AckBatches[filename] += id + " ack\n"
-			} else {
-				global.AckBatches[filename] = id + " ack\n"
-			}
-			global.AckBatchesMutex.Unlock()
+			global.BatchesMutex.Unlock()
 		}
-	}
-	if len(dest_string) > 0 {
-		global.DestMutex.Lock()
-		hydfs.AppendStringToDest(dest_string, global.Schedule[0][0]["Dest_filename"])
-		global.DestMutex.Unlock()
+		//send ack back to sender machine
+		global.AckBatchesMutex.Lock()
+		filename := GetAppendLogAck(curr_stage - 1, src)
+		if _, exists := global.AckBatches[filename]; exists {
+			global.AckBatches[filename] += id + " ack\n"
+		} else {
+			global.AckBatches[filename] = id + " ack\n"
+		}
+		global.AckBatchesMutex.Unlock()
 	}
 	for stage,log := range append_to_send {
 		global.AppendMutex.Lock()

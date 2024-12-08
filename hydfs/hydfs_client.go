@@ -14,6 +14,7 @@ import (
     "io/ioutil"
     "sync"
     "encoding/json"
+    "math/rand"
 )
 
 func GetFile(hydfs_file string, local_file string) {
@@ -212,11 +213,8 @@ func AppendStringToFile(string_to_append string, hydfs_file string) {
 
 func AppendStringToDest(string_to_append string, hydfs_file string) {
     replicas := GetFileServers(util.GetHash(hydfs_file))
-    machine_num, err := strconv.Atoi(os.Getenv("MACHINE_NUMBER"))
-    if err != nil {
-        return
-    }
-    replica := replicas[machine_num % 3]
+    
+    replica := replicas[rand.Int() % 3]
     replica_num := replicas[0][13:15]
 
     // connect to port to write file contents into replica

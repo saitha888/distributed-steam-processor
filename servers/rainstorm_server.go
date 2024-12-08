@@ -104,7 +104,11 @@ func handleRainstormConnection(conn net.Conn) {
 	} else if message_type == "tuples" {
 		var tuples map[string][]global.Tuple
 		_ = json.Unmarshal([]byte(json_data), &tuples)
-		rainstorm.CompleteTask(tuples["tuples"])
+		if global.Leader_address == global.Rainstorm_address{
+			rainstorm.WriteToDest(tuples["tuples"])
+		} else {
+			rainstorm.CompleteTask(tuples["tuples"])
+		}
 	} else if message_type == "grep" {
 		var params map[string]string
 		_ = json.Unmarshal(json_data, &params)

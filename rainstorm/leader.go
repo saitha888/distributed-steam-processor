@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"sync"
 )
 
 var worker_tasks = make(map[string][]map[string]string)
@@ -135,3 +136,31 @@ func SendPartitions(src_file string, dest_file string, Tasks []map[string]string
 		}
 	}
 }	
+
+func WriteToDest(tuples []global.Tuple) {
+	dest_string := ""
+	for _, tuple := range tuples {
+		id := tuple.ID
+		key := tuple.Key 
+		value := tuple.Value 
+		src := tuple.Src
+		curr_stage := tuple.Stage 
+
+		tup := fmt.Sprintf("%s, %s\n", key, value)
+		dest_string += tup
+		//send ack back to sender machine
+		global.AckBatchesMutex.Lock()
+		filename := GetAppendLogAck(curr_stage - 1, src)
+		if _, exists := global.AckBatches[filename]; exists {
+			global.AckBatches[filename] += id + " ack\n"
+		} else {
+			global.AckBatches[filename] = id + " ack\n"
+		}
+		global.AckBatchesMutex.Unlock()
+	}
+	if len(dest_string) > 0 {
+		global.DestMutex.Lock()
+		hydfs.AppendStringToDest(dest_string, global.Schedule[0][0]["Dest_filename"])
+		global.DestMutex.Unlock()
+	}
+}
