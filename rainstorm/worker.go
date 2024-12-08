@@ -120,7 +120,7 @@ func CompleteTask(tuples []global.Tuple) {
 					Src : global.Rainstorm_address,
 					Stage : curr_stage + 1,
 				}
-				log := fmt.Sprintf("%s \n", id)
+				log := fmt.Sprintf("%s processed\n", id)
 				if _, exists := append_to_send[curr_stage]; exists {
 					append_to_send[curr_stage] += log
 				} else {

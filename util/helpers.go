@@ -168,3 +168,15 @@ func Contains(slice []string, value string) bool {
 	}
 	return false
 }
+
+func DisplaySchedule() {
+	for stage, tasks := range global.Schedule {
+		fmt.Printf("Stage %d:\n", stage)
+		for i, task := range tasks {
+			fmt.Printf("  Task %d:\n", i+1)
+			for key, value := range task {
+				fmt.Printf("    %s: %s\n", key, value)
+			}
+		}
+	}
+}

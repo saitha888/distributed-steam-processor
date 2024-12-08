@@ -52,6 +52,7 @@ func Populate_Stage(num_tasks int, stage int, op string, pattern string, dest_fi
 			"Log_filename":  op + "-" + strconv.Itoa(i) + "-log",
 			"Dest_filename": dest_file,
 		}
+		fmt.Println("task getting populated: ", task)
 		hydfs.CreateFile("empty.txt",task["Log_filename"])
         global.Schedule[stage] = append(global.Schedule[stage], task)
 		// add task to workers task list

@@ -87,6 +87,7 @@ func SendBatches() {
 func SendAckBatches() {
 	global.AckBatchesMutex.Lock()
 	for destination, acks := range global.AckBatches {
+		fmt.Println("sending acks back to ", destination)
 		if len(acks) == 0 {
 			continue
 		}
@@ -185,7 +186,9 @@ func ProcessAcks(acks []global.Ack) {
 			stage_to_file[stage] = append_file
 			file_to_content[append_file] = ""
 		}
-		file_to_content[append_file] += id + "\n"
+		file_to_content[append_file] += id + "ack\n"
+		msg := fmt.Sprintf("%s appended to %s", id, append_file)
+		fmt.Println(msg)
 	}
 
 	for file, content := range file_to_content {
