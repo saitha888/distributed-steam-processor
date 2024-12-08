@@ -27,15 +27,15 @@ func GetFile(hydfs_file string, local_file string) {
 
 	file_server := node_ids[replica_num][:36]
 
-	dir := "./cache"
+	// dir := "./cache"
 
-	_, exists := global.Cache_set[hydfs_file]
+	// _, exists := global.Cache_set[hydfs_file]
 
-	if exists {
-		content, _ := ioutil.ReadFile(dir + "/" + hydfs_file)
-		_ = util.WriteToFile(local_file, string(content))
-		return
-	}
+	// if exists {
+	// 	content, _ := ioutil.ReadFile(dir + "/" + hydfs_file)
+	// 	_ = util.WriteToFile(local_file, string(content))
+	// 	return
+	// }
 
 	conn, err := net.Dial("tcp", file_server)
 	if err != nil {
@@ -86,17 +86,17 @@ func GetFile(hydfs_file string, local_file string) {
 	}
 
 	// Add to cache
-	localfile_cache, err := os.Create("./cache/" + hydfs_file)
-	if err != nil {
-		fmt.Println("Error creating file in cache in get", err)
-	}
-	defer localfile_cache.Close()
+	// localfile_cache, err := os.Create("./cache/" + hydfs_file)
+	// if err != nil {
+	// 	fmt.Println("Error creating file in cache in get", err)
+	// }
+	// defer localfile_cache.Close()
 
-	_, err = localfile_cache.WriteString(total_content)
-	if err != nil {
-		fmt.Println("Error writing to file in cache in get", err)
-	}
-	global.Cache_set[hydfs_file] = true
+	// _, err = localfile_cache.WriteString(total_content)
+	// if err != nil {
+	// 	fmt.Println("Error writing to file in cache in get", err)
+	// }
+	// global.Cache_set[hydfs_file] = true
 }
 
 func CreateFile(localfilename string, HyDFSfilename string) {
