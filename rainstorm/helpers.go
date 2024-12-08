@@ -187,7 +187,7 @@ func ResendTuples(hydfs_filename string) {
 		// get the destination address
 		dest_address := ""
 		if _, exists := global.Schedule[tuple.Stage]; exists {
-			dest_address = global.Schedule[tuple.Stage][util.GetHash(tuple.Key) % 3]["Port"]
+			dest_address = global.Schedule[tuple.Stage][util.GetHash(tuple.Key) % len(global.Schedule[0])]["Port"]
 		} else {
 			dest_address = global.Leader_address
 		}
