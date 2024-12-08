@@ -122,6 +122,6 @@ func handleRainstormConnection(conn net.Conn) {
 		var message map[string]string
 		_ = json.Unmarshal([]byte(json_data), &message)
 		failed_port := message["reschedule"]
-		rainstorm.Reschedule(failed_port)
+		rainstorm.Reschedule(failed_port[:36])
 	}
 }

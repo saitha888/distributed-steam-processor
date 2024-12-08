@@ -15,7 +15,7 @@ var workers []string
 
 func InitiateJob(params map[string]string) {
 	CreateSchedule(params)
-	SendSchedule()
+	SendSchedule("")
 	num_tasks, _ := strconv.Atoi(params["num_tasks"])
 	SendPartitions(params["src_file"], params["dest_file"], global.Schedule[0],num_tasks )
 }
@@ -57,9 +57,21 @@ func Populate_Stage(num_tasks int, stage int, op string, pattern string, dest_fi
     }
 }
 
-func SendSchedule() {
+func SendSchedule(deleted_port string) {
 	for _,node := range global.Membership_list {
 		// connect to node in membership list
+		if node.NodeID[:36] != deleted_port {
+			port := GetRainstormVersion(node.NodeID[:36])
+			conn, err := util.DialTCPClient(port)
+			defer conn.Close()
+		
+			// send the rainstorm schedule to the machine
+			encoder  := json.NewEncoder(conn)
+			err = encoder.Encode(global.Schedule)
+			if err != nil {
+				fmt.Println("Error encoding data in send schedule", err)
+			}
+		}
 		port := GetRainstormVersion(node.NodeID[:36])
 		conn, err := util.DialTCPClient(port)
 		defer conn.Close()
@@ -174,6 +186,6 @@ func Reschedule(addr string) {
 			}
 		}
 	}
-	SendSchedule()
+	SendSchedule(addr)
 	global.ScheduleMutex.Unlock()
 }
