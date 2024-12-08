@@ -15,6 +15,8 @@ import (
     "sync"
     "encoding/json"
     "math/rand"
+    "path/filepath"
+    "strings"
 )
 
 func GetFile(hydfs_file string, local_file string) {
@@ -366,6 +368,65 @@ func Merge(hydfs_file string) {
         }
     }
 }
+
+
+// MergeLocally merges all chunks of a file in 'file-store' and writes to the original file.
+func MergeLocally(hydfs_file string) error {
+	directory := "file-store" // Fixed directory
+    origin := GetFileServers(util.GetHash(hydfs_file))[0][13:15]
+
+	// Build the prefix for the chunks based on the original file name
+    filename := origin + "-" + hydfs_file
+	prefix := origin + "-" + hydfs_file + "-"
+
+	// Open the original file for writing (truncate if it exists)
+	originalFilePath := filepath.Join(directory, filename)
+	outFile, err := os.OpenFile(originalFilePath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open original file: %v", err)
+	}
+	defer outFile.Close()
+
+	// Walk through the directory and find files with the given prefix
+	err = filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Check if the file has the given prefix
+		if strings.HasPrefix(info.Name(), prefix) {
+			fmt.Printf("Merging chunk: %s\n", path)
+			err := AppendFileContents(path, outFile)
+			if err != nil {
+				return fmt.Errorf("failed to merge chunk %s: %v", path, err)
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("error processing file chunks: %v", err)
+	}
+
+	fmt.Printf("All chunks for '%s' merged into '%s'\n", hydfs_file, originalFilePath)
+	return nil
+}
+
+
+// Helper function to append file contents to the output file
+func AppendFileContents(inputFile string, outFile *os.File) error {
+	// Open the input file
+	inFile, err := os.Open(inputFile)
+	if err != nil {
+		return err
+	}
+	defer inFile.Close()
+
+	// Copy the input file's contents to the output file
+	_, err = io.Copy(outFile, inFile)
+	return err
+}
+
 
 func MultiAppend(hydfs_file string, vms []string, local_files []string) {
     if len(vms) != len(local_files) {

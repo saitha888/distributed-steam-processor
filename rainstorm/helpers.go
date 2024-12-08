@@ -243,7 +243,7 @@ func GetOperation(stage int) string {
 func MergeLogs() {
 	for i, _ := range global.Schedule {
 		for j, _ := range global.Schedule {
-			hydfs.Merge(global.Schedule[i][j]["Log_filename"])
+			hydfs.MergeLocally(global.Schedule[i][j]["Log_filename"])
 		}
 	}
 }
