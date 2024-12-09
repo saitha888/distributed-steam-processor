@@ -138,9 +138,9 @@ func handleRainstormConnection(conn net.Conn) {
 			global.Reschedule_called = true
 		}
 	} else if message_type == "reset" {
-		global.Partitions = nil
-		global.Batches = nil
-		global.AckBatches = nil
+		global.Schedule = make(map[int][]map[string]string)
+		global.Batches = make(map[string][]global.Tuple)
+		global.AckBatches = make(map[string]string) 
 	} else if message_type == "kill" {
 		syscall.Kill(os.Getpid(), syscall.SIGINT) 
 	} else if message_type == "complete" {

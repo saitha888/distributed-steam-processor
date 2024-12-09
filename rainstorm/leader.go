@@ -202,9 +202,10 @@ func Reschedule(addr string) {
 }
 
 func Reset() {
+	global.Schedule = make(map[int][]map[string]string)
 	global.Partitions = nil
-	global.Batches = nil
-	global.AckBatches = nil
+	global.Batches = make(map[string][]global.Tuple)
+	global.AckBatches = make(map[string]string) 
 	global.Reschedule_called = false
 	for _,node := range global.Membership_list {
 		// connect to node in membership list
