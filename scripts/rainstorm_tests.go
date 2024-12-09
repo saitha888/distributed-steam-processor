@@ -11,8 +11,8 @@ import (
 var machine_to_rainstorm = make(map[int]string)
 
 func KillVMS(machine_num1 int, machine_num2 int) {
-	for i := 1; i <= 10; i++ {
-		machine_to_rainstorm[i] = global.Rainstorm_ports[i]
+	for i := 0; i < 10; i++ {
+		machine_to_rainstorm[i+1] = global.Rainstorm_ports[i]
 	}
 
 	time.Sleep(1*time.Second + 500*time.Millisecond)
