@@ -15,7 +15,7 @@ import (
 
 //starts tcp server that listens for grep commands
 func RainstormServer() {
-	ticker := time.NewTicker(1000 * time.Millisecond)
+	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 
 	go func() {
@@ -95,7 +95,7 @@ func handleRainstormConnection(conn net.Conn) {
 			for _, task := range tasks {
 				// Check if the "port" matches the RainstormAddress
 				if task["Port"] == global.Rainstorm_address {
-					// rainstorm.ResendTuples(task["Log_filename"])
+					rainstorm.ResendTuples(task["Log_filename"])
 				}
 			}
 		}

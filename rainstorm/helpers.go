@@ -142,86 +142,83 @@ func AckTask(curr_stage int) {
 	}
 }
 
-// func ResendTuples(hydfs_filename string) {
-// 	// // get the hydfs file and place it in local file
-// 	// file_hash := util.GetHash(hydfs_filename)
-// 	// ports := hydfs.GetFileServers(file_hash)
-// 	// dest_port := ports[0][:36]
-// 	localfilename := "temp/temp-file-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
+func ResendTuples(hydfs_filename string) {
+	// // get the hydfs file and place it in local file
+	// file_hash := util.GetHash(hydfs_filename)
+	// ports := hydfs.GetFileServers(file_hash)
+	// dest_port := ports[0][:36]
+	localfilename := "temp/temp-file-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
 
-// 	_, _ = os.Create(localfilename)
+	_, _ = os.Create(localfilename)
 
-// 	hydfs.GetFile(hydfs_filename, localfilename)
+	hydfs.GetFile(hydfs_filename, localfilename)
 
-// 	file, err := os.Open(localfilename)
-// 	if err != nil {
-// 		fmt.Printf("Error opening file: %v\n", err)
-// 	}
-// 	defer file.Close()
+	file, err := os.Open(localfilename)
+	if err != nil {
+		fmt.Printf("Error opening file: %v\n", err)
+	}
+	defer file.Close()
 
-// 	word_counts := make(map[string][][]string) // unique_id maps to list of tuples with it
+	word_counts := make(map[string][][]string) // unique_id maps to list of tuples with it
 
-// 	scanner := bufio.NewScanner(file)
-// 	for scanner.Scan() {
-// 		line := scanner.Text()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
 
-// 		words := strings.Split(line, "|")
-// 		if len(words) > 0 {
-// 			unique_id := words[0]
-// 			word_counts[unique_id] = append(word_counts[unique_id] , words)
-// 		}
-// 	}
+		words := strings.Split(line, "|")
+		if len(words) > 0 {
+			unique_id := words[0]
+			word_counts[unique_id] = append(word_counts[unique_id] , words)
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Printf("Error reading file: %v\n", err)
+	}
+	// Find words with less than 2 counts
+	var incomplete [][]string
+	for _, lines := range word_counts {
+		if len(lines) == 1 {
+			incomplete = append(incomplete, lines[0])
+		}
+	}
 
-// 	if err := scanner.Err(); err != nil {
-// 		fmt.Printf("Error reading file: %v\n", err)
-// 	}
+	for _, line := range incomplete {
 
-// 	// Find words with less than 2 counts
-// 	var incomplete [][]string
-// 	for _, lines := range word_counts {
-// 		if len(lines) == 1 {
-// 			incomplete = append(incomplete, lines[0])
-// 		}
-// 	}
+		if len(line) <= 3{
+			fmt.Println("ack that is seen twice", line)
+			continue
+		} 
+		stage, _ := strconv.Atoi(line[3])
+		// make the new tuple
+		tuple := global.Tuple {
+			ID: line[0],
+			Key:   line[1],
+			Value: line[2],
+			Src:   global.Rainstorm_address,
+			Stage: stage,
+		}
+		// get the destination address
+		dest_address := ""
+		if _, exists := global.Schedule[tuple.Stage]; exists {
+			dest_address = global.Schedule[tuple.Stage][util.GetHash(tuple.Key) % len(global.Schedule[0])]["Port"]
+		} else {
+			dest_address = global.Leader_address
+		}
+		fmt.Println("tuple to resend: ", tuple)
+		fmt.Println("to port: " + dest_address)
 
-// 	for _, line := range incomplete {
-
-// 		if len(line) <= 3{
-// 			fmt.Println("ack that is seen twice", line)
-// 			continue
-// 		} 
-// 		// stage, _ := strconv.Atoi(line[3])
-// 		// // make the new tuple
-// 		// tuple := global.Tuple {
-// 		// 	ID: line[0],
-// 		// 	Key:   line[1],
-// 		// 	Value: line[2],
-// 		// 	Src:   global.Rainstorm_address,
-// 		// 	Stage: stage,
-// 		// }
-// 		// // get the destination address
-// 		// dest_address := ""
-// 		// if _, exists := global.Schedule[tuple.Stage]; exists {
-// 		// 	dest_address = global.Schedule[tuple.Stage][util.GetHash(tuple.Key) % len(global.Schedule[0])]["Port"]
-// 		// } else {
-// 		// 	dest_address = global.Leader_address
-// 		// }
-// 		// fmt.Println("tuple to resend: ", tuple)
-// 		// fmt.Println("to port: " + dest_address)
-
-// 		// // add to the batch
-// 		// global.BatchesMutex.Lock()
-// 		// if _, exists := global.Batches[dest_address]; exists {
-// 		// 	global.Batches[dest_address] = append(global.Batches[dest_address], tuple)
-// 		// } else {
-// 		// 	global.Batches[dest_address] = []global.Tuple{tuple}
-// 		// }
-// 		// global.BatchesMutex.Unlock()
-// 	}
-	
-// 	// delete the local file
-// 	_ = os.Remove(localfilename)
-// }
+		// add to the batch
+		global.BatchesMutex.Lock()
+		if _, exists := global.Batches[dest_address]; exists {
+			global.Batches[dest_address] = append(global.Batches[dest_address], tuple)
+		} else {
+			global.Batches[dest_address] = []global.Tuple{tuple}
+		}
+		global.BatchesMutex.Unlock()
+	}
+	// delete the local file
+	_ = os.Remove(localfilename)
+}
 
 func GetAppendLog(stage int) string {
 	for _, task := range global.Schedule[stage] {

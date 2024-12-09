@@ -170,9 +170,9 @@ func WriteToDest(tuples []global.Tuple) {
 		global.AckBatchesMutex.Lock()
 		filename := GetAppendLogAck(curr_stage - 1, src)
 		if _, exists := global.AckBatches[filename]; exists {
-			global.AckBatches[filename] += id + " ack\n"
+			global.AckBatches[filename] += id + "|ack\n"
 		} else {
-			global.AckBatches[filename] = id + " ack\n"
+			global.AckBatches[filename] = id + "|ack\n"
 		}
 		global.AckBatchesMutex.Unlock()
 	}

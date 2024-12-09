@@ -266,36 +266,45 @@ func commandLoop() {
                 fmt.Println("Merging of " + hydfs_file + " complete")
             
             case "rainstorm":
-                //RainStorm <op1 _exe> <pattern> <op2 _exe> <stateful> <hydfs_src_file> <hydfs_dest_filename> <num_tasks>
-                params := map[string]string{
-                    "op_1":      args[1],
-                    "pattern":    args[2],
-                    "op_2":      args[3],
-                    "stateful": args[4],
-                    "src_file":  args[5],
-                    "dest_file": args[6],
-                    "num_tasks": args[7],
+                if len(args) < 8 {
+                    print("Not enough args")
+                } else {
+                    //RainStorm <op1 _exe> <pattern> <op2 _exe> <stateful> <hydfs_src_file> <hydfs_dest_filename> <num_tasks>
+                    params := map[string]string{
+                        "op_1":      args[1],
+                        "pattern":    args[2],
+                        "op_2":      args[3],
+                        "stateful": args[4],
+                        "src_file":  args[5],
+                        "dest_file": args[6],
+                        "num_tasks": args[7],
+                    }
+                    hydfs.CreateFile("empty.txt", params["dest_file"])
+                    rainstorm.CallRainstorm(params) 
                 }
-                hydfs.CreateFile("empty.txt", params["dest_file"])
-                rainstorm.CallRainstorm(params) 
+                
 
             case "kill2":
-                machine1, _ := strconv.Atoi(args[2])
-                machine2, _ := strconv.Atoi(args[3])
-                params := map[string]string{
-                    "op_1":      args[4],
-                    "pattern":    args[5],
-                    "op_2":      args[6],
-                    "stateful": args[7],
-                    "src_file":  args[8],
-                    "dest_file": args[9],
-                    "num_tasks": args[10],
+                if len(args) < 11 {
+                    print("Not enough args")
+                    continue
+                } else {
+                    machine1, _ := strconv.Atoi(args[2])
+                    machine2, _ := strconv.Atoi(args[3])
+                    params := map[string]string{
+                        "op_1":      args[4],
+                        "pattern":    args[5],
+                        "op_2":      args[6],
+                        "stateful": args[7],
+                        "src_file":  args[8],
+                        "dest_file": args[9],
+                        "num_tasks": args[10],
+                    }
+                    hydfs.CreateFile("empty.txt", params["dest_file"])
+                    rainstorm.CallRainstorm(params) 
+                    scripts.KillVMS(machine1, machine2)
                 }
-                hydfs.CreateFile("empty.txt", params["dest_file"])
-                rainstorm.CallRainstorm(params) 
-                scripts.KillVMS(machine1, machine2)
-
-
+                
             case "schedule":
                 util.DisplaySchedule()
             
