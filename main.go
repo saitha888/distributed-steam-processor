@@ -75,6 +75,23 @@ func main() {
 		}
 	}
 
+    // create/clear temp
+    if _, err := os.Stat("temp"); os.IsNotExist(err) {
+        err := os.Mkdir("temp", 0755)
+        if err != nil {
+            log.Fatalf("Failed to create directory: %v", err)
+        }
+    } else {
+        err := os.RemoveAll("temp")
+        if err != nil {
+            log.Fatalf("Failed to remove directory contents: %v", err)
+        }
+        err = os.Mkdir("temp", 0755)
+        if err != nil {
+            log.Fatalf("Failed to recreate directory: %v", err)
+        }
+    }
+
     // create/clear cache
     if _, err := os.Stat("cache"); os.IsNotExist(err) {
 		err := os.Mkdir("cache", 0755)

@@ -103,7 +103,7 @@ func SendAckBatches() {
 
 func GetMatchingLines(hydfs_filename string, pattern string) int {
 	// get the hydfs file and place it in local file
-	localfilename := "./temp-file-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
+	localfilename := "temp/temp-file-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	_, _ = os.Create(localfilename)
 
@@ -136,7 +136,7 @@ func ResendTuples(hydfs_filename string) {
 	// file_hash := util.GetHash(hydfs_filename)
 	// ports := hydfs.GetFileServers(file_hash)
 	// dest_port := ports[0][:36]
-	localfilename := "temp-file-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
+	localfilename := "temp/temp-file-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	_, _ = os.Create(localfilename)
 
