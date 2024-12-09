@@ -327,7 +327,6 @@ func Merge(hydfs_file string) {
 	for _,chunk := range tot_response {
 		filename := chunk.Filename
 		content := chunk.FileContents
-        fmt.Println(filename)
 		timestamp := filename[len(filename)-12:]
 		_, exists := chunks_set[timestamp]
 		if exists {

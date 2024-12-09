@@ -111,7 +111,7 @@ func GetMatchingLines(hydfs_filename string, pattern string) int {
 
 	// grep the file
 	pattern = strings.TrimSpace(pattern)
-	command := "grep -c " + pattern + " " + localfilename
+	command := "grep -c " + "-- " + pattern + " " + localfilename
 	cmd := exec.Command("sh", "-c", command)
 	output, err := cmd.CombinedOutput()
 
