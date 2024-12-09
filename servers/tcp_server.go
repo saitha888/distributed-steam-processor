@@ -77,9 +77,7 @@ func handleConnection(conn net.Conn) {
             fmt.Println("Error reading directory:", err)
         }
         name := received_data.Filename
-        fmt.Println("looking for files with: "+ name)
         for _, file := range files {
-            fmt.Println(file.Name())
             if !file.IsDir() && strings.Contains(file.Name(), name)  {
                 file_content, _ := os.ReadFile("file-store/" + file.Name())
                 responseStruct := global.Message {
@@ -87,7 +85,6 @@ func handleConnection(conn net.Conn) {
                     Filename:  "",
                     FileContents: string(file_content),
                 }
-                fmt.Println(file.Name() + " is being sent back for get")
                 encoder := json.NewEncoder(conn)
                 err = encoder.Encode(responseStruct)
             }
