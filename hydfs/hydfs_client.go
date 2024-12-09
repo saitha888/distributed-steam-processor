@@ -473,22 +473,30 @@ func GetFileInVariable(hydfs_file string) string{
 	file_hash := util.GetHash(hydfs_file)
 	node_ids := GetFileServers(file_hash)
 
-	machine_num, _ := strconv.Atoi(global.Machine_number)
-	replica_num := machine_num % 3
-
-	file_server := node_ids[replica_num][:36]
-
-	dir := "./cache"
-
-	_, exists := global.Cache_set[hydfs_file]
-
-	if exists {
-		content, _ := ioutil.ReadFile(dir + "/" + hydfs_file)
-		return string(content)
-	}
-
-	conn, _ := net.Dial("tcp", file_server)
-
+    var conn net.Conn
+    var errc error
+    machine_num, _ := strconv.Atoi(global.Machine_number)
+    replica_num := machine_num % 3
+    for {
+        file_server := node_ids[replica_num][:36]
+    
+        dir := "./cache"
+    
+        _, exists := global.Cache_set[hydfs_file]
+    
+        if exists {
+            content, _ := ioutil.ReadFile(dir + "/" + hydfs_file)
+            return string(content)
+        }
+    
+        conn, errc = net.Dial("tcp", file_server)
+        if errc != nil {
+            fmt.Println("error dialing: ", errc)
+            replica_num = (replica_num +1) % 3
+        } else {
+            break
+        }
+    }
 	data := global.Message{
 		Action: "get",
 		Filename: hydfs_file,
