@@ -88,7 +88,7 @@ func handleRainstormConnection(conn net.Conn) {
 			for _, task := range tasks {
 				// Check if the "port" matches the RainstormAddress
 				if task["Port"] == global.Rainstorm_address {
-					// rainstorm.ResendTuples(task["Log_filename"])
+					rainstorm.ResendTuples(task["Log_filename"])
 				}
 			}
 		}
