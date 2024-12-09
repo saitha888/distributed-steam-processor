@@ -179,33 +179,33 @@ func ResendTuples(hydfs_filename string) {
 			fmt.Println(line)
 			continue
 		}
-		stage, _ := strconv.Atoi(line[3])
-		// make the new tuple
-		tuple := global.Tuple {
-			ID: line[0],
-			Key:   line[1],
-			Value: line[2],
-			Src:   global.Rainstorm_address,
-			Stage: stage,
-		}
-		// get the destination address
-		dest_address := ""
-		if _, exists := global.Schedule[tuple.Stage]; exists {
-			dest_address = global.Schedule[tuple.Stage][util.GetHash(tuple.Key) % len(global.Schedule[0])]["Port"]
-		} else {
-			dest_address = global.Leader_address
-		}
-		fmt.Println("tuple to resend: ", tuple)
-		fmt.Println("to port: " + dest_address)
+		// stage, _ := strconv.Atoi(line[3])
+		// // make the new tuple
+		// tuple := global.Tuple {
+		// 	ID: line[0],
+		// 	Key:   line[1],
+		// 	Value: line[2],
+		// 	Src:   global.Rainstorm_address,
+		// 	Stage: stage,
+		// }
+		// // get the destination address
+		// dest_address := ""
+		// if _, exists := global.Schedule[tuple.Stage]; exists {
+		// 	dest_address = global.Schedule[tuple.Stage][util.GetHash(tuple.Key) % len(global.Schedule[0])]["Port"]
+		// } else {
+		// 	dest_address = global.Leader_address
+		// }
+		// fmt.Println("tuple to resend: ", tuple)
+		// fmt.Println("to port: " + dest_address)
 
-		// add to the batch
-		global.BatchesMutex.Lock()
-		if _, exists := global.Batches[dest_address]; exists {
-			global.Batches[dest_address] = append(global.Batches[dest_address], tuple)
-		} else {
-			global.Batches[dest_address] = []global.Tuple{tuple}
-		}
-		global.BatchesMutex.Unlock()
+		// // add to the batch
+		// global.BatchesMutex.Lock()
+		// if _, exists := global.Batches[dest_address]; exists {
+		// 	global.Batches[dest_address] = append(global.Batches[dest_address], tuple)
+		// } else {
+		// 	global.Batches[dest_address] = []global.Tuple{tuple}
+		// }
+		// global.BatchesMutex.Unlock()
 	}
 	
 	// delete the local file
