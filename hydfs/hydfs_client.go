@@ -517,7 +517,6 @@ func GetFileInVariable(hydfs_file string) string{
         err = decoder.Decode(&response)
         if err != nil {
             if err == io.EOF {
-                fmt.Println("All files received")
                 break
             } else {
                 fmt.Println("error reading file and chunks", err)

@@ -217,9 +217,6 @@ func CompleteTask(tuples []global.Tuple) {
 }
 
 func resetTaskTimer(stage int) {
-	global.TimerMutex.Lock()
-	defer global.TimerMutex.Unlock()
-
 	if cancelChan != nil {
 		close(cancelChan) 
 	}

@@ -115,10 +115,6 @@ func GetMatchingLines(hydfs_filename string, pattern string) int {
 	cmd := exec.Command("sh", "-c", command)
 	output, err := cmd.CombinedOutput()
 
-	if _, err := os.Stat(localfilename); os.IsNotExist(err) {
-		fmt.Println("File does not exist:", localfilename)
-	}	
-
 	// delete the local file
 	_ = os.Remove(localfilename)
 	
@@ -135,7 +131,7 @@ func AckTask(curr_stage int) {
 	conn, err := util.DialTCPClient(global.Leader_address) 
 	for i, task := range global.Schedule[curr_stage] {
 		if task["Port"] == global.Rainstorm_address {
-			message := map[string]string{"message": fmt.Sprintf("%s task %s at %s Complete", task["Op"], i, task["Port"]),}
+			message := map[string]string{"message": fmt.Sprintf("%s task %d at %s Complete", task["Op"], i, task["Port"]),}
 			encoder  := json.NewEncoder(conn)
 			err = encoder.Encode(message)
 			if err != nil {
