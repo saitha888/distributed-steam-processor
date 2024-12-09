@@ -67,7 +67,6 @@ func GetFile(hydfs_file string, local_file string) {
         err = decoder.Decode(&response)
         if err != nil {
             if err == io.EOF {
-                fmt.Println("All files received")
                 break
             } else {
                 fmt.Println("error reading file and chunks", err)
@@ -394,7 +393,6 @@ func MergeLocally(hydfs_file string) error {
 
 		// Check if the file has the given prefix
 		if strings.HasPrefix(info.Name(), prefix) {
-			fmt.Printf("Merging chunk: %s\n", path)
 			err := AppendFileContents(path, outFile)
 			if err != nil {
 				return fmt.Errorf("failed to merge chunk %s: %v", path, err)

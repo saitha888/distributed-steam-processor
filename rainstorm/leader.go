@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net"
 	"sync"
-	"time"
 )
 
 var workers []string
@@ -110,33 +109,42 @@ func SendPartitions(src_file string, dest_file string, Tasks []map[string]string
 
 	// go through each port in the source stage
 	for i := 0; i < len(Tasks); i++ {
-		wg.Add(1)
+		wg.Add(1) // Increment the WaitGroup counter
 
-		partition := global.Partitions[i]
+		go func(i int) {
+			defer wg.Done() // Decrement the counter when the goroutine completes
 
-		data := global.SourceTask{
-			Start: partition[0],
-			End: partition[1],
-			Src_file: src_file,
-		}
+			partition := global.Partitions[i]
 
-		port := Tasks[i]["Port"]
-		// start a go routine to send all the tasks concurrently
-		conn, err := net.Dial("tcp", port)
-		if err != nil {
-			fmt.Println("Error connecting to port:", err)
-			return
-		}
-		defer conn.Close()
+			data := global.SourceTask{
+				Start:    partition[0],
+				End:      partition[1],
+				Src_file: src_file,
+			}
 
-		// Send the data
-		encoder := json.NewEncoder(conn)
-		err = encoder.Encode(data)
-		if err != nil {
-			fmt.Println("Error encoding structure to JSON:", err)
-			return
-		}
+			port := Tasks[i]["Port"]
+
+			// Establish a connection
+			conn, err := net.Dial("tcp", port)
+			if err != nil {
+				fmt.Println("Error connecting to port:", err)
+				return
+			}
+			defer conn.Close()
+
+			// Send the data
+			encoder := json.NewEncoder(conn)
+			err = encoder.Encode(data)
+			if err != nil {
+				fmt.Println("Error encoding structure to JSON:", err)
+				return
+			}
+		}(i) // Pass 'i' as an argument to the goroutine
 	}
+
+	// Wait for all goroutines to finish
+	wg.Wait()
+
 }	
 
 func WriteToDest(tuples []global.Tuple) {
@@ -165,31 +173,22 @@ func WriteToDest(tuples []global.Tuple) {
 		hydfs.AppendStringToDest(dest_string, global.Schedule[0][0]["Dest_filename"])
 		global.DestMutex.Unlock()
 	}
+	fmt.Println(dest_string)
 }
 
 func Reschedule(addr string) {
-	fmt.Println("ADDR TO REMOVE FROM SCHEDULE: ", addr)
-	for {
-		if len(global.Membership_list) == 4 && global.Ring_map.Size() == 4 { // Example condition: true for even numbers
-			global.ScheduleMutex.Lock()
-			rainstorm_addr := GetRainstormVersion(addr)
-			for _, tasks := range global.Schedule {
-				for _, task := range tasks {
-					if task["Port"] == rainstorm_addr {
-						//reassign port
-						reassign_port := workers[0]
-						task["Port"] = reassign_port
-						workers = append(workers[1:], workers[0])
-					}
-				}
+	global.ScheduleMutex.Lock()
+	rainstorm_addr := GetRainstormVersion(addr)
+	for _, tasks := range global.Schedule {
+		for _, task := range tasks {
+			if task["Port"] == rainstorm_addr {
+				//reassign port
+				reassign_port := workers[0]
+				task["Port"] = reassign_port
+				workers = append(workers[1:], workers[0])
 			}
-			SendSchedule(addr)
-			global.ScheduleMutex.Unlock()
-		} else {
-			fmt.Printf("Ring Map/membership list not updated, waiting 1 second...\n")
-			time.Sleep(1 * time.Second) // Wait for 1 second
 		}
 	}
-
-
+	SendSchedule(addr)
+	global.ScheduleMutex.Unlock()
 }

@@ -261,7 +261,6 @@ func GetFiles(conn net.Conn, data global.Message) {
         if err != nil {
             if err == io.EOF {
                 // End of the response from the server
-                fmt.Println("All messages received.")
                 break
             }
             fmt.Println("Error decoding message from server:", err)
