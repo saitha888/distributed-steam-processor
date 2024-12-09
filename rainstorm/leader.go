@@ -168,7 +168,7 @@ func WriteToDest(tuples []global.Tuple) {
 }
 
 func Reschedule(addr string) {
-
+	fmt.Println("ADDR TO REMOVE FROM SCHEDULE: ", addr)
 	for {
 		if len(global.Membership_list) == 4 && global.Ring_map.Size() == 4 { // Example condition: true for even numbers
 			global.ScheduleMutex.Lock()

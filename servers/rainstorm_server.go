@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var reschedule_called = false
+
 
 //starts tcp server that listens for grep commands
 func RainstormServer() {
@@ -120,14 +120,15 @@ func handleRainstormConnection(conn net.Conn) {
 			rainstorm.CompleteTask(tuples["tuples"])
 		}
 	} else if message_type == "reschedule" {
-		if reschedule_called == false {
+		if global.Reschedule_called == false {
 			fmt.Println("RESCHEDULE MESSAGE RECEIVED")
 
 			var message map[string]string
 			_ = json.Unmarshal([]byte(json_data), &message)
 			failed_port := message["reschedule"]
+
 			rainstorm.Reschedule(failed_port[:36])
-			reschedule_called = true
+			global.Reschedule_called = true
 		}
 	}
 }

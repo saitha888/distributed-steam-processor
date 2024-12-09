@@ -6,7 +6,9 @@ import (
     "strconv"
     "distributed_system/global"
     "distributed_system/util"
+    "encoding/json"
 )
+
 
 // Function to randomly select a node from the system and ping it
 func PingClient(plus_s bool) {
@@ -51,13 +53,23 @@ func PingClient(plus_s bool) {
             }
             susTimeout(6*time.Second, target_node.NodeID, target_node.Inc) // wait 6 seconds to recieve update about node status
             index := FindNode(target_node.NodeID)
-            if index < 0 || CheckStatus(target_node.NodeID) != "alive" { // if node was removed
+            if index < 0 || CheckStatus(target_node.NodeID) != "alive" { // if node was removed               
                 RemoveNode(target_node.NodeID)
+
+                //send to leader for reschedule
+                conn, _ := util.DialTCPClient(global.Leader_address)
+                defer conn.Close()
+                message := map[string]string{"reschedule": target_node.NodeID}
+                encoder := json.NewEncoder(conn)
+                err := encoder.Encode(message)
+                if err != nil {
+                    fmt.Println("Error encoding data in create", err)
+                } 
+
                 for _, node := range(global.Membership_list) { // let all other nodes know node has failed
                     SendMessage(node.NodeID, "fail", target_node.NodeID)
                 }
             }
-
         }
     } else { // response was recieved
         ack := string(buf[:n])
