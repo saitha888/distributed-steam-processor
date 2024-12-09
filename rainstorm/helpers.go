@@ -175,7 +175,7 @@ func ResendTuples(hydfs_filename string) {
 
 	for _, line := range incomplete {
 
-		if len(line) <= 2{
+		if len(line) <= 3{
 			fmt.Println(line)
 			continue
 		}
