@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 )
 
 var workers []string
@@ -167,18 +168,28 @@ func WriteToDest(tuples []global.Tuple) {
 }
 
 func Reschedule(addr string) {
-	global.ScheduleMutex.Lock()
-	rainstorm_addr := GetRainstormVersion(addr)
-	for _, tasks := range global.Schedule {
-		for _, task := range tasks {
-			if task["Port"] == rainstorm_addr {
-				//reassign port
-				reassign_port := workers[0]
-				task["Port"] = reassign_port
-				workers = append(workers[1:], workers[0])
+
+	for {
+		if len(global.Membership_list) == 4 && global.Ring_map.Size() == 4 { // Example condition: true for even numbers
+			global.ScheduleMutex.Lock()
+			rainstorm_addr := GetRainstormVersion(addr)
+			for _, tasks := range global.Schedule {
+				for _, task := range tasks {
+					if task["Port"] == rainstorm_addr {
+						//reassign port
+						reassign_port := workers[0]
+						task["Port"] = reassign_port
+						workers = append(workers[1:], workers[0])
+					}
+				}
 			}
+			SendSchedule(addr)
+			global.ScheduleMutex.Unlock()
+		} else {
+			fmt.Printf("Condition false for i = %d, waiting 1 second...\n")
+			time.Sleep(1 * time.Second) // Wait for 1 second
 		}
 	}
-	SendSchedule(addr)
-	global.ScheduleMutex.Unlock()
+
+
 }

@@ -175,6 +175,10 @@ func ResendTuples(hydfs_filename string) {
 
 	for _, line := range incomplete {
 
+		if len(line) <= 2{
+			fmt.Println(line)
+			continue
+		}
 		stage, _ := strconv.Atoi(line[3])
 		// make the new tuple
 		tuple := global.Tuple {

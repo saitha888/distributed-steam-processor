@@ -55,7 +55,7 @@ func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 			}
 			global.BatchesMutex.Unlock()
 			global.AppendMutex.Lock()
-			log := fmt.Sprintf("%s | %s | %s | %s | processed\n", record.ID, record.Key, record.Value, strconv.Itoa(record.Stage))
+			log := fmt.Sprintf("%s|%s|%s|%s|processed\n", record.ID, record.Key, record.Value, strconv.Itoa(record.Stage))
 			hydfs.AppendStringToFile(log, GetAppendLog(0))
 			global.AppendMutex.Unlock()
 		}
@@ -111,10 +111,10 @@ func CompleteTask(tuples []global.Tuple) {
 				global.AckBatchesMutex.Lock()
 				filename := GetAppendLogAck(curr_stage - 1, src)
 				if _, exists := global.AckBatches[filename]; exists {
-					global.AckBatches[filename] += id + " ack\n"
+					global.AckBatches[filename] += id + "|ack\n"
 		
 				} else {
-					global.AckBatches[filename] = id + " ack\n"
+					global.AckBatches[filename] = id + "|ack\n"
 		
 				}
 				global.AckBatchesMutex.Unlock()
