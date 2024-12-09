@@ -264,7 +264,6 @@ func GetStateLog() string {
 	for _, task := range global.Schedule[2] {
 		// Check if the "port" matches the RainstormAddress
 		if task["Port"] == global.Rainstorm_address {
-			fmt.Println("state log: " + task["State_filename"])
 			return task["State_filename"]
 		}
 	}

@@ -124,6 +124,8 @@ func CompleteTask(tuples []global.Tuple) {
 						fmt.Println("Error reading file:", err)
 					}
 					cmd := exec.Command(command, key, string(data))
+					fmt.Println("data in count file: " + string(data))
+					fmt.Println("word: " + key)
 					output, _ = cmd.CombinedOutput()
 
 					// Open the file in append mode, creating it if it doesn't exist
@@ -139,6 +141,7 @@ func CompleteTask(tuples []global.Tuple) {
 					if err != nil {
 						fmt.Println("Error writing to file:", err)
 					}
+					fmt.Println("result: " + result)
 					state_to_send += result + "\n"
 					global.StateMutex.Unlock()
 				}
