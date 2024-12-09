@@ -109,6 +109,7 @@ func CompleteTask(tuples []global.Tuple) {
 			command := "./exe/" + op
 			output := []byte{}
 			if curr_stage == 1 {
+				fmt.Println("sign stage: " + key + " " + value)
 				cmd := exec.Command(command, key, value, global.Schedule[curr_stage][0]["Pattern"])
 				output, _ = cmd.CombinedOutput()
 			} else {
