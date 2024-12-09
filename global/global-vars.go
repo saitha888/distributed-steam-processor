@@ -79,5 +79,7 @@ var AppendMutex sync.Mutex
 var DestMutex sync.Mutex
 var ScheduleMutex sync.Mutex
 var Reschedule_called = false
+var StateMutex sync.Mutex
+var TimerMutex sync.Mutex
 
 

@@ -2,61 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/gofrs/flock"
-	"io/ioutil"
 	"os"
 	"strings"
 	"strconv"
 )
 
-func PerformTask(word string) {
-	// Create a file lock
-	fileLock := flock.New("counts.txt")
-
-	// Acquire the lock
-	for {
-		err := fileLock.Lock()
-		if err == nil {
-			// Lock acquired
-			fmt.Println("Lock acquired successfully!")
-			defer fileLock.Unlock() // Ensure the lock is released
-			break
-		}
-
-		// Lock not acquired, retry after a short delay
-		fmt.Println("Lock not available, retrying...")
-		time.Sleep(250 * time.Millisecond) // Adjust the delay as needed
-	}
-
-	// Read the file
-	data, err := ioutil.ReadFile("counts.txt")
-	if err != nil {
-		fmt.Println("Error reading file:", err)
-		return
-	}
-
-	word_count := GetWordCount(string(data), word)
-
-	new_word_count := word_count + 1
-
-	// Open the file in append mode, creating it if it doesn't exist
-	file, err := os.OpenFile("counts.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return
-	}
-	defer file.Close()
-
-	// Append the new word and count to the file
-	_, err = file.WriteString(fmt.Sprintf("%s %d\n", word, new_word_count))
-	if err != nil {
-		fmt.Println("Error writing to file:", err)
-		return
-	}
-
-}
-
-func GetWordCount(contents string, word string) int {
+func GetWordCount(contents string, word string) string {
 	lines := strings.Split(contents, "\n") // Split contents into lines
 
 	// Iterate over lines in reverse order
@@ -75,16 +26,18 @@ func GetWordCount(contents string, word string) int {
 			if err != nil {
 				continue // Skip if the count is not a valid number
 			}
-			return count // Return the first matching count
+			result := fmt.Sprintf("%s %d\n", word, count+1)
+			return result // Return the first matching count
 		}
 	}
-
-	return 0 // Return -1 if the word is not found
+	result := fmt.Sprintf("%s %d\n", word, 1)
+	return result
 }
 
 
 func main() {
 	word := os.Args[1]
-	fmt.Println("got message in count exe to count for: ", word)
-	PerformTask(word)
+	content := os.Args[2]
+	result := GetWordCount(content, word)
+	fmt.Println(result)
 }

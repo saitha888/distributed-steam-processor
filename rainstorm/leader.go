@@ -14,6 +14,7 @@ import (
 var workers []string
 
 func InitiateJob(params map[string]string) {
+	Reset()
 	CreateSchedule(params)
 	SendSchedule("")
 	num_tasks, _ := strconv.Atoi(params["num_tasks"])
@@ -33,22 +34,28 @@ func CreateSchedule(params map[string]string) {
 	num_tasks, _ := strconv.Atoi(params["num_tasks"])
 	pattern := params["pattern"]
 	// populating source stage
-	Populate_Stage(num_tasks, 0, "source", pattern, params["dest_file"])
+	Populate_Stage(num_tasks, 0, "source", "", params["dest_file"], "false")
 	// populating op_1 stage
-	Populate_Stage(num_tasks, 1, params["op_1"], pattern, params["dest_file"])
+	Populate_Stage(num_tasks, 1, params["op_1"], pattern, params["dest_file"], "false")
 	// populating op_2 stage
-	Populate_Stage(num_tasks, 2, params["op_2"], pattern, params["dest_file"])
+	Populate_Stage(num_tasks, 2, params["op_2"], "", params["dest_file"], params["stateful"])
 }
 
-func Populate_Stage(num_tasks int, stage int, op string, pattern string, dest_file string) {
+func Populate_Stage(num_tasks int, stage int, op string, pattern string, dest_file string, stateful string) {
 	global.Schedule[stage] = []map[string]string{}
 	for i := 0; i < num_tasks; i++ {
+		state_filename := ""
+		if stateful == "true" {
+			state_filename = op + "-" + strconv.Itoa(i) + "-state_log"
+			hydfs.CreateFile("empty.txt",state_filename)
+		}
 		task := map[string]string{
 			"Op":      op,
 			"Port":    workers[0],
 			"Pattern":      pattern,
 			"Log_filename":  op + "-" + strconv.Itoa(i) + "-log",
 			"Dest_filename": dest_file,
+			"State_filename": state_filename,
 		}
 		hydfs.CreateFile("empty.txt",task["Log_filename"])
         global.Schedule[stage] = append(global.Schedule[stage], task)
@@ -56,6 +63,7 @@ func Populate_Stage(num_tasks int, stage int, op string, pattern string, dest_fi
 		workers = append(workers[1:], workers[0])
     }
 }
+
 
 func SendSchedule(deleted_port string) {
 	for _,node := range global.Membership_list {
@@ -191,4 +199,31 @@ func Reschedule(addr string) {
 	}
 	SendSchedule(addr)
 	global.ScheduleMutex.Unlock()
+}
+
+func Reset() {
+	global.Partitions = nil
+	global.Batches = nil
+	global.AckBatches = nil
+	global.Reschedule_called = false
+	for _,node := range global.Membership_list {
+		// connect to node in membership list
+		port := GetRainstormVersion(node.NodeID[:36])
+		conn, err := util.DialTCPClient(port)
+		if err != nil {
+			fmt.Println("Error dialing client in send schedule", err)
+			continue
+		}
+		defer conn.Close()
+	
+		// send reset message
+		message := make(map[string]string)
+		message["reset"] = "reset"
+		encoder  := json.NewEncoder(conn)
+		err = encoder.Encode(message)
+		if err != nil {
+			fmt.Println("Error encoding data in send schedule", err)
+			continue
+		}
+	}
 }

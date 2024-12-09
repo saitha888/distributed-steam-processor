@@ -131,6 +131,21 @@ func GetMatchingLines(hydfs_filename string, pattern string) int {
 	return line_count
 }
 
+func AckTask(curr_stage int) {
+	conn, err := util.DialTCPClient(global.Leader_address) 
+	for i, task := range global.Schedule[curr_stage] {
+		if task["Port"] == global.Rainstorm_address {
+			message := map[string]string{"message": fmt.Sprintf("%s task %s at %s Complete", task["Op"], i, task["Port"]),}
+			encoder  := json.NewEncoder(conn)
+			err = encoder.Encode(message)
+			if err != nil {
+				fmt.Println("Error encoding data in send schedule", err)
+				continue
+			}
+		}
+	}
+}
+
 // func ResendTuples(hydfs_filename string) {
 // 	// // get the hydfs file and place it in local file
 // 	// file_hash := util.GetHash(hydfs_filename)
@@ -248,3 +263,15 @@ func MergeLogs() {
 		}
 	}
 }
+
+func GetStateLog() string {
+	for _, task := range global.Schedule[2] {
+		// Check if the "port" matches the RainstormAddress
+		if task["Port"] == global.Rainstorm_address {
+			fmt.Println("state log: " + task["State_filename"])
+			return task["State_filename"]
+		}
+	}
+	return ""
+}
+

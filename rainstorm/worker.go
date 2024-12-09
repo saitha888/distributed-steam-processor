@@ -11,11 +11,19 @@ import (
 	"sync"
 	"strings"
 	"os/exec"
+	"io/ioutil"
+	"time"
 
 	// "github.com/gofrs/flock"
 )
 
 var mu sync.Mutex 
+
+var (
+	taskTimer       *time.Timer
+	timeoutDuration = 10 * time.Second
+	cancelChan      chan struct{} // Channel to signal cancellation
+)
 
 func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 	file, err := os.Open("file-store/"+ hydfs_file)
@@ -67,17 +75,20 @@ func CompleteSourceTask(hydfs_file string, start_line int, end_line int) {
 		fmt.Println("error reading file: %w", err)
 		return
 	}
+	AckTask(0)
 }
 
 func CompleteTask(tuples []global.Tuple) {
 	task_to_log := make(map[string]string)
 	append_to_send := make(map[int]string)
+	state_to_send := ""
 	for _, tuple := range tuples {
 		id := tuple.ID
 		key := tuple.Key 
 		value := tuple.Value 
 		src := tuple.Src
 		curr_stage := tuple.Stage 
+		resetTaskTimer(curr_stage)
 		log_name := GetAppendLog(curr_stage)
 		append_content := ""
 		if _, ok := task_to_log[log_name]; ok {
@@ -101,10 +112,37 @@ func CompleteTask(tuples []global.Tuple) {
 				cmd := exec.Command(command, key, value, global.Schedule[curr_stage][0]["Pattern"])
 				output, _ = cmd.CombinedOutput()
 			} else {
-				cmd := exec.Command(command, key, value)
-				output, _ = cmd.CombinedOutput()
-			}	
+				state_log := GetStateLog()
+				if state_log == "" { // not a stateful operation
+					cmd := exec.Command(command, key, value)
+					output, _ = cmd.CombinedOutput()
+				} else {
+					global.StateMutex.Lock()
+					// Read the file
+					data, err := ioutil.ReadFile("counts.txt")
+					if err != nil {
+						fmt.Println("Error reading file:", err)
+					}
+					cmd := exec.Command(command, key, string(data))
+					output, _ = cmd.CombinedOutput()
 
+					// Open the file in append mode, creating it if it doesn't exist
+					file, err := os.OpenFile("counts.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+					if err != nil {
+						fmt.Println("Error opening file:", err)
+					}
+					defer file.Close()
+
+					// Append the new word and count to the file
+					result := string(output)
+					_, err = file.WriteString(result)
+					if err != nil {
+						fmt.Println("Error writing to file:", err)
+					}
+					state_to_send += result + "\n"
+					global.StateMutex.Unlock()
+				}
+			}	
 			
 			ret_tuple := strings.SplitN(strings.TrimSpace(string(output)), " ", 2)
 			if ret_tuple == nil || len(ret_tuple) != 2 {
@@ -171,4 +209,29 @@ func CompleteTask(tuples []global.Tuple) {
 		hydfs.AppendStringToFile(log, GetAppendLog(stage))
 		global.AppendMutex.Unlock()
 	}
+	state_log := GetStateLog()
+	if state_log != "" {
+		hydfs.AppendStringToFile(state_to_send, state_log)
+	}
+
+}
+
+func resetTaskTimer(stage int) {
+	global.TimerMutex.Lock()
+	defer global.TimerMutex.Unlock()
+
+	if cancelChan != nil {
+		close(cancelChan) 
+	}
+
+	cancelChan = make(chan struct{})
+
+	go func(localCancelChan chan struct{}) {
+		select {
+		case <-time.After(timeoutDuration):
+				AckTask(stage)
+		case <-localCancelChan:
+			return
+		}
+	}(cancelChan)
 }

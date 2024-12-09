@@ -8,6 +8,7 @@ import (
 	"distributed_system/rainstorm"
 	"os"
 	"time"
+	"syscall"
 )
 
 
@@ -73,6 +74,12 @@ func handleRainstormConnection(conn net.Conn) {
 		message_type = "grep"
 	} else if _, ok := data["reschedule"]; ok {
 		message_type = "reschedule"
+	} else if _, ok := data["reset"]; ok {
+		message_type = "reset"
+	} else if _, ok := data["kill"]; ok {
+		message_type = "kill"
+	} else if _, ok := data["message"]; ok {
+		message_type = "complete"
 	}
 
 	if message_type == "schedule" {
@@ -130,5 +137,15 @@ func handleRainstormConnection(conn net.Conn) {
 			rainstorm.Reschedule(failed_port[:36])
 			global.Reschedule_called = true
 		}
+	} else if message_type == "reset" {
+		global.Partitions = nil
+		global.Batches = nil
+		global.AckBatches = nil
+	} else if message_type == "kill" {
+		syscall.Kill(os.Getpid(), syscall.SIGINT) 
+	} else if message_type == "complete" {
+		var output map[string]string
+		err = json.Unmarshal(json_data, &output)
+		fmt.Println(output["message"])
 	}
 }
