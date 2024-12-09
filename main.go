@@ -11,7 +11,6 @@ import (
     "distributed_system/grep"
     "github.com/joho/godotenv"
     "bufio"
-    "strings"
     "time"
     "log"
     "distributed_system/scripts"
@@ -151,7 +150,7 @@ func commandLoop() {
         fmt.Print("> ") // CLI prompt
         scanner.Scan()
         command := scanner.Text()
-        args := strings.Fields(command)
+        args := util.ParseArguments(command)
 
         switch args[0] {
             case "grep":   

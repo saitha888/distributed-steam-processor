@@ -182,3 +182,37 @@ func DisplaySchedule() {
 		fmt.Printf("Stage %d: %s\n", stage, strings.Join(ports, ", "))
 	}
 }
+
+func ParseArguments(input string) []string {
+    var args []string
+    var currentArg strings.Builder
+    inQuotes := false
+ 
+ 
+    for _, char := range input {
+        switch char {
+        case '"':
+            inQuotes = !inQuotes // Toggle the quotes state
+        case ' ':
+            if !inQuotes { // If not inside quotes, consider this as a separator
+                if currentArg.Len() > 0 {
+                    args = append(args, currentArg.String())
+                    currentArg.Reset()
+                }
+            } else {
+                currentArg.WriteRune(char) // Add space to the current argument if inside quotes
+            }
+        default:
+            currentArg.WriteRune(char)
+        }
+    }
+ 
+ 
+    // Add the last argument, if any
+    if currentArg.Len() > 0 {
+        args = append(args, currentArg.String())
+    }
+ 
+ 
+    return args
+ }

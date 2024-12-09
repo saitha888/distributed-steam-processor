@@ -142,13 +142,13 @@ func CompleteTask(tuples []global.Tuple) {
 					if err != nil {
 						fmt.Println("Error writing to file:", err)
 					}
-					fmt.Println("result: " + result)
 					state_to_send += result + "\n"
 					global.StateMutex.Unlock()
 				}
 			}	
 			
 			ret_tuple := strings.SplitN(strings.TrimSpace(string(output)), " ", 2)
+			fmt.Println("ret tuple: ", ret_tuple)
 			if ret_tuple == nil || len(ret_tuple) != 2 {
 				global.AckBatchesMutex.Lock()
 				filename := GetAppendLogAck(curr_stage - 1, src)
