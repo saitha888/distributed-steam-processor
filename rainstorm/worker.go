@@ -109,7 +109,6 @@ func CompleteTask(tuples []global.Tuple) {
 			command := "./exe/" + op
 			output := []byte{}
 			if curr_stage == 1 {
-				fmt.Println("sign stage: " + key + " " + value)
 				cmd := exec.Command(command, key, value, global.Schedule[curr_stage][0]["Pattern"])
 				output, _ = cmd.CombinedOutput()
 			} else {
@@ -125,8 +124,6 @@ func CompleteTask(tuples []global.Tuple) {
 						fmt.Println("Error reading file:", err)
 					}
 					cmd := exec.Command(command, key, string(data))
-					fmt.Println("data in count file: " + string(data))
-					fmt.Println("word: " + key)
 					output, _ = cmd.CombinedOutput()
 
 					// Open the file in append mode, creating it if it doesn't exist
@@ -148,7 +145,6 @@ func CompleteTask(tuples []global.Tuple) {
 			}	
 			
 			ret_tuple := strings.SplitN(strings.TrimSpace(string(output)), " ", 2)
-			fmt.Println("ret tuple: ", ret_tuple)
 			if ret_tuple == nil || len(ret_tuple) != 2 {
 				global.AckBatchesMutex.Lock()
 				filename := GetAppendLogAck(curr_stage - 1, src)
