@@ -186,7 +186,7 @@ func Reschedule(addr string) {
 			SendSchedule(addr)
 			global.ScheduleMutex.Unlock()
 		} else {
-			fmt.Printf("Condition false for i = %d, waiting 1 second...\n")
+			fmt.Printf("Ring Map/membership list not updated, waiting 1 second...\n")
 			time.Sleep(1 * time.Second) // Wait for 1 second
 		}
 	}

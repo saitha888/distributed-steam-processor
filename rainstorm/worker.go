@@ -129,7 +129,7 @@ func CompleteTask(tuples []global.Tuple) {
 				Stage : curr_stage + 1,
 			}
 
-			log := fmt.Sprintf("%s | %s | %s | %s | processed\n", new_tuple.ID, new_tuple.Key, new_tuple.Value, strconv.Itoa(new_tuple.Stage))
+			log := fmt.Sprintf("%s|%s|%s|%s|processed\n", new_tuple.ID, new_tuple.Key, new_tuple.Value, strconv.Itoa(new_tuple.Stage))
 			if _, exists := append_to_send[curr_stage]; exists {
 				append_to_send[curr_stage] += log
 			} else {

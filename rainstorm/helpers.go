@@ -176,9 +176,9 @@ func ResendTuples(hydfs_filename string) {
 	for _, line := range incomplete {
 
 		if len(line) <= 3{
-			fmt.Println(line)
+			fmt.Println("ack that is seen twice", line)
 			continue
-		}
+		} 
 		// stage, _ := strconv.Atoi(line[3])
 		// // make the new tuple
 		// tuple := global.Tuple {

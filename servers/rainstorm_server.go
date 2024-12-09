@@ -14,7 +14,7 @@ var reschedule_called = false
 
 //starts tcp server that listens for grep commands
 func RainstormServer() {
-	ticker := time.NewTicker(300 * time.Millisecond)
+	ticker := time.NewTicker(1000 * time.Millisecond)
 	defer ticker.Stop()
 
 	go func() {
@@ -127,7 +127,7 @@ func handleRainstormConnection(conn net.Conn) {
 			_ = json.Unmarshal([]byte(json_data), &message)
 			failed_port := message["reschedule"]
 			rainstorm.Reschedule(failed_port[:36])
+			reschedule_called = true
 		}
-		reschedule_called = true
 	}
 }
