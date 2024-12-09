@@ -339,31 +339,33 @@ func Merge(hydfs_file string) {
 		}
 	}
     iterator := files_dict.Iterator()
-    iterator.First()
-    merged_content := iterator.Value().(string)
-    for iterator.Next() {
-        merged_content += iterator.Value().(string)
+    if iterator.First() {
+        merged_content := iterator.Value().(string)
+        for iterator.Next() {
+            merged_content += iterator.Value().(string)
+        }
+        for _, replica := range replicas {
+            port := replica[:36]
+            conn, err := net.Dial("tcp", port)
+            if err != nil {
+                fmt.Println(err)
+                return
+            }
+            //request chunks of file from replica
+            message := global.Message{
+                Action: "merge",
+                Filename: hydfs_file,
+                FileContents: merged_content,
+            }
+            // Encode the structure into JSON
+            encoder := json.NewEncoder(conn)
+            err = encoder.Encode(message)
+            if err != nil {
+                fmt.Println("Error encoding structure in get to json", err)
+            }
+        }
     }
-    for _, replica := range replicas {
-        port := replica[:36]
-        conn, err := net.Dial("tcp", port)
-        if err != nil {
-            fmt.Println(err)
-            return
-        }
-        //request chunks of file from replica
-        message := global.Message{
-            Action: "merge",
-            Filename: hydfs_file,
-            FileContents: merged_content,
-        }
-        // Encode the structure into JSON
-        encoder := json.NewEncoder(conn)
-        err = encoder.Encode(message)
-        if err != nil {
-            fmt.Println("Error encoding structure in get to json", err)
-        }
-    }
+    
 }
 
 
